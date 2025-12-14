@@ -4,7 +4,7 @@ const User = require('./models/User');
 const Booking = require('./models/Booking');
 
 mongoose.connect(process.env.MONGO_URI)
-.then(() => console.log("✅ MongoDB Connected for Seeding"))
+.then(() => console.log("✅ MongoDB Connected"))
 .catch(err => console.log(err));
 
 const seedData = async () => {
@@ -12,8 +12,13 @@ const seedData = async () => {
         await User.deleteMany({});
         await Booking.deleteMany({});
 
-        // 1. Create Model
-        const modelUser = await User.create({
+        // 1. HARDCODED IDs (So they never change)
+        const MODEL_ID = "65ca10000000000000000001";
+        const CLIENT_ID = "65ca10000000000000000002";
+
+        // 2. Create Model
+        await User.create({
+            _id: MODEL_ID, // <--- FORCED ID
             name: "Isabella Rossi",
             email: "isabella@modelnext.com",
             role: "model",
@@ -22,9 +27,10 @@ const seedData = async () => {
             stats: { height: "5' 9\"", waist: "24\"", shoes: "39 EU", profileCompletion: 75 }
         });
 
-        // 2. Create Client (NAME MUST MATCH EVENTS BELOW)
-        const clientUser = await User.create({
-            name: "Vogue Agency", // <--- THIS NAME
+        // 3. Create Client
+        await User.create({
+            _id: CLIENT_ID, // <--- FORCED ID
+            name: "Vogue Agency",
             email: "contact@vogue.com",
             role: "client",
             isVerified: true,
@@ -32,23 +38,21 @@ const seedData = async () => {
             stats: {}
         });
 
-        // 3. Create Data
-        await Booking.insertMany([
-            // Matches "Vogue Agency"
-            { modelId: modelUser._id, clientName: "Vogue Agency", jobType: "Summer Campaign", date: "Oct 25, 2024", status: "NEW", isEvent: false },
-            
-            // Public Event (Matches "Vogue Agency")
-            { modelId: null, clientName: "Vogue Agency", jobType: "Open Casting Call", date: "Sept 30, 2024", status: "NEW", isEvent: true },
-            
-            // Another Public Event
-            { modelId: null, clientName: "Vogue Agency", jobType: "Runway Auditons", date: "Oct 2, 2024", status: "NEW", isEvent: true }
-        ]);
+        // 4. Create Initial Events
+        await Booking.create({
+            clientName: "Vogue Agency",
+            jobType: "Open Casting Call",
+            date: "Oct 25, 2024",
+            modelId: null, // Public Event
+            status: "NEW",
+            isEvent: true
+        });
 
-        console.log("Data Seeded.");
-        console.log("------------------------------------------------");
-        console.log("⚠️  MODEL ID:", modelUser._id.toString());
-        console.log("⚠️  CLIENT ID:", clientUser._id.toString());
-        console.log("------------------------------------------------");
+        console.log("✅ Data Seeded with FIXED IDs.");
+        console.log("--------------------------------------");
+        console.log("MODEL ID: ", MODEL_ID);
+        console.log("CLIENT ID:", CLIENT_ID);
+        console.log("--------------------------------------");
         
         process.exit();
     } catch (error) {
