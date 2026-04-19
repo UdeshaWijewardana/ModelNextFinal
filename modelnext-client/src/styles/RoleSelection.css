@@ -1,0 +1,136 @@
+/* RESET */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+/* LAYOUT */
+.role-container {
+  display: flex;
+  height: 100vh;
+  font-family: "Segoe UI", sans-serif;
+}
+
+/* LEFT SIDE */
+.role-left {
+  flex: 1;
+  background: url("https://images.unsplash.com/photo-1544005313-94ddf0286df2") center/cover no-repeat;
+  position: relative;
+  display: flex;
+  align-items: flex-end;
+  padding: 50px;
+}
+
+.role-left .overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+}
+
+/* BRAND */
+.brand {
+  position: relative;
+  color: white;
+}
+
+.brand h1 {
+  font-size: 60px;
+  font-family: serif;
+}
+
+.brand p {
+  margin-top: 10px;
+  color: #f2ca50;
+  letter-spacing: 2px;
+  font-size: 14px;
+}
+
+/* RIGHT SIDE */
+.role-right {
+  flex: 1;
+  background: #f5f1ea;
+  padding: 80px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+/* TITLE */
+.title {
+  font-size: 48px;
+  font-family: serif;
+  margin-bottom: 10px;
+}
+
+.subtitle {
+  color: #777;
+  margin-bottom: 40px;
+}
+
+/* ROLE LIST */
+.role-list {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+/* ROLE CARD */
+.role-item {
+  display: flex;
+  align-items: center;
+  padding: 20px;
+  border: 1px solid #ddd;
+  border-radius: 12px;
+  background: white;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.role-item:hover {
+  border-color: #f2ca50;
+  transform: translateY(-2px);
+}
+
+/* ACTIVE CARD */
+.role-item.active {
+  background: #c7a86d;
+  color: white;
+  border: none;
+}
+
+.role-item.active p {
+  color: #f0f0f0;
+}
+
+/* ICON */
+.icon {
+  font-size: 22px;
+  margin-right: 15px;
+}
+
+/* BUTTON */
+.register-btn {
+  margin-top: 40px;
+  padding: 16px;
+  background: black;
+  color: #f2ca50;
+  border: none;
+  font-weight: bold;
+  letter-spacing: 1px;
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+.register-btn:hover {
+  opacity: 0.8;
+}
+
+/* FOOTER */
+.footer-links {
+  margin-top: 20px;
+  display: flex;
+  gap: 20px;
+  font-size: 12px;
+  color: #777;
+}
