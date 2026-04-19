@@ -6,10 +6,13 @@ import Home from './pages/Home';
 import ModelDashboard from './pages/ModelDashboard';
 import ClientDashboard from './pages/ClientDashboard';
 import ProfileDetails from './pages/ProfileDetails';
-
-// ✅ ADD THESE
 import RoleSelection from './pages/RoleSelection';
-import Register from './pages/Register';
+
+// ✅ FORMS
+import ModelForm from "./forms/ModelForm";
+import PhotographerForm from "./forms/PhotographerForm";
+import AgencyForm from "./forms/AgencyForm";
+import ClientForm from "./forms/ClientForm";
 
 import './App.css';
 
@@ -17,18 +20,23 @@ function App() {
   return (
     <Router>
       <Routes>
+
         {/* CORE */}
         <Route path="/" element={<Home />} />
         <Route path="/login" element={<Login />} />
-
-        {/* ⭐ YOUR PART */}
         <Route path="/role" element={<RoleSelection />} />
-        <Route path="/register" element={<Register />} />
 
-        {/* EXISTING */}
+        {/* ✅ REGISTER PAGES */}
+        <Route path="/register/model" element={<ModelForm />} />
+        <Route path="/register/photographer" element={<PhotographerForm />} />
+        <Route path="/register/agency" element={<AgencyForm />} />
+        <Route path="/register/client" element={<ClientForm />} />
+
+        {/* DASHBOARD */}
         <Route path="/dashboard" element={<ModelDashboard />} />
         <Route path="/client-portal" element={<ClientDashboard />} />
         <Route path="/profile" element={<ProfileDetails />} />
+
       </Routes>
     </Router>
   );
