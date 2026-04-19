@@ -1,7 +1,9 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import "../styles/modelForm.css";
 
 export default function ModelForm() {
+  const navigate = useNavigate();
 
   const [form, setForm] = useState({
     fullName: "",
@@ -71,7 +73,7 @@ export default function ModelForm() {
   };
 
   // 🔹 Submit
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
 
@@ -103,8 +105,34 @@ export default function ModelForm() {
       return;
     }
 
-    console.log("Model Data:", form, profile, portfolio);
-    alert("Model Registered Successfully!");
+    const formData = new FormData();
+    for (const key in form) {
+      if (key === "categories") {
+        formData.append(key, JSON.stringify(form[key]));
+      } else {
+        formData.append(key, form[key]);
+      }
+    }
+    
+    formData.append("profileImage", profile);
+    portfolio.forEach(file => formData.append("portfolio", file));
+
+    try {
+      const res = await fetch("http://localhost:5000/api/models/register", {
+        method: "POST",
+        body: formData,
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) throw new Error(data.error || "Failed to register");
+
+      alert("Model Registered Successfully!");
+      navigate("/dashboard");
+    } catch (err) {
+      console.error(err);
+      setError(err.message);
+    }
   };
 
   return (
