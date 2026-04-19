@@ -7,6 +7,8 @@ import ModelDashboard from './pages/ModelDashboard';
 import ClientDashboard from './pages/ClientDashboard';
 import ProfileDetails from './pages/ProfileDetails';
 import RoleSelection from './pages/RoleSelection';
+import AgencyDashboard from './pages/AgencyDashboard';
+import PhotographerDashboard from './pages/PhotographerDashboard';
 
 // ✅ FORMS
 import ModelForm from "./forms/ModelForm";
@@ -35,6 +37,8 @@ function App() {
         {/* DASHBOARD */}
         <Route path="/dashboard" element={<ModelDashboard />} />
         <Route path="/client-portal" element={<ClientDashboard />} />
+        <Route path="/agency-dashboard" element={<AgencyDashboard />} />
+        <Route path="/photographer-dashboard" element={<PhotographerDashboard />} />
         <Route path="/profile" element={<ProfileDetails />} />
 
       </Routes>

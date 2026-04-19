@@ -18,8 +18,24 @@ export default function Home() {
           <span>Lookbook</span>
         </div>
 
-        <div className="nav-actions">
+        <div className="nav-actions" style={{ display: 'flex', gap: '15px', alignItems: 'center' }}>
           <input placeholder="Search..." />
+          <button 
+            onClick={() => navigate("/login")} 
+            style={{ 
+              background: 'transparent', 
+              border: '1px solid #1A1A1A', 
+              color: '#1A1A1A', 
+              padding: '8px 20px', 
+              cursor: 'pointer',
+              fontWeight: '600',
+              textTransform: 'uppercase',
+              fontSize: '12px',
+              letterSpacing: '1px'
+            }}
+          >
+            LOGIN
+          </button>
         </div>
       </nav>
 

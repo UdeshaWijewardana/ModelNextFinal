@@ -1,7 +1,9 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import "../styles/clientForm.css";
 
 export default function ClientForm() {
+  const navigate = useNavigate();
 
   const [form, setForm] = useState({
     type: "",
@@ -21,7 +23,7 @@ export default function ClientForm() {
     });
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
     for (let key in form) {
@@ -36,8 +38,22 @@ export default function ClientForm() {
       return;
     }
 
-    alert("Registration Successful!");
-    console.log(form);
+    try {
+      const res = await fetch("http://localhost:5000/api/clients/register", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(form)
+      });
+      const data = await res.json();
+
+      if (!res.ok) throw new Error(data.error || "Failed to register");
+
+      alert("Registration Successful!");
+      navigate("/client-portal");
+    } catch (err) {
+      console.error(err);
+      alert(err.message);
+    }
   };
 
   return (

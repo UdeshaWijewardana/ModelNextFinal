@@ -1,7 +1,9 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import "../styles/photographerForm.css";
 
 export default function PhotographerForm() {
+  const navigate = useNavigate();
 
   const [form, setForm] = useState({
     name: "",
@@ -39,7 +41,7 @@ export default function PhotographerForm() {
   };
 
   // 🔹 Submit
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
 
@@ -65,8 +67,27 @@ export default function PhotographerForm() {
       return;
     }
 
-    console.log("Photographer Data:", form);
-    alert("Photographer Registered Successfully!");
+    const formData = new FormData();
+    for (const key in form) {
+      formData.append(key, form[key]);
+    }
+
+    try {
+      const res = await fetch("http://localhost:5000/api/photographers/register", {
+        method: "POST",
+        body: formData,
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) throw new Error(data.error || "Failed to register");
+
+      alert("Photographer Registered Successfully!");
+      navigate("/photographer-dashboard");
+    } catch (err) {
+      console.error(err);
+      setError(err.message);
+    }
   };
 
   return (

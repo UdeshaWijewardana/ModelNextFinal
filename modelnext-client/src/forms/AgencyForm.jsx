@@ -1,7 +1,9 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import "../styles/agencyForm.css";
 
 export default function AgencyForm() {
+  const navigate = useNavigate();
 
   const [form, setForm] = useState({
     agencyName: "",
@@ -52,7 +54,7 @@ export default function AgencyForm() {
   };
 
   // 🔹 Submit form
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
     // clear previous error
@@ -84,8 +86,38 @@ export default function AgencyForm() {
       return;
     }
 
-    console.log("Agency Data:", form);
-    alert("Agency Registered Successfully!");
+    const formData = new FormData();
+    formData.append("agencyName", form.agencyName);
+    formData.append("ownerName", form.ownerName);
+    formData.append("phone", form.phone);
+    formData.append("email", form.email);
+    formData.append("address", form.address);
+    if (form.businessId) formData.append("businessId", form.businessId);
+    formData.append("password", form.password);
+    formData.append("profileImage", form.profileImage);
+    if (form.coverImage) formData.append("coverImage", form.coverImage);
+
+    try {
+      const res = await fetch("http://localhost:5000/api/agencies/register", {
+        method: "POST",
+        body: formData,
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(data.error || "Failed to register agency");
+      }
+
+      console.log("Agency Data:", data);
+      alert("Agency Registered Successfully!");
+      
+      // Navigate to Agency Dashboard
+      navigate("/agency-dashboard");
+    } catch (err) {
+      console.error(err);
+      setError(err.message);
+    }
   };
 
   return (
