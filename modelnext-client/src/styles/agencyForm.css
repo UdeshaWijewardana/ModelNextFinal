@@ -1,0 +1,135 @@
+/* PAGE */
+.agency-page {
+  min-height: 100vh;
+  background: linear-gradient(to right, #0e0e0e, #1a1a1a);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-family: "Segoe UI", sans-serif;
+}
+
+/* BOX */
+.agency-box {
+  width: 420px;
+  background: #111;
+  padding: 40px;
+  border-radius: 12px;
+  border: 1px solid #333;
+  box-shadow: 0 0 20px rgba(0,0,0,0.6);
+}
+
+/* TITLE */
+.agency-box h1 {
+  color: #f2ca50;
+  margin-bottom: 10px;
+}
+
+.subtitle {
+  color: #aaa;
+  margin-bottom: 20px;
+}
+
+/* ERROR MESSAGE */
+.error {
+  color: red;
+  margin-bottom: 10px;
+  font-size: 14px;
+}
+
+/* INPUTS */
+.agency-box input {
+  width: 100%;
+  padding: 12px;
+  margin-bottom: 12px;
+  background: #1c1c1c;
+  border: 1px solid #333;
+  color: white;
+  border-radius: 6px;
+  outline: none;
+}
+
+.agency-box input:focus {
+  border-color: #f2ca50;
+}
+
+/* BUTTON */
+.agency-box button {
+  width: 100%;
+  padding: 14px;
+  background: linear-gradient(135deg, #f2ca50, #d4af37);
+  border: none;
+  color: black;
+  font-weight: bold;
+  cursor: pointer;
+  margin-top: 10px;
+}
+
+.agency-box button:hover {
+  opacity: 0.85;
+}
+
+/* COVER IMAGE */
+.cover-upload {
+  width: 100%;
+  height: 140px;
+  background: #222;
+  margin-bottom: 20px;
+  position: relative;
+  overflow: hidden;
+  cursor: pointer;
+}
+
+.cover-upload img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.cover-upload span {
+  position: absolute;
+  color: #aaa;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+.cover-upload input {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+}
+
+/* PROFILE IMAGE */
+.profile-upload {
+  width: 90px;
+  height: 90px;
+  background: #222;
+  border-radius: 50%;
+  margin: -50px auto 20px;
+  position: relative;
+  overflow: hidden;
+  border: 3px solid #f2ca50;
+  cursor: pointer;
+}
+
+.profile-upload img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.profile-upload span {
+  position: absolute;
+  font-size: 10px;
+  color: #aaa;
+  text-align: center;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+.profile-upload input {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+}
