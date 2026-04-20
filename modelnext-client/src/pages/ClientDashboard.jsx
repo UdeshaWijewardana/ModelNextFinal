@@ -8,8 +8,8 @@ const ClientDashboard = () => {
   const [showModal, setShowModal] = useState(false);
   const [newEvent, setNewEvent] = useState({ title: '', date: '' });
   
-  // ✅ FIXED CLIENT ID (Must match the ID in your seed.js file)
-  const CLIENT_ID = "65ca10000000000000000002"; 
+  // ✅ GET CLIENT ID FROM LOCAL STORAGE
+  const CLIENT_ID = localStorage.getItem("userId");
 
   useEffect(() => {
     fetchClientData();
@@ -28,7 +28,7 @@ const ClientDashboard = () => {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-              clientName: JSON.parse(localStorage.getItem('clientData'))?.name || clientData?.profile?.name || 'Client',
+              clientName: clientData.profile.name,
               jobType: newEvent.title,
               date: newEvent.date,
               modelId: null, // Public Event
@@ -99,7 +99,7 @@ const ClientDashboard = () => {
         
         {/* ✅ LOGOUT BUTTON AND USER INFO */}
         <div style={{ marginTop: 'auto' }}>
-          <div style={{ fontWeight: '600', marginBottom: '10px' }}>{JSON.parse(localStorage.getItem('clientData'))?.name || clientData?.profile?.name || 'Client'}</div>
+          <div style={{ fontWeight: '600', marginBottom: '10px' }}>{clientData.profile.name}</div>
           <div 
             style={{ cursor: 'pointer', color: '#666', fontSize: '14px' }} 
             onClick={() => { 

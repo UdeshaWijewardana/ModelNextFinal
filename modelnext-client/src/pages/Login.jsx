@@ -26,6 +26,10 @@ export default function Login() {
 
       if (!res.ok) throw new Error(data.error || "Login failed");
 
+      // ✅ SAVE USER ID TO LOCAL STORAGE SO DASHBOARDS CAN LOAD IT
+      localStorage.setItem("userId", data.user._id);
+      localStorage.setItem("userRole", data.role);
+
       // Route based on role returned by backend
       if (data.role === "model") navigate("/dashboard");
       else if (data.role === "client") navigate("/client-portal");
