@@ -2,3 +2,23 @@ node_modules/
 **/node_modules/
 .env
 .DS_Store
+# Node
+node_modules/
+
+# Python
+venv/
+.venv/
+
+# ML
+*.h5
+dataset/
+
+# Build
+build/
+dist/
+
+# Logs
+*.log
+
+# OS
+.DS_Store
