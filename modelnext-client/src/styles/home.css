@@ -68,16 +68,34 @@
 
 .hero-content {
   position: relative;
-  max-width: 500px;
+  max-width: 600px;
   z-index: 2;
   text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
 }
 
 .hero h1 {
-  font-size: 60px;
+  font-size: 80px;
   font-weight: 900;
-  animation: fadeInUp 1s ease-out forwards;
+  margin: 0;
+  padding: 0;
+  white-space: nowrap;
+  animation: slideInDown 1.2s ease-out forwards;
   opacity: 0;
+}
+
+@keyframes slideInDown {
+  from {
+    opacity: 0;
+    transform: translateY(-30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 @keyframes fadeInUp {
@@ -95,6 +113,11 @@
   color: #f2ca50;
 }
 
+.hero-content p {
+  animation: fadeInUp 1s ease-out 2.8s forwards;
+  opacity: 0;
+}
+
 .gold-btn {
   margin-top: 20px;
   padding: 12px 30px;
@@ -102,8 +125,39 @@
   border: none;
   cursor: pointer;
   font-weight: bold;
+  animation: fadeInUp 1s ease-out 3s forwards;
+  opacity: 0;
 }
 
+/* SOUND BUTTON */
+.sound-btn {
+  position: fixed;
+  bottom: 40px;
+  left: 40px;
+  z-index: 50;
+  background: rgba(242, 202, 80, 0.2);
+  border: 2px solid #f2ca50;
+  color: #f2ca50;
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  transition: all 0.3s;
+  backdrop-filter: blur(10px);
+}
+
+.sound-btn:hover {
+  background: rgba(242, 202, 80, 0.4);
+  transform: scale(1.1);
+}
+
+.sound-btn.muted {
+  opacity: 0.6;
+}
 /* ROLES */
 .roles {
   display: flex;

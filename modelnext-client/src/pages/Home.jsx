@@ -1,8 +1,22 @@
 import { useNavigate } from "react-router-dom";
+import { useState, useEffect, useRef } from "react";
 import "../styles/home.css";
 
 export default function Home() {
   const navigate = useNavigate();
+  const [isMuted, setIsMuted] = useState(false);
+  const videoRef = useRef(null);
+
+  useEffect(() => {
+    // Video sound control logic can go here if needed
+  }, []);
+
+  const toggleSound = () => {
+    if (videoRef.current) {
+      videoRef.current.muted = !videoRef.current.muted;
+      setIsMuted(!isMuted);
+    }
+  };
 
   return (
     <div className="home">
@@ -42,12 +56,17 @@ export default function Home() {
       {/* HERO */}
       <section className="hero">
         <video
+          ref={videoRef}
           autoPlay
           loop
           className="hero-bg"
         >
           <source src="/assets/thunder.mp4" type="video/mp4" />
         </video>
+
+        <button className={`sound-btn ${isMuted ? "muted" : ""}`} onClick={toggleSound} title={isMuted ? "Unmute" : "Mute"}>
+          {isMuted ? "🔇" : "🔊"}
+        </button>
 
         <div className="hero-content">
           <h1>Define The Next Era</h1>
