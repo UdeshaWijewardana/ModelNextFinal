@@ -2,3 +2,19 @@ node_modules/
 **/node_modules/
 .env
 .DS_Store
+# Python
+.venv/
+__pycache__/
+
+# ML model & dataset
+ml-model/
+
+# Node
+node_modules/
+
+# env files
+.env
+.venv/
+ml-model/
+node_modules/
+.env
