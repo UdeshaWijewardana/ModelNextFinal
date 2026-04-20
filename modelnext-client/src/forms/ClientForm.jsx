@@ -2,7 +2,6 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import "../styles/clientForm.css";
 
-
 export default function ClientForm() {
   const navigate = useNavigate();
 
@@ -48,9 +47,6 @@ export default function ClientForm() {
       const data = await res.json();
 
       if (!res.ok) throw new Error(data.error || "Failed to register");
-
-      // Store client data in localStorage
-      localStorage.setItem('clientData', JSON.stringify(data.client));
 
       alert("Registration Successful!");
       navigate("/client-portal");

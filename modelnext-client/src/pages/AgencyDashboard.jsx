@@ -5,18 +5,12 @@ const AgencyDashboard = () => {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('dashboard');
 
-  // Retrieve agency data from localStorage
-  const storedAgencyData = JSON.parse(localStorage.getItem('agencyData')) || {};
-  const profileImageUrl = storedAgencyData.profileImage 
-    ? `http://localhost:5000/${storedAgencyData.profileImage.replace(/\\/g, '/')}` 
-    : "https://images.unsplash.com/photo-1560179707-f14e90ef3623?auto=format&fit=crop&w=300&q=80";
-
-  // Hardcoded placeholder data for visual presentation combined with stored data
+  // Hardcoded placeholder data for visual presentation
   const agencyData = {
     profile: {
-      name: storedAgencyData.agencyName || "Elite Model Management",
+      name: "Elite Model Management",
       type: "Premium Agency",
-      profileImage: profileImageUrl,
+      profileImage: "https://images.unsplash.com/photo-1560179707-f14e90ef3623?auto=format&fit=crop&w=300&q=80",
       stats: { profileCompletion: 85 }
     },
     models: [
@@ -61,7 +55,7 @@ const AgencyDashboard = () => {
         </nav>
         <div style={{ marginTop: 'auto', display: 'flex', alignItems: 'center', gap: '15px', paddingTop: '20px', borderTop: '1px solid #eee' }}>
           <img src={agencyData.profile.profileImage} alt="user" style={{width:'40px', height:'40px', borderRadius:'50%', objectFit:'cover'}} />
-          <div><div style={{fontWeight:'600', fontSize:'14px'}}>{storedAgencyData.ownerName || 'Admin'}</div><div onClick={() => {localStorage.clear(); navigate('/')}} style={{fontSize:'12px', color:'#999', cursor:'pointer'}}>Logout</div></div>
+          <div><div style={{fontWeight:'600', fontSize:'14px'}}>Admin</div><div onClick={() => {localStorage.clear(); navigate('/')}} style={{fontSize:'12px', color:'#999', cursor:'pointer'}}>Logout</div></div>
         </div>
       </aside>
 
@@ -69,7 +63,7 @@ const AgencyDashboard = () => {
         <div style={styles.headerProfile}>
           <img src={agencyData.profile.profileImage} style={styles.mainImage} alt="Agency Profile" />
           <div style={{ paddingTop: '20px' }}>
-             <h1 style={styles.nameTitle}>{agencyData.profile.name.toUpperCase()} <span style={styles.verifiedBadge}>✓</span></h1>
+             <h1 style={styles.nameTitle}>ELITE <br/> MODELS <span style={styles.verifiedBadge}>✓</span></h1>
              <p style={{ color: '#666', marginTop: '10px', letterSpacing: '1px' }}>VERIFIED AGENCY</p>
           </div>
         </div>

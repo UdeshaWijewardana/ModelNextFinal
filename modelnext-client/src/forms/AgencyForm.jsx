@@ -110,10 +110,6 @@ export default function AgencyForm() {
       }
 
       console.log("Agency Data:", data);
-      
-      // Store agency data in localStorage for dashboard
-      localStorage.setItem('agencyData', JSON.stringify(data.agency));
-
       alert("Agency Registered Successfully!");
       
       // Navigate to Agency Dashboard
