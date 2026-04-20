@@ -41,17 +41,16 @@ export default function Home() {
 
       {/* HERO */}
       <section className="hero">
-        <img
-          src="https://images.unsplash.com/photo-1544005313-94ddf0286df2"
+        <video
+          autoPlay
+          loop
           className="hero-bg"
-          alt="Hero model"
-        />
+        >
+          <source src="/assets/thunder.mp4" type="video/mp4" />
+        </video>
 
         <div className="hero-content">
-          <h1>
-            Define The <br />
-            <span>Next Era</span>
-          </h1>
+          <h1>Define The Next Era</h1>
 
           <p>
             The premier digital atelier connecting avant-garde talent with visionary creatives worldwide.
