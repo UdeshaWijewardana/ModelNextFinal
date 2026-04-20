@@ -28,7 +28,7 @@ const ClientDashboard = () => {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-              clientName: clientData.profile.name,
+              clientName: JSON.parse(localStorage.getItem('clientData'))?.name || clientData?.profile?.name || 'Client',
               jobType: newEvent.title,
               date: newEvent.date,
               modelId: null, // Public Event
@@ -97,15 +97,18 @@ const ClientDashboard = () => {
         <div style={{ fontFamily: "'Playfair Display', serif", fontSize: '24px', fontWeight: 'bold', marginBottom: '40px' }}>ModelNext</div>
         <div style={{ padding: '10px', background: '#EEE', borderRadius: '5px', fontWeight: '600' }}>Dashboard</div>
         
-        {/* ✅ FIXED LOGOUT BUTTON */}
-        <div 
-          style={{ marginTop: 'auto', cursor: 'pointer', color: '#666' }} 
-          onClick={() => { 
-            localStorage.clear(); 
-            navigate('/'); 
-          }}
-        >
-          Logout
+        {/* ✅ LOGOUT BUTTON AND USER INFO */}
+        <div style={{ marginTop: 'auto' }}>
+          <div style={{ fontWeight: '600', marginBottom: '10px' }}>{JSON.parse(localStorage.getItem('clientData'))?.name || clientData?.profile?.name || 'Client'}</div>
+          <div 
+            style={{ cursor: 'pointer', color: '#666', fontSize: '14px' }} 
+            onClick={() => { 
+              localStorage.clear(); 
+              navigate('/'); 
+            }}
+          >
+            Logout
+          </div>
         </div>
       </aside>
 

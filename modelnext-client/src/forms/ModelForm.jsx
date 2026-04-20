@@ -19,8 +19,42 @@ const ModelForm = () => {
       return;
     }
 
-    console.log("FORM DATA:", form);
-    console.log("SELFIE:", selfie);
+    if (portfolio.length !== 6) {
+      setError("You must upload exactly 6 portfolio images");
+      return;
+    }
+
+    if (form.categories.length === 0) {
+      setError("Select at least one category");
+      return;
+    }
+
+    if (form.password !== form.confirmPassword) {
+      setError("Passwords do not match");
+      return;
+    }
+
+    const formData = new FormData();
+    for (const key in form) {
+      if (key === "categories") {
+        formData.append(key, JSON.stringify(form[key]));
+      } else {
+        formData.append(key, form[key]);
+      }
+    }
+    
+    formData.append("profileImage", profile);
+    portfolio.forEach(file => formData.append("portfolio", file));
+
+    try {
+      const res = await fetch("http://localhost:5000/api/models/register", {
+        method: "POST",
+        body: formData,
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) throw new Error(data.error || "Failed to register");
 
     alert("Registration Complete ✅");
   };
