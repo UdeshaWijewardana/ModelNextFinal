@@ -5,11 +5,17 @@ const PhotographerDashboard = () => {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('dashboard');
 
+  // Retrieve photographer data from localStorage
+  const storedPhotoData = JSON.parse(localStorage.getItem('photographerData')) || {};
+  const profileImageUrl = storedPhotoData.profileImage 
+    ? `http://localhost:5000/${storedPhotoData.profileImage.replace(/\\/g, '/')}` 
+    : "https://images.unsplash.com/photo-1554046920-90dc5f3ac186?auto=format&fit=crop&w=300&q=80";
+
   const photoData = {
     profile: {
-      name: "Alex Mercer",
+      name: storedPhotoData.name || "Alex Mercer",
       type: "Professional Photographer",
-      profileImage: "https://images.unsplash.com/photo-1554046920-90dc5f3ac186?auto=format&fit=crop&w=300&q=80",
+      profileImage: profileImageUrl,
       stats: { profileCompletion: 90 }
     },
     gigs: [
@@ -56,7 +62,7 @@ const PhotographerDashboard = () => {
         </nav>
         <div style={{ marginTop: 'auto', display: 'flex', alignItems: 'center', gap: '15px', paddingTop: '20px', borderTop: '1px solid #eee' }}>
           <img src={photoData.profile.profileImage} alt="user" style={{width:'40px', height:'40px', borderRadius:'50%', objectFit:'cover'}} />
-          <div><div style={{fontWeight:'600', fontSize:'14px'}}>Alex Mercer</div><div onClick={() => {localStorage.clear(); navigate('/')}} style={{fontSize:'12px', color:'#999', cursor:'pointer'}}>Logout</div></div>
+          <div><div style={{fontWeight:'600', fontSize:'14px'}}>{photoData.profile.name}</div><div onClick={() => {localStorage.clear(); navigate('/')}} style={{fontSize:'12px', color:'#999', cursor:'pointer'}}>Logout</div></div>
         </div>
       </aside>
 
@@ -64,7 +70,7 @@ const PhotographerDashboard = () => {
         <div style={styles.headerProfile}>
           <img src={photoData.profile.profileImage} style={styles.mainImage} alt="Profile" />
           <div style={{ paddingTop: '20px' }}>
-             <h1 style={styles.nameTitle}>ALEX <br/> MERCER <span style={styles.verifiedBadge}>✓</span></h1>
+             <h1 style={styles.nameTitle}>{photoData.profile.name.toUpperCase()} <span style={styles.verifiedBadge}>✓</span></h1>
              <p style={{ color: '#666', marginTop: '10px', letterSpacing: '1px' }}>PRO PHOTOGRAPHER</p>
           </div>
         </div>
