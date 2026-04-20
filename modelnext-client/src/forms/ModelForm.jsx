@@ -1,212 +1,175 @@
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
-import "../styles/modelForm.css";
+import React, { useState } from "react";
+import FaceVerification from "../components/FaceVerification";
+import "../styles/modelRegister.css";
 
-export default function ModelForm() {
-  const navigate = useNavigate();
+const ModelForm = () => {
+  const [step, setStep] = useState(1);
+  const [form, setForm] = useState({});
+  const [selfie, setSelfie] = useState(null);
 
-  const [form, setForm] = useState({
-    fullName: "",
-    username: "",
-    address: "",
-    idType: "",
-    phone: "",
-    birthdate: "",
-    location: "",
-    gender: "",
-    email: "",
-    password: "",
-    confirmPassword: "",
-    categories: []
-  });
-
-  const [profile, setProfile] = useState(null);
-  const [portfolio, setPortfolio] = useState([]);
-  const [error, setError] = useState("");
-
-  const categoriesList = [
-    "Bridal",
-    "Sports Wear",
-    "Swim Wear",
-    "Casual",
-    "Fashion",
-    "Runway"
-  ];
-
-  // 🔹 Handle text input
   const handleChange = (e) => {
-    setForm({
-      ...form,
-      [e.target.name]: e.target.value
-    });
+    setForm({ ...form, [e.target.name]: e.target.value });
   };
 
-  // 🔹 Handle category select
-  const handleCategory = (cat) => {
-    if (form.categories.includes(cat)) {
-      setForm({
-        ...form,
-        categories: form.categories.filter(c => c !== cat)
-      });
-    } else {
-      setForm({
-        ...form,
-        categories: [...form.categories, cat]
-      });
-    }
-  };
-
-  // 🔹 Profile image
-  const handleProfile = (e) => {
-    const file = e.target.files[0];
-    if (file) setProfile(file);
-  };
-
-  // 🔹 Portfolio images (max 6)
-  const handlePortfolio = (e) => {
-    const files = Array.from(e.target.files);
-    if (files.length > 6) {
-      alert("You can upload max 6 images");
-      return;
-    }
-    setPortfolio(files);
-  };
-
-  // 🔹 Submit
-  const handleSubmit = async (e) => {
+  const handleSubmit = (e) => {
     e.preventDefault();
-    setError("");
 
-    // required check
-    for (let key in form) {
-      if (key !== "categories" && !form[key]) {
-        setError("Please fill all required fields");
-        return;
-      }
-    }
-
-    if (!profile) {
-      setError("Profile image is required");
+    if (!selfie) {
+      alert("Please complete face verification");
       return;
     }
 
-    if (portfolio.length !== 6) {
-      setError("You must upload exactly 6 portfolio images");
-      return;
-    }
+    console.log("FORM DATA:", form);
+    console.log("SELFIE:", selfie);
 
-    if (form.categories.length === 0) {
-      setError("Select at least one category");
-      return;
-    }
-
-    if (form.password !== form.confirmPassword) {
-      setError("Passwords do not match");
-      return;
-    }
-
-    const formData = new FormData();
-    for (const key in form) {
-      if (key === "categories") {
-        formData.append(key, JSON.stringify(form[key]));
-      } else {
-        formData.append(key, form[key]);
-      }
-    }
-    
-    formData.append("profileImage", profile);
-    portfolio.forEach(file => formData.append("portfolio", file));
-
-    try {
-      const res = await fetch("http://localhost:5000/api/models/register", {
-        method: "POST",
-        body: formData,
-      });
-
-      const data = await res.json();
-
-      if (!res.ok) throw new Error(data.error || "Failed to register");
-
-      alert("Model Registered Successfully!");
-      navigate("/dashboard");
-    } catch (err) {
-      console.error(err);
-      setError(err.message);
-    }
+    alert("Registration Complete ✅");
   };
 
   return (
-    <div className="model-page">
+    <div className="main-container">
 
-      <div className="model-box">
+      {/* LEFT SIDEBAR */}
+      <div className="sidebar">
+        <h3 className="logo">ModelNext</h3>
 
-        <h1>Model Registration</h1>
-        <p className="subtitle">Create your model profile</p>
+        <p className={step === 1 ? "active" : ""}>
+          Basic Info
+          <span>Personal Details</span>
+        </p>
 
-        {error && <p className="error">{error}</p>}
+        <p className={step === 2 ? "active" : ""}>
+          Physical
+          <span>Your Measurements</span>
+        </p>
 
-        {/* PROFILE IMAGE */}
-        <div className="profile-upload">
-          <span>Upload Profile Image *</span>
-          <input type="file" onChange={handleProfile} />
-        </div>
+        <p className={step === 3 ? "active" : ""}>
+          Portfolio
+          <span>Upload Images</span>
+        </p>
 
+        <p className={step === 4 ? "active" : ""}>
+          Social
+          <span>Connect Profiles</span>
+        </p>
+
+        <p className={step === 5 ? "active" : ""}>
+          Verification
+          <span>Secure Account</span>
+        </p>
+      </div>
+
+      {/* RIGHT SIDE */}
+      <div className="form-box">
         <form onSubmit={handleSubmit}>
 
-          <input name="fullName" placeholder="Full Name" onChange={handleChange} />
-          <input name="username" placeholder="Username" onChange={handleChange} />
-          <input name="address" placeholder="Address" onChange={handleChange} />
+          {/* STEP 1 */}
+          {step === 1 && (
+            <>
+              <h2>Basic Information</h2>
+              <p className="subtitle">
+                Start by telling us the essentials.
+              </p>
 
-          {/* ID TYPE */}
-          <select name="idType" onChange={handleChange}>
-            <option value="">Select ID Type</option>
-            <option value="nic">National ID</option>
-            <option value="license">Driving License</option>
-            <option value="passport">Passport</option>
-          </select>
+              <input
+                name="name"
+                placeholder="Full Name"
+                onChange={handleChange}
+              />
 
-          <input name="phone" placeholder="Phone Number" onChange={handleChange} />
-          <input type="date" name="birthdate" onChange={handleChange} />
-          <input name="location" placeholder="Current Location" onChange={handleChange} />
+              <input
+                type="date"
+                name="dob"
+                onChange={handleChange}
+              />
 
-          {/* GENDER */}
-          <select name="gender" onChange={handleChange}>
-            <option value="">Select Gender</option>
-            <option value="male">Male</option>
-            <option value="female">Female</option>
-            <option value="transgender">Transgender</option>
-          </select>
+              <input
+                name="email"
+                placeholder="Email Address"
+                onChange={handleChange}
+              />
 
-          <input name="email" placeholder="Email" onChange={handleChange} />
+              <input
+                type="password"
+                name="password"
+                placeholder="Password"
+                onChange={handleChange}
+              />
 
-          <input type="password" name="password" placeholder="Password" onChange={handleChange} />
-          <input type="password" name="confirmPassword" placeholder="Confirm Password" onChange={handleChange} />
+              <button type="button" onClick={() => setStep(2)}>
+                Next Step →
+              </button>
+            </>
+          )}
 
-          {/* CATEGORIES */}
-          <div className="categories">
-            <p>Select Model Type *</p>
-            {categoriesList.map(cat => (
-              <span
-                key={cat}
-                className={form.categories.includes(cat) ? "active" : ""}
-                onClick={() => handleCategory(cat)}
-              >
-                {cat}
-              </span>
-            ))}
-          </div>
+          {/* STEP 2 */}
+          {step === 2 && (
+            <>
+              <h2>Physical Attributes</h2>
 
-          {/* PORTFOLIO */}
-          <div className="portfolio">
-            <p>Upload 6 Images *</p>
-            <input type="file" multiple onChange={handlePortfolio} />
-          </div>
+              <input name="height" placeholder="Height (cm)" onChange={handleChange} />
+              <input name="weight" placeholder="Weight (kg)" onChange={handleChange} />
 
-          <button type="submit">CREATE ACCOUNT</button>
+              <div className="btn-group">
+                <button type="button" onClick={() => setStep(1)}>← Back</button>
+                <button type="button" onClick={() => setStep(3)}>Next →</button>
+              </div>
+            </>
+          )}
+
+          {/* STEP 3 */}
+          {step === 3 && (
+            <>
+              <h2>Portfolio Setup</h2>
+
+              <p className="subtitle">Upload your images (max 6)</p>
+
+              <input type="file" multiple />
+
+              <div className="btn-group">
+                <button type="button" onClick={() => setStep(2)}>← Back</button>
+                <button type="button" onClick={() => setStep(4)}>Next →</button>
+              </div>
+            </>
+          )}
+
+          {/* STEP 4 */}
+          {step === 4 && (
+            <>
+              <h2>Social Media</h2>
+
+              <input placeholder="Instagram URL" />
+              <input placeholder="Facebook URL" />
+
+              <div className="btn-group">
+                <button type="button" onClick={() => setStep(3)}>← Back</button>
+                <button type="button" onClick={() => setStep(5)}>Next →</button>
+              </div>
+            </>
+          )}
+
+          {/* STEP 5 */}
+          {step === 5 && (
+            <>
+              <h2>Identity Verification</h2>
+
+              <p className="subtitle">
+                Complete face verification to continue
+              </p>
+
+              {/* FACE TRACKING */}
+              <FaceVerification onCapture={setSelfie} />
+
+              <div className="btn-group">
+                <button type="button" onClick={() => setStep(4)}>← Back</button>
+                <button type="submit">Submit ✔</button>
+              </div>
+            </>
+          )}
 
         </form>
-
       </div>
     </div>
   );
-}
+};
+
+export default ModelForm;

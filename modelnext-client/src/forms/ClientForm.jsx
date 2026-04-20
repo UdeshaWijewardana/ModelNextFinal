@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import "../styles/clientForm.css";
 
+
 export default function ClientForm() {
   const navigate = useNavigate();
 
