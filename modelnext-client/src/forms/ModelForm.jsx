@@ -1,202 +1,208 @@
 import React, { useState } from "react";
-import FaceVerification from "../components/FaceVerification";
 import "../styles/modelRegister.css";
 
 const ModelForm = () => {
   const [step, setStep] = useState(1);
-  const [form, setForm] = useState({});
-  const [selfie, setSelfie] = useState(null);
 
+  const [form, setForm] = useState({
+    fullName: "",
+    birthdate: "",
+    email: "",
+    password: "",
+    categories: [],
+    idType: "",
+  });
+
+  const [portfolio, setPortfolio] = useState([]);
+  const [profile, setProfile] = useState(null);
+
+  const [idFront, setIdFront] = useState(null);
+  const [idBack, setIdBack] = useState(null);
+
+  const [error, setError] = useState("");
+
+  // INPUT CHANGE
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
+  const handleProfile = (e) => {
+    setProfile(e.target.files[0]);
+  };
 
-    if (!selfie) {
-      alert("Please complete face verification");
-      return;
-    }
+  const handlePortfolio = (e) => {
+    setPortfolio(Array.from(e.target.files));
+  };
+
+  const handleIdFront = (e) => setIdFront(e.target.files[0]);
+  const handleIdBack = (e) => setIdBack(e.target.files[0]);
+
+  // SUBMIT
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setError("");
 
     if (portfolio.length !== 6) {
-      setError("You must upload exactly 6 portfolio images");
-      return;
+      return setError("Upload exactly 6 images");
     }
 
-    if (form.categories.length === 0) {
-      setError("Select at least one category");
-      return;
+    if (!profile) {
+      return setError("Upload profile image");
     }
 
-    if (form.password !== form.confirmPassword) {
-      setError("Passwords do not match");
-      return;
+    if (!form.idType) {
+      return setError("Select ID type");
     }
 
-    const formData = new FormData();
-    for (const key in form) {
-      if (key === "categories") {
-        formData.append(key, JSON.stringify(form[key]));
-      } else {
-        formData.append(key, form[key]);
-      }
+    if (!idFront) {
+      return setError("Upload ID front image");
     }
-    
-    formData.append("profileImage", profile);
-    portfolio.forEach(file => formData.append("portfolio", file));
+
+    if (form.idType !== "passport" && !idBack) {
+      return setError("Upload ID back image");
+    }
 
     try {
-      const res = await fetch("http://localhost:5000/api/models/register", {
-        method: "POST",
-        body: formData,
+      const formData = new FormData();
+
+      // TEXT
+      Object.keys(form).forEach((key) => {
+        formData.append(key, form[key]);
       });
 
-      const data = await res.json();
+      // FILES
+      formData.append("profileImage", profile);
+      formData.append("idFront", idFront);
 
-      if (!res.ok) throw new Error(data.error || "Failed to register");
+      if (idBack) {
+        formData.append("idBack", idBack);
+      }
 
-    alert("Registration Complete ✅");
+      portfolio.forEach((file) => {
+        formData.append("portfolio", file);
+      });
+
+      const res = await fetch(
+        "http://localhost:5000/api/models/register",
+        {
+          method: "POST",
+          body: formData,
+        }
+      );
+
+      const text = await res.text();
+      console.log("SERVER RESPONSE:", text);
+
+      let data;
+      try {
+        data = JSON.parse(text);
+      } catch {
+        throw new Error("Server error ❌");
+      }
+
+      if (!res.ok) throw new Error(data.error);
+
+      alert("Registration Successful ✅");
+
+    } catch (err) {
+      console.error(err);
+      setError(err.message || "Something went wrong");
+    }
   };
 
   return (
     <div className="main-container">
-
-      {/* LEFT SIDEBAR */}
       <div className="sidebar">
         <h3 className="logo">ModelNext</h3>
-
-        <p className={step === 1 ? "active" : ""}>
-          Basic Info
-          <span>Personal Details</span>
-        </p>
-
-        <p className={step === 2 ? "active" : ""}>
-          Physical
-          <span>Your Measurements</span>
-        </p>
-
-        <p className={step === 3 ? "active" : ""}>
-          Portfolio
-          <span>Upload Images</span>
-        </p>
-
-        <p className={step === 4 ? "active" : ""}>
-          Social
-          <span>Connect Profiles</span>
-        </p>
-
-        <p className={step === 5 ? "active" : ""}>
-          Verification
-          <span>Secure Account</span>
-        </p>
+        <p className={step === 1 ? "active" : ""}>Basic Info</p>
+        <p className={step === 2 ? "active" : ""}>Physical</p>
+        <p className={step === 3 ? "active" : ""}>Portfolio</p>
+        <p className={step === 4 ? "active" : ""}>Social</p>
+        <p className={step === 5 ? "active" : ""}>ID Verification</p>
       </div>
 
-      {/* RIGHT SIDE */}
       <div className="form-box">
         <form onSubmit={handleSubmit}>
+
+          {error && <p className="error">{error}</p>}
 
           {/* STEP 1 */}
           {step === 1 && (
             <>
-              <h2>Basic Information</h2>
-              <p className="subtitle">
-                Start by telling us the essentials.
-              </p>
+              <h2>Basic Info</h2>
+              <input name="fullName" placeholder="Full Name" onChange={handleChange} />
+              <input type="date" name="birthdate" onChange={handleChange} />
+              <input name="email" placeholder="Email" onChange={handleChange} />
+              <input type="password" name="password" placeholder="Password" onChange={handleChange} />
 
-              <input
-                name="name"
-                placeholder="Full Name"
-                onChange={handleChange}
-              />
-
-              <input
-                type="date"
-                name="dob"
-                onChange={handleChange}
-              />
-
-              <input
-                name="email"
-                placeholder="Email Address"
-                onChange={handleChange}
-              />
-
-              <input
-                type="password"
-                name="password"
-                placeholder="Password"
-                onChange={handleChange}
-              />
-
-              <button type="button" onClick={() => setStep(2)}>
-                Next Step →
-              </button>
+              <button type="button" onClick={() => setStep(2)}>Next</button>
             </>
           )}
 
           {/* STEP 2 */}
           {step === 2 && (
             <>
-              <h2>Physical Attributes</h2>
+              <h2>Physical</h2>
+              <input name="height" placeholder="Height" onChange={handleChange} />
+              <input name="weight" placeholder="Weight" onChange={handleChange} />
 
-              <input name="height" placeholder="Height (cm)" onChange={handleChange} />
-              <input name="weight" placeholder="Weight (kg)" onChange={handleChange} />
-
-              <div className="btn-group">
-                <button type="button" onClick={() => setStep(1)}>← Back</button>
-                <button type="button" onClick={() => setStep(3)}>Next →</button>
-              </div>
+              <button type="button" onClick={() => setStep(1)}>Back</button>
+              <button type="button" onClick={() => setStep(3)}>Next</button>
             </>
           )}
 
           {/* STEP 3 */}
           {step === 3 && (
             <>
-              <h2>Portfolio Setup</h2>
+              <h2>Portfolio</h2>
 
-              <p className="subtitle">Upload your images (max 6)</p>
+              <p>Upload Profile Image</p>
+              <input type="file" onChange={handleProfile} />
 
-              <input type="file" multiple />
+              <p>Upload 6 Images</p>
+              <input type="file" multiple onChange={handlePortfolio} />
 
-              <div className="btn-group">
-                <button type="button" onClick={() => setStep(2)}>← Back</button>
-                <button type="button" onClick={() => setStep(4)}>Next →</button>
-              </div>
+              <button type="button" onClick={() => setStep(2)}>Back</button>
+              <button type="button" onClick={() => setStep(4)}>Next</button>
             </>
           )}
 
           {/* STEP 4 */}
           {step === 4 && (
             <>
-              <h2>Social Media</h2>
+              <h2>Social</h2>
+              <input placeholder="Instagram" />
+              <input placeholder="Facebook" />
 
-              <input placeholder="Instagram URL" />
-              <input placeholder="Facebook URL" />
-
-              <div className="btn-group">
-                <button type="button" onClick={() => setStep(3)}>← Back</button>
-                <button type="button" onClick={() => setStep(5)}>Next →</button>
-              </div>
+              <button type="button" onClick={() => setStep(3)}>Back</button>
+              <button type="button" onClick={() => setStep(5)}>Next</button>
             </>
           )}
 
           {/* STEP 5 */}
           {step === 5 && (
             <>
-              <h2>Identity Verification</h2>
+              <h2>ID Verification</h2>
 
-              <p className="subtitle">
-                Complete face verification to continue
-              </p>
+              <select name="idType" onChange={handleChange}>
+                <option value="">Select ID Type</option>
+                <option value="nic">National ID</option>
+                <option value="license">Driving License</option>
+                <option value="passport">Passport</option>
+              </select>
 
-              {/* FACE TRACKING */}
-              <FaceVerification onCapture={setSelfie} />
+              <p>Upload Front Image</p>
+              <input type="file" onChange={handleIdFront} />
 
-              <div className="btn-group">
-                <button type="button" onClick={() => setStep(4)}>← Back</button>
-                <button type="submit">Submit ✔</button>
-              </div>
+              {form.idType !== "passport" && (
+                <>
+                  <p>Upload Back Image</p>
+                  <input type="file" onChange={handleIdBack} />
+                </>
+              )}
+
+              <button type="button" onClick={() => setStep(4)}>Back</button>
+              <button type="submit">Submit</button>
             </>
           )}
 

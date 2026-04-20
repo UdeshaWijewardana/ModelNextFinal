@@ -13,17 +13,19 @@ const authRoutes = require('./routes/authRoutes');
 
 const app = express();
 
-// Middleware
-app.use(cors()); 
+// ✅ Middleware
+app.use(cors());
 app.use(express.json());
+
+// ✅ Static folder (for uploaded images)
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
-// Database Connection
+// ✅ MongoDB Connection
 mongoose.connect(process.env.MONGO_URI)
-.then(() => console.log("✅ MongoDB Connected"))
-.catch(err => console.error("❌ MongoDB Error:", err));
+  .then(() => console.log("✅ MongoDB Connected"))
+  .catch(err => console.error("❌ MongoDB Error:", err));
 
-// Routes
+// ✅ Routes
 app.use('/api/dashboard', dashboardRoutes);
 app.use('/api/agencies', agencyRoutes);
 app.use('/api/clients', clientRoutes);
@@ -31,5 +33,6 @@ app.use('/api/models', modelRoutes);
 app.use('/api/photographers', photographerRoutes);
 app.use('/api/auth', authRoutes);
 
+// ✅ Start server
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));

@@ -1,64 +1,68 @@
-/* PAGE BACKGROUND */
-.form-page {
-  min-height: 100vh;
-  background: linear-gradient(to right, #0e0e0e, #1a1a1a);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  font-family: "Segoe UI", sans-serif;
-}
+/* ===== FACE VERIFICATION ===== */
 
-/* FORM BOX */
-.form-box {
-  width: 400px;
-  background: #111;
-  padding: 40px;
-  border-radius: 12px;
-  border: 1px solid #333;
-  box-shadow: 0 0 20px rgba(0,0,0,0.6);
+.face-container {
+  position: relative;
+  text-align: center;
+  padding: 30px;
 }
 
 /* TITLE */
-.form-box h1 {
-  color: #f2ca50;
+.title {
+  font-size: 26px;
+  font-weight: bold;
   margin-bottom: 10px;
 }
 
-.subtitle {
-  color: #aaa;
-  margin-bottom: 25px;
+/* INSTRUCTION TEXT */
+.instruction-text {
+  color: #f2ca50;
+  font-size: 16px;
+  margin-bottom: 20px;
+  font-weight: 500;
 }
 
-/* INPUTS */
-.form-box input,
-.form-box select {
+/* CAMERA CIRCLE */
+.camera-frame {
+  width: 260px;
+  height: 260px;
+  margin: 20px auto;
+  border-radius: 50%;
+  overflow: hidden;
+  border: 6px solid #7c5cff;
+  box-shadow: 0 0 25px rgba(124, 92, 255, 0.4);
+}
+
+/* VIDEO */
+.video {
   width: 100%;
-  padding: 12px;
-  margin-bottom: 15px;
-  background: #1c1c1c;
-  border: 1px solid #333;
+  height: 100%;
+  object-fit: cover;
+  transform: scaleX(-1);
+}
+
+/* STATUS ICON (❌) */
+.status-icon {
+  position: absolute;
+  top: 110px;
+  right: 35%;
+  font-size: 26px;
+  color: red;
+}
+
+/* SUCCESS */
+.success {
+  margin-top: 25px;
+}
+
+.success-icon {
+  width: 70px;
+  height: 70px;
+  background: #22c55e;
   color: white;
-  border-radius: 6px;
-  outline: none;
-}
-
-.form-box input:focus,
-.form-box select:focus {
-  border-color: #f2ca50;
-}
-
-/* BUTTON */
-.form-box button {
-  width: 100%;
-  padding: 14px;
-  background: linear-gradient(135deg, #f2ca50, #d4af37);
-  border: none;
-  color: black;
-  font-weight: bold;
-  cursor: pointer;
-  margin-top: 10px;
-}
-
-.form-box button:hover {
-  opacity: 0.85;
+  font-size: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 10px;
 }
