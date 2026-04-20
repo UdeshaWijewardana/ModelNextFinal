@@ -82,6 +82,9 @@ export default function PhotographerForm() {
 
       if (!res.ok) throw new Error(data.error || "Failed to register");
 
+      // Store photographer data in localStorage for dashboard
+      localStorage.setItem('photographerData', JSON.stringify(data.photographer));
+
       alert("Photographer Registered Successfully!");
       navigate("/photographer-dashboard");
     } catch (err) {
