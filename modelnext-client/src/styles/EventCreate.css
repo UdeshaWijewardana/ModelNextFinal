@@ -1,0 +1,204 @@
+
+/* ================= GLOBAL ================= */
+html, body {
+  height: 100%;
+  margin: 0;
+  overflow: hidden; /* 🔥 NO SCROLL */
+  font-family: 'Inter', sans-serif;
+}
+
+/* ================= MAIN WRAPPER ================= */
+.event-wrapper {
+  display: flex;
+  height: 100vh; /* 🔥 exact screen height */
+}
+
+/* ================= LEFT IMAGE ================= */
+.event-left {
+  flex: 1;
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  background: #000;
+}
+
+.hero-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center top; /* keeps face visible */
+}
+
+.event-left .overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to bottom, rgba(0,0,0,0.4), rgba(0,0,0,0.9));
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  padding: 30px; /* reduced */
+  z-index: 2;
+}
+
+.event-left h2 {
+  color: #f2ca50;
+  font-size: 24px;
+}
+
+.event-left p {
+  color: rgba(255,255,255,0.7);
+  font-size: 13px;
+}
+
+/* ================= RIGHT SIDE ================= */
+.event-right {
+  flex: 1;
+  background: radial-gradient(circle at top, #111, #050505);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px; /* 🔥 reduced */
+  overflow: hidden;
+}
+
+/* ================= CARD ================= */
+.event-card {
+  width: 100%;
+  max-width: 480px;
+  max-height: 90vh; /* 🔥 prevents overflow */
+  overflow: hidden;
+
+  background: linear-gradient(145deg, #111, #1a1a1a);
+  padding: 30px; /* reduced */
+  border-radius: 16px;
+
+  border: 1px solid rgba(255,255,255,0.08);
+
+  box-shadow:
+    0 15px 40px rgba(0,0,0,0.8),
+    inset 0 0 0 1px rgba(255,255,255,0.03);
+}
+
+/* ================= TITLE ================= */
+.event-card h2 {
+  text-align: center;
+  color: #fff;
+  margin-bottom: 5px;
+  font-size: 20px;
+}
+
+.subtitle {
+  text-align: center;
+  color: rgba(255,255,255,0.6);
+  margin-bottom: 15px;
+  font-size: 13px;
+}
+
+/* ================= GRID ================= */
+.form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px; /* reduced */
+}
+
+/* ================= INPUT ================= */
+input,
+select,
+textarea {
+  width: 100%;
+  padding: 10px; /* 🔥 smaller */
+  border-radius: 8px;
+  border: 1px solid rgba(255,255,255,0.08);
+  background: rgba(255,255,255,0.05);
+  color: #fff;
+  font-size: 13px;
+  outline: none;
+  transition: 0.2s;
+}
+
+input::placeholder,
+textarea::placeholder {
+  color: rgba(255,255,255,0.5);
+}
+
+input:focus,
+select:focus,
+textarea:focus {
+  border-color: #f2ca50;
+  box-shadow: 0 0 10px rgba(242,202,80,0.25);
+}
+
+/* ================= TEXTAREA ================= */
+textarea {
+  margin-top: 10px;
+  min-height: 60px; /* smaller */
+  resize: none;
+}
+
+/* ================= UPLOAD ================= */
+.upload-box {
+  margin-top: 10px;
+  height: 80px; /* 🔥 reduced */
+  border-radius: 10px;
+  border: 2px dashed rgba(255,255,255,0.1);
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  cursor: pointer;
+  overflow: hidden;
+}
+
+.upload-box:hover {
+  border-color: #f2ca50;
+}
+
+.upload-box img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.upload-text {
+  color: rgba(255,255,255,0.6);
+  font-size: 12px;
+}
+
+/* ================= BUTTON ================= */
+.submit-btn {
+  width: 100%;
+  margin-top: 15px;
+  padding: 10px;
+
+  background: linear-gradient(135deg, #f2ca50, #d4af37);
+  color: #000;
+  border: none;
+
+  font-weight: 700;
+  font-size: 13px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+.submit-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 8px 20px rgba(242,202,80,0.3);
+}
+
+/* ================= RESPONSIVE ================= */
+@media (max-width: 900px) {
+  .event-wrapper {
+    flex-direction: column;
+    overflow: auto; /* allow scroll on mobile */
+  }
+
+  .event-left {
+    height: 200px;
+  }
+
+  .form-grid {
+    grid-template-columns: 1fr;
+  }
+}

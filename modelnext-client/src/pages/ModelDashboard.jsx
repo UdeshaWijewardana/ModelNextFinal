@@ -102,16 +102,16 @@ const ModelDashboard = () => {
           <div style={styles.navItem('events')} onClick={() => setActiveTab('events')}><i className="fa-regular fa-calendar"></i> Events</div>
         </nav>
         <div style={{ marginTop: 'auto', display: 'flex', alignItems: 'center', gap: '15px', paddingTop: '20px', borderTop: '1px solid #eee' }}>
-          <img src={modelData.profile.profileImage} alt="user" style={{width:'40px', height:'40px', borderRadius:'50%', objectFit:'cover'}} />
-          <div><div style={{fontWeight:'600', fontSize:'14px'}}>{modelData.profile.name}</div><div onClick={() => {localStorage.clear(); navigate('/')}} style={{fontSize:'12px', color:'#999', cursor:'pointer'}}>Logout</div></div>
+          <img src={JSON.parse(localStorage.getItem('modelData'))?.profileImage ? `http://localhost:5000/${JSON.parse(localStorage.getItem('modelData')).profileImage.replace(/\\/g, '/')}` : modelData.profile.profileImage} alt="user" style={{width:'40px', height:'40px', borderRadius:'50%', objectFit:'cover'}} />
+          <div><div style={{fontWeight:'600', fontSize:'14px'}}>{JSON.parse(localStorage.getItem('modelData'))?.fullName || modelData.profile.name}</div><div onClick={() => {localStorage.clear(); navigate('/')}} style={{fontSize:'12px', color:'#999', cursor:'pointer'}}>Logout</div></div>
         </div>
       </aside>
 
       <main style={styles.mainContent}>
         <div style={styles.headerProfile}>
-          <img src={modelData.profile.profileImage} style={styles.mainImage} alt="Main Profile" />
+          <img src={JSON.parse(localStorage.getItem('modelData'))?.profileImage ? `http://localhost:5000/${JSON.parse(localStorage.getItem('modelData')).profileImage.replace(/\\/g, '/')}` : modelData.profile.profileImage} style={styles.mainImage} alt="Main Profile" />
           <div style={{ paddingTop: '20px' }}>
-             <h1 style={styles.nameTitle}>ISABELLA <br/> ROSSI <span style={styles.verifiedBadge}>✓</span></h1>
+             <h1 style={styles.nameTitle}>{(JSON.parse(localStorage.getItem('modelData'))?.fullName || "ISABELLA ROSSI").toUpperCase()} <span style={styles.verifiedBadge}>✓</span></h1>
              <p style={{ color: '#666', marginTop: '10px', letterSpacing: '1px' }}>VERIFIED MODEL</p>
           </div>
         </div>

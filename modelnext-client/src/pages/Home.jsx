@@ -1,8 +1,22 @@
 import { useNavigate } from "react-router-dom";
+import { useState, useEffect, useRef } from "react";
 import "../styles/home.css";
 
 export default function Home() {
   const navigate = useNavigate();
+  const [isMuted, setIsMuted] = useState(false);
+  const videoRef = useRef(null);
+
+  useEffect(() => {
+    // Video sound control logic can go here if needed
+  }, []);
+
+  const toggleSound = () => {
+    if (videoRef.current) {
+      videoRef.current.muted = !videoRef.current.muted;
+      setIsMuted(!isMuted);
+    }
+  };
 
   return (
     <div className="home">
@@ -18,24 +32,44 @@ export default function Home() {
           <span>Lookbook</span>
         </div>
 
-        <div className="nav-actions">
+        <div className="nav-actions" style={{ display: 'flex', gap: '15px', alignItems: 'center' }}>
           <input placeholder="Search..." />
+          <button 
+            onClick={() => navigate("/login")} 
+            style={{ 
+              background: 'transparent', 
+              border: '1px solid #1A1A1A', 
+              color: '#1A1A1A', 
+              padding: '8px 20px', 
+              cursor: 'pointer',
+              fontWeight: '600',
+              textTransform: 'uppercase',
+              fontSize: '12px',
+              letterSpacing: '1px'
+            }}
+          >
+            LOGIN
+          </button>
         </div>
       </nav>
 
       {/* HERO */}
       <section className="hero">
-        <img
-          src="https://images.unsplash.com/photo-1544005313-94ddf0286df2"
+        <video
+          ref={videoRef}
+          autoPlay
+          loop
           className="hero-bg"
-          alt="Hero model"
-        />
+        >
+          <source src="/assets/thunder.mp4" type="video/mp4" />
+        </video>
+
+        <button className={`sound-btn ${isMuted ? "muted" : ""}`} onClick={toggleSound} title={isMuted ? "Unmute" : "Mute"}>
+          {isMuted ? "🔇" : "🔊"}
+        </button>
 
         <div className="hero-content">
-          <h1>
-            Define The <br />
-            <span>Next Era</span>
-          </h1>
+          <h1>Define The Next Era</h1>
 
           <p>
             The premier digital atelier connecting avant-garde talent with visionary creatives worldwide.
