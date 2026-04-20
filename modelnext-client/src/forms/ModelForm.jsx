@@ -127,6 +127,9 @@ export default function ModelForm() {
 
       if (!res.ok) throw new Error(data.error || "Failed to register");
 
+      // Store model data in localStorage for dashboard
+      localStorage.setItem('modelData', JSON.stringify(data.model));
+
       alert("Model Registered Successfully!");
       navigate("/dashboard");
     } catch (err) {

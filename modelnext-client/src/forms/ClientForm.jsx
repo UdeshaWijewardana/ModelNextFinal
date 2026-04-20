@@ -48,6 +48,9 @@ export default function ClientForm() {
 
       if (!res.ok) throw new Error(data.error || "Failed to register");
 
+      // Store client data in localStorage
+      localStorage.setItem('clientData', JSON.stringify(data.client));
+
       alert("Registration Successful!");
       navigate("/client-portal");
     } catch (err) {
