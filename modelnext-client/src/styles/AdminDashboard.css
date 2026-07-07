@@ -1,0 +1,288 @@
+.admin-page {
+  background: #131313;
+  color: #e2e2e2;
+  min-height: 100vh;
+  font-family: 'Montserrat', sans-serif;
+}
+
+.admin-hero {
+  padding: 140px 20px 40px;
+  background: linear-gradient(180deg, rgba(242, 202, 80, 0.03) 0%, rgba(19, 19, 19, 0) 100%);
+  text-align: center;
+}
+
+.admin-hero-content h1 {
+  font-size: 40px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  margin-bottom: 15px;
+}
+
+.admin-hero-content p {
+  color: #aaa;
+  font-size: 15px;
+  max-width: 600px;
+  margin: 0 auto;
+  line-height: 1.6;
+}
+
+.admin-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 40px 80px;
+}
+
+/* TABS */
+.admin-tabs {
+  display: flex;
+  justify-content: center;
+  gap: 15px;
+  margin-bottom: 40px;
+}
+
+.admin-tab-btn {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: #aaa;
+  padding: 12px 24px;
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  cursor: pointer;
+  border-radius: 4px;
+  transition: all 0.3s;
+}
+
+.admin-tab-btn:hover {
+  border-color: #f2ca50;
+  color: #f2ca50;
+}
+
+.admin-tab-btn.active {
+  background: linear-gradient(135deg, #f2ca50, #d4af37);
+  color: #131313;
+  border-color: transparent;
+  box-shadow: 0 4px 15px rgba(242, 202, 80, 0.2);
+}
+
+/* PANEL CARD */
+.admin-panel-card {
+  background: #1c1c1c;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 12px;
+  padding: 40px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+}
+
+.admin-panel-card h2 {
+  font-size: 24px;
+  font-weight: 700;
+  color: #fff;
+  margin-bottom: 5px;
+}
+
+.panel-desc {
+  color: #888;
+  font-size: 13px;
+  margin-bottom: 30px;
+}
+
+/* EMPTY STATE */
+.empty-state {
+  text-align: center;
+  padding: 60px 20px;
+  color: #666;
+  font-size: 15px;
+  border: 1px dashed rgba(255, 255, 255, 0.05);
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.01);
+}
+
+/* TABLE STYLING */
+.admin-table-wrapper {
+  overflow-x: auto;
+}
+
+.admin-table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+}
+
+.admin-table th {
+  border-bottom: 2px solid rgba(255, 255, 255, 0.05);
+  padding: 15px 20px;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: #777;
+  letter-spacing: 0.5px;
+}
+
+.admin-table td {
+  padding: 20px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+  font-size: 13px;
+  color: #ccc;
+}
+
+.bold-cell {
+  color: #fff !important;
+  font-weight: 600;
+}
+
+.role-badge {
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.role-badge.model {
+  background: rgba(242, 202, 80, 0.1);
+  color: #f2ca50;
+  border: 1px solid rgba(242, 202, 80, 0.2);
+}
+
+.role-badge.agency {
+  background: rgba(129, 199, 132, 0.1);
+  color: #81C784;
+  border: 1px solid rgba(129, 199, 132, 0.2);
+}
+
+.role-badge.photographer {
+  background: rgba(100, 181, 246, 0.1);
+  color: #64B5F6;
+  border: 1px solid rgba(100, 181, 246, 0.2);
+}
+
+/* ACTIONS BUTTONS */
+.table-actions {
+  display: flex;
+  gap: 10px;
+}
+
+.approve-btn {
+  background: rgba(129, 199, 132, 0.15);
+  color: #81C784;
+  border: 1px solid rgba(129, 199, 132, 0.3);
+  padding: 8px 16px;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  cursor: pointer;
+  border-radius: 4px;
+  transition: all 0.3s;
+}
+
+.approve-btn:hover {
+  background: #81C784;
+  color: #131313;
+  border-color: transparent;
+  box-shadow: 0 4px 12px rgba(129, 199, 132, 0.2);
+}
+
+.reject-btn {
+  background: rgba(229, 115, 115, 0.15);
+  color: #E57373;
+  border: 1px solid rgba(229, 115, 115, 0.3);
+  padding: 8px 16px;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  cursor: pointer;
+  border-radius: 4px;
+  transition: all 0.3s;
+}
+
+.reject-btn:hover {
+  background: #E57373;
+  color: #131313;
+  border-color: transparent;
+  box-shadow: 0 4px 12px rgba(229, 115, 115, 0.2);
+}
+
+/* ADMIN EVENT CARDS */
+.admin-events-list {
+  display: flex;
+  flex-direction: column;
+  gap: 25px;
+}
+
+.admin-event-request-card {
+  display: flex;
+  background: #252525;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  overflow: hidden;
+}
+
+.req-event-img {
+  width: 240px;
+  object-fit: cover;
+}
+
+.req-event-details {
+  padding: 25px;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.req-event-meta {
+  display: flex;
+  gap: 20px;
+  font-size: 11px;
+  color: #888;
+  font-weight: 600;
+  text-transform: uppercase;
+  margin-bottom: 8px;
+}
+
+.req-event-date {
+  color: #f2ca50;
+}
+
+.req-event-details h3 {
+  font-size: 18px;
+  color: #fff;
+  margin-bottom: 8px;
+}
+
+.req-event-loc {
+  font-size: 12px;
+  color: #666;
+  margin-bottom: 12px;
+}
+
+.req-event-desc {
+  color: #aaa;
+  font-size: 13px;
+  line-height: 1.6;
+  margin-bottom: 25px;
+  flex: 1;
+}
+
+.req-event-actions {
+  display: flex;
+  gap: 15px;
+}
+
+@media screen and (max-width: 768px) {
+  .admin-container {
+    padding: 0 20px 60px;
+  }
+  .admin-panel-card {
+    padding: 20px;
+  }
+  .admin-event-request-card {
+    flex-direction: column;
+  }
+  .req-event-img {
+    width: 100%;
+    height: 180px;
+  }
+}
