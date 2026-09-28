@@ -1,0 +1,223 @@
+.photographers-page {
+  background: #131313;
+  color: #e2e2e2;
+  min-height: 100vh;
+  font-family: 'Montserrat', sans-serif;
+}
+
+.photographers-hero {
+  padding: 140px 20px 60px;
+  background: linear-gradient(180deg, rgba(242, 202, 80, 0.05) 0%, rgba(19, 19, 19, 0) 100%);
+  text-align: center;
+}
+
+.photographers-hero-content h1 {
+  font-size: 48px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  margin-bottom: 15px;
+}
+
+.photographers-hero-content p {
+  color: #aaa;
+  font-size: 16px;
+  max-width: 600px;
+  margin: 0 auto;
+  line-height: 1.6;
+}
+
+.photographers-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 40px 80px;
+}
+
+.photographers-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(450px, 1fr));
+  gap: 30px;
+}
+
+.photographer-card {
+  background: #1c1c1c;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 8px;
+  padding: 30px;
+  display: flex;
+  flex-direction: column;
+  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+}
+
+.photographer-card:hover {
+  transform: translateY(-8px);
+  border-color: rgba(242, 202, 80, 0.25);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+}
+
+.photographer-profile-section {
+  display: flex;
+  gap: 20px;
+  align-items: center;
+  margin-bottom: 25px;
+}
+
+.photographer-avatar-wrapper {
+  width: 90px;
+  height: 90px;
+  border-radius: 50%;
+  overflow: hidden;
+  border: 2px solid #f2ca50;
+}
+
+.photographer-avatar {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.photographer-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.photographer-name {
+  font-size: 20px;
+  font-weight: 700;
+  color: #fff;
+}
+
+.photographer-style {
+  color: #f2ca50;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.photographer-location {
+  color: #777;
+  font-size: 13px;
+}
+
+/* PORTFOLIO PREVIEW */
+.photographer-portfolio-preview {
+  margin-bottom: 30px;
+}
+
+.preview-label {
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: #777;
+  letter-spacing: 1px;
+  margin-bottom: 12px;
+}
+
+.preview-images {
+  display: flex;
+  gap: 15px;
+  position: relative;
+}
+
+.portfolio-preview-img {
+  width: 100px;
+  height: 100px;
+  object-fit: cover;
+  border-radius: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  transition: opacity 0.3s;
+}
+
+.portfolio-preview-img:hover {
+  opacity: 0.8;
+}
+
+.portfolio-more-overlay {
+  width: 100px;
+  height: 100px;
+  border-radius: 6px;
+  background: rgba(19, 19, 19, 0.8);
+  border: 1px dashed rgba(242, 202, 80, 0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #f2ca50;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.portfolio-more-overlay:hover {
+  background: rgba(242, 202, 80, 0.08);
+}
+
+/* ACTIONS */
+.photographer-actions {
+  display: flex;
+  gap: 15px;
+  margin-top: auto;
+}
+
+.book-btn {
+  flex: 1;
+  background: linear-gradient(135deg, #f2ca50, #d4af37);
+  border: none;
+  color: #131313;
+  padding: 12px;
+  font-weight: 700;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  cursor: pointer;
+  border-radius: 4px;
+  transition: all 0.3s;
+}
+
+.book-btn:hover {
+  box-shadow: 0 4px 15px rgba(242, 202, 80, 0.3);
+  transform: translateY(-1px);
+}
+
+.portfolio-btn {
+  flex: 1;
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #fff;
+  padding: 12px;
+  font-weight: 700;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  cursor: pointer;
+  border-radius: 4px;
+  transition: all 0.3s;
+}
+
+.portfolio-btn:hover {
+  border-color: #fff;
+  background: rgba(255, 255, 255, 0.03);
+}
+
+@media screen and (max-width: 900px) {
+  .photographers-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media screen and (max-width: 500px) {
+  .photographer-card {
+    padding: 20px;
+  }
+  .photographer-profile-section {
+    flex-direction: column;
+    text-align: center;
+  }
+  .preview-images {
+    justify-content: center;
+  }
+  .photographer-actions {
+    flex-direction: column;
+  }
+}

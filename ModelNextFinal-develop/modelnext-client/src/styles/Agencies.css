@@ -1,0 +1,181 @@
+.agencies-page {
+  background: #131313;
+  color: #e2e2e2;
+  min-height: 100vh;
+  font-family: 'Montserrat', sans-serif;
+}
+
+.agencies-hero {
+  padding: 140px 20px 60px;
+  background: linear-gradient(180deg, rgba(242, 202, 80, 0.05) 0%, rgba(19, 19, 19, 0) 100%);
+  text-align: center;
+}
+
+.agencies-hero-content h1 {
+  font-size: 48px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  margin-bottom: 15px;
+}
+
+.agencies-hero-content p {
+  color: #aaa;
+  font-size: 16px;
+  max-width: 600px;
+  margin: 0 auto;
+  line-height: 1.6;
+}
+
+.gold-text {
+  background: linear-gradient(135deg, #f2ca50, #d4af37);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.agencies-container {
+  max-width: 1300px;
+  margin: 0 auto;
+  padding: 0 40px 80px;
+}
+
+.agencies-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+  gap: 30px;
+}
+
+.agency-card {
+  background: #1c1c1c;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 8px;
+  overflow: hidden;
+  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+  display: flex;
+  flex-direction: column;
+}
+
+.agency-card:hover {
+  transform: translateY(-8px);
+  border-color: rgba(242, 202, 80, 0.25);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+}
+
+.agency-image-wrapper {
+  position: relative;
+  height: 200px;
+  overflow: hidden;
+}
+
+.agency-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.5s ease;
+}
+
+.agency-card:hover .agency-image {
+  transform: scale(1.05);
+}
+
+.agency-rating {
+  position: absolute;
+  top: 15px;
+  right: 15px;
+  background: rgba(19, 19, 19, 0.8);
+  backdrop-filter: blur(5px);
+  color: #f2ca50;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 700;
+  border: 1px solid rgba(242, 202, 80, 0.3);
+}
+
+.agency-info {
+  padding: 25px;
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1;
+}
+
+.agency-location {
+  color: #f2ca50;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: 8px;
+}
+
+.agency-name {
+  font-size: 20px;
+  font-weight: 700;
+  margin-bottom: 12px;
+  color: #fff;
+  line-height: 1.3;
+}
+
+.agency-desc {
+  color: #aaa;
+  font-size: 13px;
+  line-height: 1.6;
+  margin-bottom: 20px;
+  flex-grow: 1;
+}
+
+.agency-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 25px;
+}
+
+.agency-tag {
+  background: rgba(255, 255, 255, 0.05);
+  color: #ccc;
+  padding: 4px 10px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 500;
+  transition: all 0.3s;
+}
+
+.agency-card:hover .agency-tag {
+  background: rgba(242, 202, 80, 0.08);
+  color: #f2ca50;
+}
+
+.agency-btn {
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #fff;
+  padding: 12px;
+  width: 100%;
+  cursor: pointer;
+  font-weight: 700;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  border-radius: 4px;
+  transition: all 0.3s ease;
+}
+
+.agency-card:hover .agency-btn {
+  background: linear-gradient(135deg, #f2ca50, #d4af37);
+  color: #131313;
+  border-color: transparent;
+  box-shadow: 0 4px 15px rgba(242, 202, 80, 0.2);
+}
+
+@media screen and (max-width: 768px) {
+  .agencies-container {
+    padding: 0 20px 60px;
+  }
+  .agencies-grid {
+    grid-template-columns: 1fr;
+  }
+  .agencies-hero-content h1 {
+    font-size: 36px;
+  }
+}

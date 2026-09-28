@@ -1,0 +1,237 @@
+/* RESET */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+/* LAYOUT */
+.role-container {
+  display: flex;
+  min-height: 100vh;
+  font-family: "Montserrat", sans-serif;
+  background: #080808;
+  color: #f7efe4;
+}
+
+/* LEFT SIDE */
+.role-left {
+  flex: 1;
+  background: linear-gradient(135deg, rgba(0, 0, 0, 0.2), rgba(0, 0, 0, 0.72)),
+    url("https://images.unsplash.com/photo-1544005313-94ddf0286df2") center/cover no-repeat;
+  position: relative;
+  display: flex;
+  align-items: flex-end;
+  padding: 50px;
+  overflow: hidden;
+}
+
+.role-left::before {
+  content: "";
+  position: absolute;
+  inset: -20%;
+  background: radial-gradient(circle, rgba(242, 202, 80, 0.22), transparent 35%);
+  animation: pulseGlow 6s ease-in-out infinite;
+}
+
+.role-left .overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(0, 0, 0, 0.18), rgba(0, 0, 0, 0.8));
+}
+
+/* BRAND */
+.brand {
+  position: relative;
+  z-index: 1;
+  color: white;
+  animation: fadeUp 0.75s ease both;
+}
+
+.brand h1 {
+  font-size: 60px;
+  font-family: Georgia, "Times New Roman", serif;
+  letter-spacing: 1px;
+  text-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+}
+
+.brand p {
+  margin-top: 10px;
+  color: #f2ca50;
+  letter-spacing: 2px;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+/* RIGHT SIDE */
+.role-right {
+  flex: 1;
+  background: linear-gradient(135deg, #141414 0%, #0b0b0b 100%);
+  padding: 80px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  border-left: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+/* TITLE */
+.title {
+  font-size: 48px;
+  font-family: Georgia, "Times New Roman", serif;
+  margin-bottom: 10px;
+  color: #fff;
+}
+
+.subtitle {
+  color: #b1a89b;
+  margin-bottom: 36px;
+  font-size: 15px;
+}
+
+/* ROLE LIST */
+.role-list {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+/* ROLE CARD */
+.role-item {
+  display: flex;
+  align-items: center;
+  padding: 18px 20px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.03);
+  cursor: pointer;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.role-item::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, rgba(242, 202, 80, 0.14), transparent 60%);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.role-item:hover {
+  border-color: rgba(242, 202, 80, 0.45);
+  transform: translateY(-4px);
+  box-shadow: 0 16px 30px rgba(0, 0, 0, 0.22);
+}
+
+.role-item:hover::before {
+  opacity: 1;
+}
+
+/* ACTIVE CARD */
+.role-item.active {
+  background: linear-gradient(135deg, #c7a86d 0%, #f2ca50 100%);
+  color: #111;
+  border: none;
+  box-shadow: 0 16px 34px rgba(242, 202, 80, 0.22);
+}
+
+.role-item.active p {
+  color: #312b20;
+}
+
+/* ICON */
+.icon {
+  font-size: 24px;
+  margin-right: 15px;
+  width: 42px;
+  height: 42px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+/* BUTTON */
+.register-btn {
+  margin-top: 38px;
+  padding: 16px 22px;
+  background: linear-gradient(135deg, #f2ca50, #d4af37);
+  color: #111;
+  border: none;
+  border-radius: 999px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  cursor: pointer;
+  transition: transform 0.3s ease, box-shadow 0.3s ease, opacity 0.3s ease;
+  box-shadow: 0 12px 28px rgba(242, 202, 80, 0.18);
+}
+
+.register-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 14px 30px rgba(242, 202, 80, 0.28);
+}
+
+.register-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+/* FOOTER */
+.footer-links {
+  margin-top: 22px;
+  display: flex;
+  gap: 20px;
+  font-size: 12px;
+  color: #8f877c;
+}
+
+.footer-links span {
+  cursor: pointer;
+  transition: color 0.3s ease;
+}
+
+.footer-links span:hover {
+  color: #f2ca50;
+}
+
+@keyframes pulseGlow {
+  0%,
+  100% {
+    transform: scale(1);
+    opacity: 0.8;
+  }
+  50% {
+    transform: scale(1.08);
+    opacity: 1;
+  }
+}
+
+@keyframes fadeUp {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (max-width: 900px) {
+  .role-container {
+    flex-direction: column;
+  }
+
+  .role-left {
+    min-height: 280px;
+    padding: 36px 24px;
+  }
+
+  .role-right {
+    padding: 40px 24px;
+  }
+}
