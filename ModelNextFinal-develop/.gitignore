@@ -1,0 +1,10 @@
+node_modules/
+**/node_modules/
+.DS_Store
+
+# Keep example env file tracked, but do not commit real secrets
+server/.env.example
+
+# Allow the server data directory to be shared if needed
+!server/data/
+!server/data/models.json

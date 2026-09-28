@@ -1,0 +1,64 @@
+/* PAGE BACKGROUND */
+.form-page {
+  min-height: 100vh;
+  background: linear-gradient(to right, #0e0e0e, #1a1a1a);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-family: "Segoe UI", sans-serif;
+}
+
+/* FORM BOX */
+.form-box {
+  width: 400px;
+  background: #111;
+  padding: 40px;
+  border-radius: 12px;
+  border: 1px solid #333;
+  box-shadow: 0 0 20px rgba(0,0,0,0.6);
+}
+
+/* TITLE */
+.form-box h1 {
+  color: #f2ca50;
+  margin-bottom: 10px;
+}
+
+.subtitle {
+  color: #aaa;
+  margin-bottom: 25px;
+}
+
+/* INPUTS */
+.form-box input,
+.form-box select {
+  width: 100%;
+  padding: 12px;
+  margin-bottom: 15px;
+  background: #1c1c1c;
+  border: 1px solid #333;
+  color: white;
+  border-radius: 6px;
+  outline: none;
+}
+
+.form-box input:focus,
+.form-box select:focus {
+  border-color: #f2ca50;
+}
+
+/* BUTTON */
+.form-box button {
+  width: 100%;
+  padding: 14px;
+  background: linear-gradient(135deg, #f2ca50, #d4af37);
+  border: none;
+  color: black;
+  font-weight: bold;
+  cursor: pointer;
+  margin-top: 10px;
+}
+
+.form-box button:hover {
+  opacity: 0.85;
+}
