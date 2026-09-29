@@ -27,6 +27,7 @@ import ModelForm from "./forms/ModelForm";
 import PhotographerForm from "./forms/PhotographerForm";
 import AgencyForm from "./forms/AgencyForm";
 import ClientForm from "./forms/ClientForm";
+import WebcamTest from "./components/WebcamTest";
 
 import './App.css';
 
@@ -66,6 +67,7 @@ function App() {
 
         {/* PROFILE */}
         <Route path="/profile" element={<ProfileDetails />} />
+        <Route path="/webcam-test" element={<WebcamTest />} />
 
       </Routes>
     </Router>

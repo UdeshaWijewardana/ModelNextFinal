@@ -130,7 +130,6 @@ export default function AdminRegister() {
               />
 
               <input 
-                style={styles.input}
                 placeholder="Invitation Security Code *" 
                 type="password"
                 name="inviteCode"

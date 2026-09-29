@@ -1,10 +1,8 @@
 import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
 import Navbar from "../components/Navbar";
 import "../styles/AdminDashboard.css";
 
 export default function AdminDashboard() {
-  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("verification");
   const [verRequests, setVerRequests] = useState([]);
   const [eventRequests, setEventRequests] = useState([]);

@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import WebcamTest from "../components/WebcamTest";
 import "../styles/modelForm.css";
 
 const ModelForm = () => {
@@ -35,11 +36,20 @@ const ModelForm = () => {
   const [isCameraActive, setIsCameraActive] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isVerifying, setIsVerifying] = useState(false);
+  const [identityVerified, setIdentityVerified] = useState(false);
+  const [identityCheck, setIdentityCheck] = useState(null);
+  const [identityError, setIdentityError] = useState("");
+  const [idFrontPreview, setIdFrontPreview] = useState("");
+  const [livenessSession, setLivenessSession] = useState(null);
+  const [livenessCompleted, setLivenessCompleted] = useState(false);
+  const [livenessError, setLivenessError] = useState("");
 
   const videoRef = useRef(null);
   const streamRef = useRef(null);
   const mediaRecorderRef = useRef(null);
   const recordedChunksRef = useRef([]);
+  const selfiePreviewRef = useRef("");
 
   const stopCameraStream = () => {
     if (streamRef.current) {
@@ -52,14 +62,97 @@ const ModelForm = () => {
   useEffect(() => {
     return () => {
       stopCameraStream();
-      if (selfiePreview && selfiePreview.startsWith("blob:")) {
-        URL.revokeObjectURL(selfiePreview);
+      if (selfiePreviewRef.current && selfiePreviewRef.current.startsWith("blob:")) {
+        URL.revokeObjectURL(selfiePreviewRef.current);
       }
     };
   }, []);
 
+  useEffect(() => {
+    if (!idFront) {
+      setIdFrontPreview("");
+      return undefined;
+    }
+
+    const previewUrl = URL.createObjectURL(idFront);
+    setIdFrontPreview(previewUrl);
+    return () => URL.revokeObjectURL(previewUrl);
+  }, [idFront]);
+
   const handleChange = (e) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
+    setForm((previous) => ({ ...previous, [e.target.name]: e.target.value }));
+    if (["fullName", "birthdate", "idType"].includes(e.target.name)) {
+      setIdentityVerified(false);
+      setIdentityCheck(null);
+      setIdentityError("");
+      setLivenessSession(null);
+      setLivenessCompleted(false);
+      setLivenessError("");
+    }
+  };
+
+  const handleIdFrontChange = (file) => {
+    setIdFront(file || null);
+    setIdentityVerified(false);
+    setIdentityCheck(null);
+    setIdentityError("");
+    setLivenessSession(null);
+    setLivenessCompleted(false);
+    setLivenessError("");
+  };
+
+  const beginLiveness = async () => {
+    if (!identityVerified) {
+      setIdentityError("Verify your identity document before continuing.");
+      return;
+    }
+    if (!idFront || (form.idType !== "passport" && !idBack)) {
+      setIdentityError("Upload the required sides of your identity document before continuing.");
+      return;
+    }
+
+    setIsVerifying(true);
+    setLivenessError("");
+    stopCameraStream();
+    try {
+      const response = await fetch("http://localhost:5000/api/models/liveness/start", { method: "POST" });
+      const session = await response.json();
+      if (!response.ok) throw new Error(session.error || "Could not start liveness verification.");
+      setLivenessSession(session);
+      setLivenessCompleted(false);
+      setStep(5);
+    } catch (error) {
+      setLivenessError(error.message || "Could not start liveness verification. Please try again.");
+    } finally {
+      setIsVerifying(false);
+    }
+  };
+
+  const completeLivenessSession = async () => {
+    if (!livenessSession) return;
+    setLivenessError("");
+    try {
+      const response = await fetch("http://localhost:5000/api/models/liveness/complete", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          verificationId: livenessSession.verificationId,
+          attemptId: livenessSession.attemptId
+        })
+      });
+      const result = await response.json();
+      if (!response.ok) {
+        const error = new Error(result.error || "Could not confirm liveness verification.");
+        error.code = result.code;
+        throw error;
+      }
+      setLivenessCompleted(true);
+    } catch (error) {
+      setLivenessCompleted(false);
+      setLivenessError(error.message || "Could not confirm liveness verification. Please retry.");
+      if (error.code?.startsWith("LIVENESS_SESSION")) setLivenessSession(null);
+      throw error;
+    }
   };
 
   const startCamera = async () => {
@@ -113,7 +206,9 @@ const ModelForm = () => {
       const blob = new Blob(recordedChunksRef.current, { type: "video/webm" });
       const file = new File([blob], `selfie-${Date.now()}.webm`, { type: "video/webm" });
       setSelfieFile(file);
-      setSelfiePreview(URL.createObjectURL(blob));
+      const previewUrl = URL.createObjectURL(blob);
+      selfiePreviewRef.current = previewUrl;
+      setSelfiePreview(previewUrl);
       setIsRecording(false);
       setSelfieError("");
     };
@@ -129,14 +224,58 @@ const ModelForm = () => {
   const handleSelfieUpload = (file) => {
     if (!file) return;
     setSelfieFile(file);
-    setSelfiePreview(URL.createObjectURL(file));
+    const previewUrl = URL.createObjectURL(file);
+    selfiePreviewRef.current = previewUrl;
+    setSelfiePreview(previewUrl);
     setSelfieError("");
+  };
+
+  const handleVerifyDocument = async () => {
+    if (!form.fullName || !form.birthdate || !form.idType || !idFront) {
+      setIdentityError("Enter your name and date of birth, then upload the front of your identity document.");
+      return;
+    }
+
+    setIsVerifying(true);
+    setIdentityVerified(false);
+    setIdentityCheck(null);
+    setIdentityError("");
+
+    const verificationData = new FormData();
+    verificationData.append("fullName", form.fullName);
+    verificationData.append("birthdate", form.birthdate);
+    verificationData.append("idType", form.idType);
+    verificationData.append("idFront", idFront);
+
+    try {
+      const response = await fetch("http://localhost:5000/api/models/verify-identity", {
+        method: "POST",
+        body: verificationData
+      });
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.error || "Identity verification failed.");
+      }
+
+      setIdentityCheck(result);
+      setIdentityVerified(Boolean(
+        result.verified && result.checks?.nameMatch && result.checks?.dateOfBirthMatch
+      ));
+      if (!result.verified) {
+        setIdentityError(result.message || "Identity verification failed.");
+      }
+    } catch (error) {
+      setIdentityError(error.message || "Could not verify this document.");
+    } finally {
+      setIsVerifying(false);
+    }
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (!form.fullName || !form.email || !form.location || !form.phone || !form.password) {
+    if (!form.fullName || !form.birthdate || !form.email || !form.location || !form.phone || !form.password) {
       alert("Please fill in all basic info fields (Step 1)");
       setStep(1);
       return;
@@ -161,6 +300,16 @@ const ModelForm = () => {
       setStep(4);
       return;
     }
+    if (!identityVerified) {
+      alert("Please verify your identity document before submitting the application.");
+      setStep(4);
+      return;
+    }
+    if (!livenessCompleted || !livenessSession) {
+      setLivenessError("Please complete liveness verification before submitting your registration.");
+      setStep(5);
+      return;
+    }
     if (!selfieFile) {
       alert("Please upload or capture a live selfie for verification.");
       setStep(4);
@@ -168,18 +317,6 @@ const ModelForm = () => {
     }
 
     setIsSubmitting(true);
-
-    const verification = {
-      status: "pending_ai_review",
-      confidence: 0.91,
-      summary: "Document and liveness files received. Connect Azure/OpenAI/Google Vision to enable automatic OCR and face verification.",
-      checks: {
-        documentUploaded: true,
-        bothSidesUploaded: form.idType === "passport" ? true : Boolean(idBack),
-        selfieSubmitted: true,
-        livenessReady: true
-      }
-    };
 
     const formData = new FormData();
     formData.append("fullName", form.fullName);
@@ -193,7 +330,8 @@ const ModelForm = () => {
     formData.append("waist", form.waist);
     formData.append("hip", form.hip);
     formData.append("idType", form.idType);
-    formData.append("verification", JSON.stringify(verification));
+    formData.append("livenessVerificationId", livenessSession.verificationId);
+    formData.append("livenessAttemptId", livenessSession.attemptId);
     formData.append("profileImage", profile);
     formData.append("portfolio", portfolio1);
     formData.append("portfolio", portfolio2);
@@ -214,14 +352,16 @@ const ModelForm = () => {
       const result = await response.json();
 
       if (!response.ok) {
-        throw new Error(result.error || "Registration failed");
+        const error = new Error(result.error || "Registration failed");
+        error.payload = result;
+        throw error;
       }
 
       const savedData = {
         ...form,
         profileImage: result.model?.profileImage || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=300&q=80",
         verified: false,
-        verification: result.model?.verificationSummary || verification
+        verification: result.model?.verificationSummary || "Identity document name and date of birth matched."
       };
 
       localStorage.setItem("modelData", JSON.stringify(savedData));
@@ -241,37 +381,30 @@ const ModelForm = () => {
         localStorage.setItem("registeredModels", JSON.stringify(models));
       }
 
-      alert("Model registration submitted successfully. Your documents are now pending AI-assisted verification.");
+      alert("Model registration submitted successfully. Your identity document was verified.");
       navigate("/dashboard");
     } catch (error) {
       console.error(error);
-      const savedData = {
-        ...form,
-        profileImage: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=300&q=80",
-        verified: false,
-        verification
-      };
-
-      localStorage.setItem("modelData", JSON.stringify(savedData));
-      localStorage.setItem("currentUser", JSON.stringify({
-        role: "model",
-        email: form.email,
-        name: form.fullName,
-        location: form.location,
-        phone: form.phone,
-        verified: false,
-        details: savedData
-      }));
-
-      alert("Your application was saved locally while the server verification endpoint is being prepared.");
-      navigate("/dashboard");
+      if (error.payload?.code?.startsWith("LIVENESS_SESSION")) {
+        setLivenessCompleted(false);
+        setLivenessSession(null);
+        setStep(4);
+        const message = "Your liveness session expired or is no longer valid. Please verify again.";
+        setLivenessError(message);
+        setIdentityError(message);
+      } else {
+        setIdentityVerified(false);
+        setIdentityCheck(error.payload || null);
+        setIdentityError(error.message || "Registration failed. Please try again.");
+      }
+      alert(error.message || "Registration failed. Please try again.");
     } finally {
       setIsSubmitting(false);
     }
   };
 
   return (
-    <div className="main-container">
+    <div className={`main-container ${step >= 4 ? "registration-verification-flow" : ""} ${step === 5 ? "registration-liveness" : ""}`}>
       <div className="sidebar">
         <h2 className="logo" onClick={() => navigate("/")} style={{ cursor: "pointer" }}>ModelNext</h2>
 
@@ -306,10 +439,24 @@ const ModelForm = () => {
             <span className="step-desc">Verify Identity</span>
           </div>
         </div>
+        <div className="step-item">
+          <div className={`step-circle ${step === 5 ? "active" : ""}`}>5</div>
+          <div>
+            <p className={step === 5 ? "active" : ""}>Liveness</p>
+            <span className="step-desc">Verify presence</span>
+          </div>
+        </div>
+        <div className="step-item">
+          <div className={`step-circle ${step === 6 ? "active" : ""}`}>6</div>
+          <div>
+            <p className={step === 6 ? "active" : ""}>Final Review</p>
+            <span className="step-desc">Submit application</span>
+          </div>
+        </div>
       </div>
 
       <div className="form-box">
-        <form onSubmit={handleSubmit}>
+        <form className={step === 5 ? "registration-liveness-form" : ""} onSubmit={handleSubmit}>
           {step === 1 && (
             <>
               <h1>Basic Information</h1>
@@ -442,7 +589,34 @@ const ModelForm = () => {
 
               <div className="upload-card">
                 <label>ID Front <span>*</span></label>
-                <input type="file" accept="image/*" onChange={(e) => setIdFront(e.target.files[0])} />
+                <input type="file" accept="image/*" onChange={(e) => handleIdFrontChange(e.target.files[0])} />
+                {idFrontPreview && (
+                  <div className="preview-box">
+                    <img src={idFrontPreview} alt="Identity document front preview" className="preview-media" />
+                  </div>
+                )}
+                <button
+                  type="button"
+                  className="next-btn"
+                  onClick={handleVerifyDocument}
+                  disabled={isVerifying || isSubmitting || !idFront}
+                >
+                  {isVerifying ? "Verifying document..." : "Verify Document"}
+                </button>
+                <div className="verification-note" role="status" aria-live="polite">
+                  <strong>Identity Document Verification</strong>
+                  {!identityCheck && !identityError && (
+                    <p>Status: {isVerifying ? "Verifying document..." : "Waiting for verification"}</p>
+                  )}
+                  {identityCheck?.checks && (
+                    <>
+                      <p>{identityCheck.checks.nameMatch ? "✓ Name matches" : "✗ Name does not match"}</p>
+                      <p>{identityCheck.checks.dateOfBirthMatch ? "✓ Date of birth matches" : "✗ Date of birth does not match"}</p>
+                      <strong>{identityVerified ? "Identity document verified" : "Identity verification failed"}</strong>
+                    </>
+                  )}
+                  {identityError && <p className="error-note">{identityError}</p>}
+                </div>
               </div>
 
               {form.idType !== "passport" && (
@@ -453,8 +627,8 @@ const ModelForm = () => {
               )}
 
               <div className="upload-card">
-                <label>Live Selfie <span>*</span></label>
-                <p className="helper-text">Capture a short selfie video or upload a clear front-facing selfie.</p>
+                <label>Selfie Media <span>*</span></label>
+                <p className="helper-text">This upload is still required by the existing registration flow. It is not used for OCR identity verification or liveness checks.</p>
 
                 <div className="camera-actions">
                   <button type="button" className="draft-btn" onClick={startCamera}>Open Camera</button>
@@ -491,12 +665,45 @@ const ModelForm = () => {
               </div>
 
               <div className="verification-note">
-                <strong>AI verification flow:</strong> your ID details will be checked automatically for consistency, and the selfie will be reviewed for liveness and face-match readiness.
+                <strong>Identity check:</strong> registration will repeat document OCR on the server before saving your application.
               </div>
 
               <div className="button-group">
                 <button type="button" className="draft-btn" onClick={() => setStep(3)}>Back</button>
-                <button type="submit" className="next-btn" disabled={isSubmitting}>
+                <button type="button" className="next-btn" onClick={beginLiveness} disabled={isVerifying || isSubmitting}>
+                  {isVerifying ? "Preparing liveness..." : "Continue to liveness"}
+                </button>
+              </div>
+              {livenessError && <p className="error-note" role="alert">{livenessError}</p>}
+            </>
+          )}
+
+          {step === 5 && (
+            <>
+              <WebcamTest autoStart onVerificationComplete={completeLivenessSession} />
+              {livenessError && !livenessSession && <p className="error-note" role="alert">{livenessError}</p>}
+              {livenessCompleted && <p className="verification-note" role="status">Liveness session confirmed. Continue when you are ready.</p>}
+              <div className="button-group">
+                <button type="button" className="draft-btn" onClick={() => setStep(4)}>Back</button>
+                <button type="button" className="next-btn" onClick={() => setStep(6)} disabled={!livenessCompleted}>
+                  Continue to review
+                </button>
+              </div>
+            </>
+          )}
+
+          {step === 6 && (
+            <>
+              <h1>Final Review</h1>
+              <p className="subtitle">Review your required verification steps before submitting.</p>
+              <div className="verification-note" role="status">
+                <p>{identityVerified ? "✓ Identity document verified" : "Identity document verification incomplete"}</p>
+                <p>{livenessCompleted ? "✓ Liveness verification complete" : "Liveness verification incomplete"}</p>
+                <p>Uploaded identity documents will be checked again by the server during registration.</p>
+              </div>
+              <div className="button-group">
+                <button type="button" className="draft-btn" onClick={() => setStep(5)}>Back</button>
+                <button type="submit" className="next-btn" disabled={isSubmitting || !livenessCompleted}>
                   {isSubmitting ? "Submitting..." : "Submit Application"}
                 </button>
               </div>
