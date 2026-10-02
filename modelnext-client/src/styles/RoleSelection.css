@@ -30,7 +30,7 @@
   content: "";
   position: absolute;
   inset: -20%;
-  background: radial-gradient(circle, rgba(242, 202, 80, 0.22), transparent 35%);
+  background: radial-gradient(circle, rgba(200, 215, 225, 0.22), transparent 35%);
   animation: pulseGlow 6s ease-in-out infinite;
 }
 
@@ -57,7 +57,7 @@
 
 .brand p {
   margin-top: 10px;
-  color: #f2ca50;
+  color: var(--mn-casper);
   letter-spacing: 2px;
   font-size: 14px;
   font-weight: 600;
@@ -113,13 +113,13 @@
   content: "";
   position: absolute;
   inset: 0;
-  background: linear-gradient(90deg, rgba(242, 202, 80, 0.14), transparent 60%);
+  background: linear-gradient(90deg, rgba(200, 215, 225, 0.14), transparent 60%);
   opacity: 0;
   transition: opacity 0.3s ease;
 }
 
 .role-item:hover {
-  border-color: rgba(242, 202, 80, 0.45);
+  border-color: rgba(200, 215, 225, 0.45);
   transform: translateY(-4px);
   box-shadow: 0 16px 30px rgba(0, 0, 0, 0.22);
 }
@@ -130,10 +130,10 @@
 
 /* ACTIVE CARD */
 .role-item.active {
-  background: linear-gradient(135deg, #c7a86d 0%, #f2ca50 100%);
+  background: linear-gradient(135deg, var(--mn-casper) 0%, var(--mn-casper) 100%);
   color: #111;
   border: none;
-  box-shadow: 0 16px 34px rgba(242, 202, 80, 0.22);
+  box-shadow: 0 16px 34px rgba(200, 215, 225, 0.22);
 }
 
 .role-item.active p {
@@ -157,7 +157,7 @@
 .register-btn {
   margin-top: 38px;
   padding: 16px 22px;
-  background: linear-gradient(135deg, #f2ca50, #d4af37);
+  background: linear-gradient(135deg, var(--mn-casper), var(--mn-casper));
   color: #111;
   border: none;
   border-radius: 999px;
@@ -165,12 +165,12 @@
   letter-spacing: 1px;
   cursor: pointer;
   transition: transform 0.3s ease, box-shadow 0.3s ease, opacity 0.3s ease;
-  box-shadow: 0 12px 28px rgba(242, 202, 80, 0.18);
+  box-shadow: 0 12px 28px rgba(200, 215, 225, 0.18);
 }
 
 .register-btn:hover {
   transform: translateY(-2px);
-  box-shadow: 0 14px 30px rgba(242, 202, 80, 0.28);
+  box-shadow: 0 14px 30px rgba(200, 215, 225, 0.28);
 }
 
 .register-btn:disabled {
@@ -195,7 +195,7 @@
 }
 
 .footer-links span:hover {
-  color: #f2ca50;
+  color: var(--mn-casper);
 }
 
 @keyframes pulseGlow {

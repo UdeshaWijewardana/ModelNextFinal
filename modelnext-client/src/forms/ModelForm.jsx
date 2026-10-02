@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import WebcamTest from "../components/WebcamTest";
 import "../styles/modelForm.css";
@@ -30,11 +30,6 @@ const ModelForm = () => {
   const [portfolio6, setPortfolio6] = useState(null);
   const [idFront, setIdFront] = useState(null);
   const [idBack, setIdBack] = useState(null);
-  const [selfieFile, setSelfieFile] = useState(null);
-  const [selfiePreview, setSelfiePreview] = useState("");
-  const [selfieError, setSelfieError] = useState("");
-  const [isCameraActive, setIsCameraActive] = useState(false);
-  const [isRecording, setIsRecording] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isVerifying, setIsVerifying] = useState(false);
   const [identityVerified, setIdentityVerified] = useState(false);
@@ -44,29 +39,8 @@ const ModelForm = () => {
   const [livenessSession, setLivenessSession] = useState(null);
   const [livenessCompleted, setLivenessCompleted] = useState(false);
   const [livenessError, setLivenessError] = useState("");
-
-  const videoRef = useRef(null);
-  const streamRef = useRef(null);
-  const mediaRecorderRef = useRef(null);
-  const recordedChunksRef = useRef([]);
-  const selfiePreviewRef = useRef("");
-
-  const stopCameraStream = () => {
-    if (streamRef.current) {
-      streamRef.current.getTracks().forEach((track) => track.stop());
-      streamRef.current = null;
-    }
-    setIsCameraActive(false);
-  };
-
-  useEffect(() => {
-    return () => {
-      stopCameraStream();
-      if (selfiePreviewRef.current && selfiePreviewRef.current.startsWith("blob:")) {
-        URL.revokeObjectURL(selfiePreviewRef.current);
-      }
-    };
-  }, []);
+  const [validationErrors, setValidationErrors] = useState({});
+  const [submissionError, setSubmissionError] = useState("");
 
   useEffect(() => {
     if (!idFront) {
@@ -81,6 +55,8 @@ const ModelForm = () => {
 
   const handleChange = (e) => {
     setForm((previous) => ({ ...previous, [e.target.name]: e.target.value }));
+    setValidationErrors((previous) => ({ ...previous, [e.target.name]: "" }));
+    setSubmissionError("");
     if (["fullName", "birthdate", "idType"].includes(e.target.name)) {
       setIdentityVerified(false);
       setIdentityCheck(null);
@@ -89,6 +65,35 @@ const ModelForm = () => {
       setLivenessCompleted(false);
       setLivenessError("");
     }
+  };
+
+  const getStepValidationErrors = (stepNumber) => {
+    const errors = {};
+    if (stepNumber === 1) {
+      ["fullName", "birthdate", "email", "password", "location", "phone"].forEach((field) => {
+        if (!String(form[field] || "").trim()) errors[field] = "This field is required.";
+      });
+      if (form.email.trim() && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email.trim())) {
+        errors.email = "Enter a valid email address.";
+      }
+    }
+    if (stepNumber === 2) {
+      ["weight", "height", "waist", "hip"].forEach((field) => {
+        const value = Number(form[field]);
+        if (!Number.isFinite(value) || value <= 0) errors[field] = "Enter a number greater than 0.";
+      });
+    }
+    if (stepNumber === 3 && (!profile || !portfolio1 || !portfolio2 || !portfolio3 || !portfolio4 || !portfolio5 || !portfolio6)) {
+      errors.portfolio = "Upload a profile image and all six portfolio images to continue.";
+    }
+    return errors;
+  };
+
+  const continueFromStep = (stepNumber, nextStep) => {
+    const errors = getStepValidationErrors(stepNumber);
+    setValidationErrors(errors);
+    if (Object.keys(errors).length > 0) return;
+    setStep(nextStep);
   };
 
   const handleIdFrontChange = (file) => {
@@ -113,7 +118,6 @@ const ModelForm = () => {
 
     setIsVerifying(true);
     setLivenessError("");
-    stopCameraStream();
     try {
       const response = await fetch("http://localhost:5000/api/models/liveness/start", { method: "POST" });
       const session = await response.json();
@@ -153,81 +157,6 @@ const ModelForm = () => {
       if (error.code?.startsWith("LIVENESS_SESSION")) setLivenessSession(null);
       throw error;
     }
-  };
-
-  const startCamera = async () => {
-    setSelfieError("");
-    try {
-      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-        throw new Error("Camera not supported");
-      }
-
-      stopCameraStream();
-      const stream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: "user" },
-        audio: false
-      });
-
-      streamRef.current = stream;
-      if (videoRef.current) {
-        videoRef.current.srcObject = stream;
-        await videoRef.current.play();
-      }
-      setIsCameraActive(true);
-    } catch (error) {
-      console.error(error);
-      setSelfieError("Camera access was blocked. You can still upload a selfie image or video instead.");
-    }
-  };
-
-  const captureLiveSelfie = async () => {
-    if (!streamRef.current) {
-      await startCamera();
-    }
-
-    if (!streamRef.current || !window.MediaRecorder) {
-      setSelfieError("Live selfie capture is not available in this browser. Please upload a selfie file instead.");
-      return;
-    }
-
-    setIsRecording(true);
-    recordedChunksRef.current = [];
-
-    const mediaRecorder = new MediaRecorder(streamRef.current);
-    mediaRecorderRef.current = mediaRecorder;
-
-    mediaRecorder.ondataavailable = (event) => {
-      if (event.data.size > 0) {
-        recordedChunksRef.current.push(event.data);
-      }
-    };
-
-    mediaRecorder.onstop = () => {
-      const blob = new Blob(recordedChunksRef.current, { type: "video/webm" });
-      const file = new File([blob], `selfie-${Date.now()}.webm`, { type: "video/webm" });
-      setSelfieFile(file);
-      const previewUrl = URL.createObjectURL(blob);
-      selfiePreviewRef.current = previewUrl;
-      setSelfiePreview(previewUrl);
-      setIsRecording(false);
-      setSelfieError("");
-    };
-
-    mediaRecorder.start();
-    setTimeout(() => {
-      if (mediaRecorderRef.current && mediaRecorderRef.current.state !== "inactive") {
-        mediaRecorderRef.current.stop();
-      }
-    }, 3000);
-  };
-
-  const handleSelfieUpload = (file) => {
-    if (!file) return;
-    setSelfieFile(file);
-    const previewUrl = URL.createObjectURL(file);
-    selfiePreviewRef.current = previewUrl;
-    setSelfiePreview(previewUrl);
-    setSelfieError("");
   };
 
   const handleVerifyDocument = async () => {
@@ -275,33 +204,26 @@ const ModelForm = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (!form.fullName || !form.birthdate || !form.email || !form.location || !form.phone || !form.password) {
-      alert("Please fill in all basic info fields (Step 1)");
-      setStep(1);
-      return;
-    }
-    if (!form.height || !form.weight || !form.waist || !form.hip) {
-      alert("Please fill in all physical attribute fields (Step 2)");
-      setStep(2);
-      return;
-    }
-    if (!profile || !portfolio1 || !portfolio2 || !portfolio3 || !portfolio4 || !portfolio5 || !portfolio6) {
-      alert("Please upload your profile image and all six portfolio images before continuing.");
-      setStep(3);
-      return;
+    for (const stepNumber of [1, 2, 3]) {
+      const errors = getStepValidationErrors(stepNumber);
+      if (Object.keys(errors).length > 0) {
+        setValidationErrors(errors);
+        setStep(stepNumber);
+        return;
+      }
     }
     if (!idFront) {
-      alert("Please upload your ID document front image.");
+      setIdentityError("Upload your ID document front image.");
       setStep(4);
       return;
     }
     if (form.idType !== "passport" && !idBack) {
-      alert("Please upload both sides of your National ID or Driving License.");
+      setIdentityError("Upload both sides of your National ID or Driving License.");
       setStep(4);
       return;
     }
     if (!identityVerified) {
-      alert("Please verify your identity document before submitting the application.");
+      setIdentityError("Verify your identity document before submitting the application.");
       setStep(4);
       return;
     }
@@ -310,21 +232,16 @@ const ModelForm = () => {
       setStep(5);
       return;
     }
-    if (!selfieFile) {
-      alert("Please upload or capture a live selfie for verification.");
-      setStep(4);
-      return;
-    }
-
     setIsSubmitting(true);
+    setSubmissionError("");
 
     const formData = new FormData();
-    formData.append("fullName", form.fullName);
+    formData.append("fullName", form.fullName.trim());
     formData.append("birthdate", form.birthdate);
-    formData.append("email", form.email);
+    formData.append("email", form.email.trim());
     formData.append("password", form.password);
-    formData.append("location", form.location);
-    formData.append("phone", form.phone);
+    formData.append("location", form.location.trim());
+    formData.append("phone", form.phone.trim());
     formData.append("weight", form.weight);
     formData.append("height", form.height);
     formData.append("waist", form.waist);
@@ -341,12 +258,12 @@ const ModelForm = () => {
     formData.append("portfolio", portfolio6);
     formData.append("idFront", idFront);
     if (idBack) formData.append("idBack", idBack);
-    formData.append("selfieMedia", selfieFile);
 
     try {
       const response = await fetch("http://localhost:5000/api/models/register", {
         method: "POST",
-        body: formData
+        body: formData,
+        credentials: "include"
       });
 
       const result = await response.json();
@@ -357,32 +274,7 @@ const ModelForm = () => {
         throw error;
       }
 
-      const savedData = {
-        ...form,
-        profileImage: result.model?.profileImage || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=300&q=80",
-        verified: false,
-        verification: result.model?.verificationSummary || "Identity document name and date of birth matched."
-      };
-
-      localStorage.setItem("modelData", JSON.stringify(savedData));
-      localStorage.setItem("currentUser", JSON.stringify({
-        role: "model",
-        email: form.email,
-        name: form.fullName,
-        location: form.location,
-        phone: form.phone,
-        verified: false,
-        details: savedData
-      }));
-
-      const models = JSON.parse(localStorage.getItem("registeredModels")) || [];
-      if (!models.some((m) => m.email === form.email)) {
-        models.push(savedData);
-        localStorage.setItem("registeredModels", JSON.stringify(models));
-      }
-
-      alert("Model registration submitted successfully. Your identity document was verified.");
-      navigate("/dashboard");
+      navigate("/dashboard", { state: { registrationSubmitted: true } });
     } catch (error) {
       console.error(error);
       if (error.payload?.code?.startsWith("LIVENESS_SESSION")) {
@@ -397,7 +289,7 @@ const ModelForm = () => {
         setIdentityCheck(error.payload || null);
         setIdentityError(error.message || "Registration failed. Please try again.");
       }
-      alert(error.message || "Registration failed. Please try again.");
+      setSubmissionError(error.message || "Registration failed. Please try again.");
     } finally {
       setIsSubmitting(false);
     }
@@ -465,29 +357,35 @@ const ModelForm = () => {
               <div className="grid">
                 <div>
                   <label>Full Name <span>*</span></label>
-                  <input name="fullName" placeholder="Enter your full name" onChange={handleChange} />
+                  <input name="fullName" value={form.fullName} placeholder="Enter your full name" onChange={handleChange} required aria-invalid={Boolean(validationErrors.fullName)} />
+                  {validationErrors.fullName && <p className="error-note" role="alert">{validationErrors.fullName}</p>}
                 </div>
 
                 <div>
                   <label>Date of Birth <span>*</span></label>
-                  <input type="date" name="birthdate" placeholder="mm/dd/yyyy" onChange={handleChange} />
+                  <input type="date" name="birthdate" value={form.birthdate} onChange={handleChange} required aria-invalid={Boolean(validationErrors.birthdate)} />
+                  {validationErrors.birthdate && <p className="error-note" role="alert">{validationErrors.birthdate}</p>}
                 </div>
               </div>
 
               <label>Email Address <span>*</span></label>
-              <input name="email" placeholder="you@example.com" onChange={handleChange} />
+              <input type="email" name="email" value={form.email} placeholder="you@example.com" onChange={handleChange} required aria-invalid={Boolean(validationErrors.email)} />
+              {validationErrors.email && <p className="error-note" role="alert">{validationErrors.email}</p>}
 
               <label>Password <span>*</span></label>
-              <input type="password" name="password" placeholder="Create a strong password" onChange={handleChange} />
+              <input type="password" name="password" value={form.password} placeholder="Create a strong password" onChange={handleChange} required aria-invalid={Boolean(validationErrors.password)} />
+              {validationErrors.password && <p className="error-note" role="alert">{validationErrors.password}</p>}
 
               <label>Location <span>*</span></label>
-              <input name="location" placeholder="City, Country" onChange={handleChange} />
+              <input name="location" value={form.location} placeholder="City, Country" onChange={handleChange} required aria-invalid={Boolean(validationErrors.location)} />
+              {validationErrors.location && <p className="error-note" role="alert">{validationErrors.location}</p>}
 
               <label>Phone <span>*</span></label>
-              <input name="phone" placeholder="Your phone number" onChange={handleChange} />
+              <input name="phone" value={form.phone} placeholder="Your phone number" onChange={handleChange} required aria-invalid={Boolean(validationErrors.phone)} />
+              {validationErrors.phone && <p className="error-note" role="alert">{validationErrors.phone}</p>}
 
               <div className="button-group">
-                <button type="button" className="next-btn" onClick={() => setStep(2)}>Next Step</button>
+                <button type="button" className="next-btn" onClick={() => continueFromStep(1, 2)}>Next Step</button>
               </div>
             </>
           )}
@@ -499,30 +397,34 @@ const ModelForm = () => {
               <div className="grid">
                 <div>
                   <label>Weight (kg) <span>*</span></label>
-                  <input name="weight" placeholder="e.g., 60" onChange={handleChange} />
+                  <input type="number" min="0" step="any" name="weight" value={form.weight} placeholder="e.g., 60" onChange={handleChange} required aria-invalid={Boolean(validationErrors.weight)} />
+                  {validationErrors.weight && <p className="error-note" role="alert">{validationErrors.weight}</p>}
                 </div>
 
                 <div>
                   <label>Height (cm) <span>*</span></label>
-                  <input name="height" placeholder="e.g., 170" onChange={handleChange} />
+                  <input type="number" min="0" step="any" name="height" value={form.height} placeholder="e.g., 170" onChange={handleChange} required aria-invalid={Boolean(validationErrors.height)} />
+                  {validationErrors.height && <p className="error-note" role="alert">{validationErrors.height}</p>}
                 </div>
               </div>
 
               <div className="grid">
                 <div>
                   <label>Waist Size (cm) <span>*</span></label>
-                  <input name="waist" placeholder="e.g., 65" onChange={handleChange} />
+                  <input type="number" min="0" step="any" name="waist" value={form.waist} placeholder="e.g., 65" onChange={handleChange} required aria-invalid={Boolean(validationErrors.waist)} />
+                  {validationErrors.waist && <p className="error-note" role="alert">{validationErrors.waist}</p>}
                 </div>
 
                 <div>
                   <label>Hip Size (cm) <span>*</span></label>
-                  <input name="hip" placeholder="e.g., 90" onChange={handleChange} />
+                  <input type="number" min="0" step="any" name="hip" value={form.hip} placeholder="e.g., 90" onChange={handleChange} required aria-invalid={Boolean(validationErrors.hip)} />
+                  {validationErrors.hip && <p className="error-note" role="alert">{validationErrors.hip}</p>}
                 </div>
               </div>
 
               <div className="button-group">
                 <button type="button" className="draft-btn" onClick={() => setStep(1)}>Back</button>
-                <button type="button" className="next-btn" onClick={() => setStep(3)}>Next Step</button>
+                <button type="button" className="next-btn" onClick={() => continueFromStep(2, 3)}>Next Step</button>
               </div>
             </>
           )}
@@ -567,10 +469,11 @@ const ModelForm = () => {
                   <input type="file" accept="image/*" onChange={(e) => setPortfolio6(e.target.files[0])} />
                 </div>
               </div>
+              {validationErrors.portfolio && <p className="error-note" role="alert">{validationErrors.portfolio}</p>}
 
               <div className="button-group">
                 <button type="button" className="draft-btn" onClick={() => setStep(2)}>Back</button>
-                <button type="button" className="next-btn" onClick={() => setStep(4)}>Next Step</button>
+                <button type="button" className="next-btn" onClick={() => continueFromStep(3, 4)}>Next Step</button>
               </div>
             </>
           )}
@@ -578,7 +481,7 @@ const ModelForm = () => {
           {step === 4 && (
             <>
               <h1>ID Verification</h1>
-              <p className="subtitle">Upload your government ID and a live selfie for AI-assisted verification.</p>
+              <p className="subtitle">Upload your government ID for OCR-assisted identity verification.</p>
 
               <label>ID Type <span>*</span></label>
               <select name="idType" value={form.idType} onChange={handleChange}>
@@ -626,44 +529,6 @@ const ModelForm = () => {
                 </div>
               )}
 
-              <div className="upload-card">
-                <label>Selfie Media <span>*</span></label>
-                <p className="helper-text">This upload is still required by the existing registration flow. It is not used for OCR identity verification or liveness checks.</p>
-
-                <div className="camera-actions">
-                  <button type="button" className="draft-btn" onClick={startCamera}>Open Camera</button>
-                  <button type="button" className="next-btn" onClick={captureLiveSelfie} disabled={isRecording}>
-                    {isRecording ? "Recording..." : "Capture 3s Selfie"}
-                  </button>
-                </div>
-
-                {selfieError && <p className="error-note">{selfieError}</p>}
-
-                <div className="preview-row">
-                  <div className="preview-box">
-                    {isCameraActive ? (
-                      <video ref={videoRef} autoPlay playsInline muted className="preview-media" />
-                    ) : (
-                      <p className="helper-text">Your camera preview will appear here.</p>
-                    )}
-                  </div>
-
-                  <div className="preview-box">
-                    {selfiePreview ? (
-                      selfiePreview.includes("video") || selfiePreview.includes("blob") ? (
-                        <video src={selfiePreview} controls className="preview-media" />
-                      ) : (
-                        <img src={selfiePreview} alt="Selfie preview" className="preview-media" />
-                      )
-                    ) : (
-                      <p className="helper-text">Your captured or uploaded selfie will appear here.</p>
-                    )}
-                  </div>
-                </div>
-
-                <input type="file" accept="image/*,video/*" onChange={(e) => handleSelfieUpload(e.target.files[0])} />
-              </div>
-
               <div className="verification-note">
                 <strong>Identity check:</strong> registration will repeat document OCR on the server before saving your application.
               </div>
@@ -697,6 +562,10 @@ const ModelForm = () => {
               <h1>Final Review</h1>
               <p className="subtitle">Review your required verification steps before submitting.</p>
               <div className="verification-note" role="status">
+                <p><strong>Registration details</strong></p>
+                <p>{form.fullName.trim()} · {form.email.trim()} · {form.location.trim()}</p>
+                <p>Measurements: {form.weight} kg · {form.height} cm · waist {form.waist} cm · hip {form.hip} cm</p>
+                <p>Portfolio: profile image and six portfolio images selected.</p>
                 <p>{identityVerified ? "✓ Identity document verified" : "Identity document verification incomplete"}</p>
                 <p>{livenessCompleted ? "✓ Liveness verification complete" : "Liveness verification incomplete"}</p>
                 <p>Uploaded identity documents will be checked again by the server during registration.</p>
@@ -707,6 +576,7 @@ const ModelForm = () => {
                   {isSubmitting ? "Submitting..." : "Submit Application"}
                 </button>
               </div>
+              {submissionError && <p className="error-note" role="alert">{submissionError}</p>}
             </>
           )}
         </form>

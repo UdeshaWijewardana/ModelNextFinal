@@ -7,7 +7,7 @@
 
 .admin-hero {
   padding: 140px 20px 40px;
-  background: linear-gradient(180deg, rgba(242, 202, 80, 0.03) 0%, rgba(19, 19, 19, 0) 100%);
+  background: linear-gradient(180deg, rgba(200, 215, 225, 0.03) 0%, rgba(19, 19, 19, 0) 100%);
   text-align: center;
 }
 
@@ -56,15 +56,15 @@
 }
 
 .admin-tab-btn:hover {
-  border-color: #f2ca50;
-  color: #f2ca50;
+  border-color: var(--mn-casper);
+  color: var(--mn-casper);
 }
 
 .admin-tab-btn.active {
-  background: linear-gradient(135deg, #f2ca50, #d4af37);
+  background: linear-gradient(135deg, var(--mn-casper), var(--mn-casper));
   color: #131313;
   border-color: transparent;
-  box-shadow: 0 4px 15px rgba(242, 202, 80, 0.2);
+  box-shadow: 0 4px 15px rgba(200, 215, 225, 0.2);
 }
 
 /* PANEL CARD */
@@ -142,9 +142,9 @@
 }
 
 .role-badge.model {
-  background: rgba(242, 202, 80, 0.1);
-  color: #f2ca50;
-  border: 1px solid rgba(242, 202, 80, 0.2);
+  background: rgba(200, 215, 225, 0.1);
+  color: var(--mn-casper);
+  border: 1px solid rgba(200, 215, 225, 0.2);
 }
 
 .role-badge.agency {
@@ -243,7 +243,7 @@
 }
 
 .req-event-date {
-  color: #f2ca50;
+  color: var(--mn-casper);
 }
 
 .req-event-details h3 {

@@ -12,6 +12,7 @@ export default function AdminRegister() {
   });
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleInputChange = (e) => {
     setFormData({
@@ -20,7 +21,7 @@ export default function AdminRegister() {
     });
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
 
@@ -36,27 +37,24 @@ export default function AdminRegister() {
       return;
     }
 
-    // 🔒 ADMIN AUTHENTICATION CODE VALIDATION
-    if (inviteCode.trim() !== "MN-ADMIN-2026") {
-      setError("Invalid Administrator Invitation Code. You are not authorized to create admin accounts.");
-      return;
+    setIsSubmitting(true);
+    try {
+      const response = await fetch("http://localhost:5000/api/admin/register", {
+        credentials: "include",
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name, email, password, invitationCode: inviteCode })
+      });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || "Unable to create administrator account.");
+
+      setSuccess(true);
+      setTimeout(() => navigate("/admin"), 1200);
+    } catch (err) {
+      setError(err.message || "Unable to create administrator account.");
+    } finally {
+      setIsSubmitting(false);
     }
-
-    // Save admin to local user registry and active session
-    const adminSession = {
-      role: "admin",
-      email: email,
-      name: name,
-      verified: true
-    };
-
-    localStorage.setItem("currentUser", JSON.stringify(adminSession));
-    
-    // Simulate API registration lag
-    setSuccess(true);
-    setTimeout(() => {
-      navigate("/admin");
-    }, 1500);
   };
 
   const styles = {
@@ -69,7 +67,7 @@ export default function AdminRegister() {
     subtitle: { color: '#AAA', fontSize: '14px', marginBottom: '30px', lineHeight: '1.6' },
     form: { display: 'flex', flexDirection: 'column', gap: '15px', maxWidth: '400px' },
     input: { padding: '14px 18px', background: '#2A2A2A', border: '1px solid #444', color: '#FFF', fontSize: '13px', outline: 'none' },
-    button: { padding: '16px', background: '#C5A572', border: 'none', color: '#FFF', fontSize: '13px', fontWeight: 'bold', letterSpacing: '2px', cursor: 'pointer', marginTop: '10px' },
+    button: { padding: '16px', background: 'var(--mn-casper)', border: 'none', color: '#000', fontSize: '13px', fontWeight: 'bold', letterSpacing: '2px', cursor: 'pointer', marginTop: '10px' },
     error: { color: '#E57373', fontSize: '13px', background: 'rgba(229, 115, 115, 0.1)', padding: '10px', borderLeft: '3px solid #E57373', marginBottom: '10px' },
     success: { color: '#81C784', fontSize: '13px', background: 'rgba(129, 199, 132, 0.1)', padding: '10px', borderLeft: '3px solid #81C784', marginBottom: '10px' },
     backLink: { color: '#888', fontSize: '13px', cursor: 'pointer', marginTop: '20px', display: 'inline-block' }
@@ -136,15 +134,17 @@ export default function AdminRegister() {
                 value={formData.inviteCode}
                 onChange={handleInputChange}
                 required
-                style={{ ...styles.input, border: '1px solid #C5A572' }}
+                style={{ ...styles.input, border: '1px solid var(--mn-casper)' }}
               />
               
-              <button type="submit" style={styles.button}>CREATE ADMIN ACCOUNT</button>
+              <button type="submit" style={styles.button} disabled={isSubmitting}>
+                {isSubmitting ? "CREATING ACCOUNT..." : "CREATE ADMIN ACCOUNT"}
+              </button>
             </form>
           )}
 
           <div style={styles.backLink} onClick={() => navigate("/login")}>
-            Already have an account? <b style={{color: '#C5A572', marginLeft: '5px'}}>Log In</b>
+            Already have an account? <b style={{color: 'var(--mn-casper)', marginLeft: '5px'}}>Log In</b>
           </div>
         </div>
       </div>

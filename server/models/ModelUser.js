@@ -10,7 +10,7 @@ const modelSchema = new mongoose.Schema({
   location: { type: String, required: true },
   gender: { type: String },
   email: { type: String, required: true, unique: true },
-  password: { type: String, required: true },
+  password: { type: String, required: true, select: false },
   categories: [{ type: String }],
   profileImage: { type: String },
   portfolioImages: [{ type: String }],
@@ -25,6 +25,10 @@ const modelSchema = new mongoose.Schema({
   verificationSummary: { type: String },
   aiConfidence: { type: Number },
   aiChecks: { type: Object },
+  approvalStatus: { type: String, enum: ['pending', 'approved', 'rejected'], default: 'pending' },
+  approvedAt: { type: Date },
+  approvedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'Admin' },
+  rejectionReason: { type: String, trim: true },
 }, { timestamps: true });
 
 module.exports = mongoose.model('ModelUser', modelSchema);

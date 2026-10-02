@@ -10,8 +10,6 @@ function createLivenessVerificationSessionService({
   useDatabase = () => mongoose.connection.readyState === 1,
   now = () => new Date(),
 } = {}) {
-  const localSessions = new Map();
-
   const hash = (value) => crypto.createHash('sha256').update(value).digest('hex');
 
   const sessionError = (code, message, status = 400) => {
@@ -22,8 +20,6 @@ function createLivenessVerificationSessionService({
   };
 
   const readSession = async (tokenHash) => {
-    const localSession = localSessions.get(tokenHash);
-    if (localSession) return { session: localSession, storage: 'local' };
     if (useDatabase()) {
       const session = await model.findOne({ tokenHash }).exec();
       return session ? { session, storage: 'database' } : null;
@@ -48,8 +44,6 @@ function createLivenessVerificationSessionService({
     if (new Date(session.expiresAt).getTime() <= now().getTime()) {
       if (storage === 'database') {
         await model.deleteOne({ _id: session._id, expiresAt: { $lte: now() } });
-      } else {
-        localSessions.delete(tokenHash);
       }
       throw sessionError('LIVENESS_SESSION_EXPIRED', 'The liveness verification session expired. Please verify again.', 410);
     }
@@ -90,12 +84,6 @@ function createLivenessVerificationSessionService({
       return;
     }
 
-    const current = localSessions.get(validated.tokenHash);
-    if (!current || current.status !== fromStatus || current.expiresAt.getTime() <= timestamp.getTime()) {
-      throw sessionError('LIVENESS_SESSION_INVALID', 'The liveness verification session is no longer valid.', 409);
-    }
-    current.status = toStatus;
-    if (timestampField) current[timestampField] = timestamp;
   };
 
   const service = {
@@ -116,14 +104,8 @@ function createLivenessVerificationSessionService({
 
       // The session records browser-reported prototype challenge completion, not independently verified physical movement.
       // No camera frames, landmarks, or biometric templates are accepted or stored here.
-      if (useDatabase()) {
-        await model.create(record);
-      } else {
-        for (const [tokenHash, session] of localSessions) {
-          if (session.expiresAt.getTime() <= createdAt.getTime()) localSessions.delete(tokenHash);
-        }
-        localSessions.set(record.tokenHash, record);
-      }
+      if (!useDatabase()) throw sessionError('DATABASE_UNAVAILABLE', 'Database service is currently unavailable. Please try again later.', 503);
+      await model.create(record);
 
       return { verificationId, attemptId, expiresAt: expiresAt.toISOString() };
     },

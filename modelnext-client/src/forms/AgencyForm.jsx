@@ -101,6 +101,7 @@ export default function AgencyForm() {
       const res = await fetch("http://localhost:5000/api/agencies/register", {
         method: "POST",
         body: formData,
+        credentials: "include",
       });
 
       const data = await res.json();
@@ -109,65 +110,10 @@ export default function AgencyForm() {
         throw new Error(data.error || "Failed to register agency");
       }
 
-      console.log("Agency Data:", data);
-      
-      // Store agency data in localStorage for dashboard
-      localStorage.setItem('agencyData', JSON.stringify(data.agency));
-      localStorage.setItem('currentUser', JSON.stringify({
-        role: "agency",
-        email: data.agency.email || form.email,
-        name: data.agency.agencyName || form.agencyName,
-        location: data.agency.address || form.address,
-        phone: data.agency.phone || form.phone,
-        verified: false,
-        details: data.agency
-      }));
-      // Save to registeredAgencies list
-      const agencies = JSON.parse(localStorage.getItem('registeredAgencies')) || [];
-      if (!agencies.some(a => a.email === (data.agency.email || form.email))) {
-        agencies.push(data.agency);
-        localStorage.setItem('registeredAgencies', JSON.stringify(agencies));
-      }
-
-      alert("Agency Registered Successfully!");
-      
-      // Navigate to Agency Dashboard
-      navigate("/agency-dashboard");
+      navigate("/agency-dashboard", { state: { registrationSubmitted: true } });
     } catch (err) {
       console.error(err);
-      
-      // Fallback local storage mock if backend server is not running
-      const mockAgency = {
-        agencyName: form.agencyName,
-        ownerName: form.ownerName,
-        phone: form.phone,
-        email: form.email,
-        address: form.address,
-        businessId: form.businessId,
-        profileImage: preview.profile || "https://images.unsplash.com/photo-1560179707-f14e90ef3623?auto=format&fit=crop&w=300&q=80",
-        verified: false
-      };
-      
-      localStorage.setItem('agencyData', JSON.stringify(mockAgency));
-      localStorage.setItem('currentUser', JSON.stringify({
-        role: "agency",
-        email: form.email,
-        name: form.agencyName,
-        location: form.address,
-        phone: form.phone,
-        verified: false,
-        details: mockAgency
-      }));
-
-      // Save to registeredAgencies list
-      const agencies = JSON.parse(localStorage.getItem('registeredAgencies')) || [];
-      if (!agencies.some(a => a.email === form.email)) {
-        agencies.push(mockAgency);
-        localStorage.setItem('registeredAgencies', JSON.stringify(agencies));
-      }
-
-      alert("Agency Registered Successfully!");
-      navigate("/agency-dashboard");
+      setError(err.message || "Unable to submit agency registration.");
     }
   };
 

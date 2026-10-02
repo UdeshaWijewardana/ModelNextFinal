@@ -1,10 +1,10 @@
 .webcam-test-page {
-  --webcam-ink: #182a35;
-  --webcam-muted: #637681;
-  --webcam-line: #dce5e9;
-  --webcam-accent: #176b63;
-  --webcam-accent-soft: #e9f5f2;
-  --webcam-warn: #a54832;
+  --webcam-ink: var(--mn-text-primary);
+  --webcam-muted: var(--mn-text-secondary);
+  --webcam-line: var(--mn-border);
+  --webcam-accent: var(--mn-casper-strong);
+  --webcam-accent-soft: rgba(200, 215, 225, .18);
+  --webcam-warn: var(--mn-error);
   width: min(760px, calc(100% - 24px));
   margin: 24px auto;
   color: var(--webcam-ink);
@@ -32,7 +32,7 @@
   overflow: hidden;
   border: 1px solid var(--webcam-line);
   border-radius: 8px;
-  background: #fff;
+  background: var(--mn-surface);
   box-shadow: 0 8px 26px rgb(24 42 53 / 7%);
 }
 
@@ -85,7 +85,7 @@
   overflow: hidden;
   aspect-ratio: 4 / 3;
   place-items: center;
-  border: 1px solid #cbd7dc;
+  border: 1px solid var(--mn-border);
   border-radius: 6px;
   background: #17252d;
 }
@@ -185,7 +185,7 @@
   padding: 10px 12px;
   border: 1px solid var(--webcam-line);
   border-radius: 6px;
-  background: #f7faf9;
+  background: var(--mn-surface-raised);
 }
 
 .status-symbol {
@@ -220,9 +220,7 @@
   color: #155e54;
 }
 
-.status-waiting {
-  color: #506570;
-}
+.status-waiting { color: var(--mn-text-secondary); }
 
 .status-error {
   border-color: #e6c7be;
@@ -237,7 +235,7 @@
   border: 1px solid #b8d9d1;
   border-left: 4px solid var(--webcam-accent);
   border-radius: 6px;
-  background: #fbfefd;
+  background: var(--mn-surface-raised);
 }
 
 .current-action.action-complete {
@@ -304,7 +302,7 @@
   padding: 3px 7px;
   border: 1px solid transparent;
   border-radius: 5px;
-  color: #6b7c85;
+  color: var(--mn-text-secondary);
   font-size: 13px;
 }
 

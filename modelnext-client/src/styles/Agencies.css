@@ -7,7 +7,7 @@
 
 .agencies-hero {
   padding: 140px 20px 60px;
-  background: linear-gradient(180deg, rgba(242, 202, 80, 0.05) 0%, rgba(19, 19, 19, 0) 100%);
+  background: linear-gradient(180deg, rgba(200, 215, 225, 0.05) 0%, rgba(19, 19, 19, 0) 100%);
   text-align: center;
 }
 
@@ -28,7 +28,7 @@
 }
 
 .gold-text {
-  background: linear-gradient(135deg, #f2ca50, #d4af37);
+  background: linear-gradient(135deg, var(--mn-casper), var(--mn-casper));
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
 }
@@ -57,7 +57,7 @@
 
 .agency-card:hover {
   transform: translateY(-8px);
-  border-color: rgba(242, 202, 80, 0.25);
+  border-color: rgba(200, 215, 225, 0.25);
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
 }
 
@@ -84,12 +84,12 @@
   right: 15px;
   background: rgba(19, 19, 19, 0.8);
   backdrop-filter: blur(5px);
-  color: #f2ca50;
+  color: var(--mn-casper);
   padding: 4px 8px;
   border-radius: 4px;
   font-size: 12px;
   font-weight: 700;
-  border: 1px solid rgba(242, 202, 80, 0.3);
+  border: 1px solid rgba(200, 215, 225, 0.3);
 }
 
 .agency-info {
@@ -100,7 +100,7 @@
 }
 
 .agency-location {
-  color: #f2ca50;
+  color: var(--mn-casper);
   font-size: 11px;
   font-weight: 700;
   text-transform: uppercase;
@@ -142,8 +142,8 @@
 }
 
 .agency-card:hover .agency-tag {
-  background: rgba(242, 202, 80, 0.08);
-  color: #f2ca50;
+  background: rgba(200, 215, 225, 0.08);
+  color: var(--mn-casper);
 }
 
 .agency-btn {
@@ -162,10 +162,10 @@
 }
 
 .agency-card:hover .agency-btn {
-  background: linear-gradient(135deg, #f2ca50, #d4af37);
+  background: linear-gradient(135deg, var(--mn-casper), var(--mn-casper));
   color: #131313;
   border-color: transparent;
-  box-shadow: 0 4px 15px rgba(242, 202, 80, 0.2);
+  box-shadow: 0 4px 15px rgba(200, 215, 225, 0.2);
 }
 
 @media screen and (max-width: 768px) {

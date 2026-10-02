@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { apiFetch } from "../api";
 
 export default function Login() {
   const navigate = useNavigate();
@@ -16,21 +17,18 @@ export default function Login() {
       return;
     }
 
-    // 🟢 LOCAL MOCK ADMIN INTERCEPTION
-    if (email === "admin@modelnext.com" && password === "admin123") {
-      const adminSession = {
-        role: "admin",
-        email: "admin@modelnext.com",
-        name: "System Administrator",
-        verified: true
-      };
-      localStorage.setItem("currentUser", JSON.stringify(adminSession));
-      navigate("/admin");
-      return;
-    }
-
     try {
-      const res = await fetch("http://localhost:5000/api/auth/login", {
+      const adminResponse = await apiFetch("/admin/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password })
+      });
+      if (adminResponse.ok) {
+        navigate("/admin");
+        return;
+      }
+
+      const res = await apiFetch("/auth/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password })
@@ -39,20 +37,11 @@ export default function Login() {
 
       if (!res.ok) throw new Error(data.error || "Login failed");
 
-      // Save currentUser session details
-      localStorage.setItem("currentUser", JSON.stringify({
-        role: data.role,
-        email: data.email,
-        name: data.name || "User",
-        verified: data.verified || false
-      }));
-
       // Route based on role returned by backend
-      if (data.role === "model") navigate("/dashboard");
-      else if (data.role === "client") navigate("/client-portal");
-      else if (data.role === "agency") navigate("/agency-dashboard");
-      else if (data.role === "photographer") navigate("/photographer-dashboard");
-      else if (data.role === "admin") navigate("/admin");
+      if (data.user.role === "model") navigate("/dashboard");
+      else if (data.user.role === "client") navigate("/client-portal");
+      else if (data.user.role === "agency") navigate("/agency-dashboard");
+      else if (data.user.role === "photographer") navigate("/photographer-dashboard");
       else navigate("/");
     } catch (err) {
       setError(err.message);
@@ -69,7 +58,7 @@ export default function Login() {
     subtitle: { color: '#AAA', fontSize: '15px', marginBottom: '40px', lineHeight: '1.6' },
     form: { display: 'flex', flexDirection: 'column', gap: '20px', maxWidth: '400px' },
     input: { padding: '16px 20px', background: '#2A2A2A', border: '1px solid #444', color: '#FFF', fontSize: '14px', outline: 'none' },
-    button: { padding: '18px', background: '#C5A572', border: 'none', color: '#FFF', fontSize: '13px', fontWeight: 'bold', letterSpacing: '2px', cursor: 'pointer', marginTop: '10px' },
+    button: { padding: '18px', background: 'var(--mn-casper)', border: 'none', color: '#000', fontSize: '13px', fontWeight: 'bold', letterSpacing: '2px', cursor: 'pointer', marginTop: '10px' },
     error: { color: '#E57373', fontSize: '13px', marginTop: '-10px', background: 'rgba(229, 115, 115, 0.1)', padding: '10px', borderLeft: '3px solid #E57373' },
     registerLink: { color: '#888', fontSize: '13px', cursor: 'pointer', marginTop: '30px', display: 'inline-block' }
   };
@@ -106,7 +95,7 @@ export default function Login() {
           </form>
 
           <div style={styles.registerLink} onClick={() => navigate("/role")}>
-            Don't have an account? <b style={{color: '#C5A572', marginLeft: '5px'}}>Join the Network</b>
+            Don't have an account? <b style={{color: 'var(--mn-casper)', marginLeft: '5px'}}>Join the Network</b>
           </div>
         </div>
       </div>

@@ -31,13 +31,13 @@
 
 /* LOGO */
 .navbar-logo {
-  color: #f2ca50;
+  color: var(--mn-casper);
   font-weight: 800;
   font-size: 24px;
   letter-spacing: 1.5px;
   cursor: pointer;
   text-transform: uppercase;
-  background: linear-gradient(135deg, #f2ca50 30%, #d4af37 100%);
+  background: linear-gradient(135deg, var(--mn-casper) 30%, var(--mn-casper) 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   transition: opacity 0.3s ease;
@@ -71,7 +71,7 @@
 }
 
 .nav-item.active {
-  color: #f2ca50;
+  color: var(--mn-casper);
 }
 
 .nav-item.active::after {
@@ -81,7 +81,7 @@
   left: 0;
   width: 100%;
   height: 2px;
-  background: linear-gradient(135deg, #f2ca50, #d4af37);
+  background: linear-gradient(135deg, var(--mn-casper), var(--mn-casper));
   border-radius: 2px;
 }
 
@@ -92,7 +92,7 @@
   left: 50%;
   width: 0;
   height: 2px;
-  background: linear-gradient(135deg, #f2ca50, #d4af37);
+  background: linear-gradient(135deg, var(--mn-casper), var(--mn-casper));
   transition: all 0.3s ease;
   transform: translateX(-50%);
 }
@@ -110,7 +110,7 @@
 
 .nav-btn-login {
   background: transparent;
-  border: 1px solid rgba(242, 202, 80, 0.4);
+  border: 1px solid rgba(200, 215, 225, 0.4);
   color: #e2e2e2;
   padding: 10px 22px;
   cursor: pointer;
@@ -123,14 +123,14 @@
 }
 
 .nav-btn-login:hover {
-  border-color: #f2ca50;
-  color: #f2ca50;
-  background: rgba(242, 202, 80, 0.05);
+  border-color: var(--mn-casper);
+  color: var(--mn-casper);
+  background: rgba(200, 215, 225, 0.05);
   transform: translateY(-1px);
 }
 
 .nav-btn-register {
-  background: linear-gradient(135deg, #f2ca50, #d4af37);
+  background: linear-gradient(135deg, var(--mn-casper), var(--mn-casper));
   border: none;
   color: #131313;
   padding: 11px 24px;
@@ -141,12 +141,12 @@
   letter-spacing: 1.5px;
   transition: all 0.3s ease;
   border-radius: 4px;
-  box-shadow: 0 4px 15px rgba(242, 202, 80, 0.15);
+  box-shadow: 0 4px 15px rgba(200, 215, 225, 0.15);
 }
 
 .nav-btn-register:hover {
   transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(242, 202, 80, 0.3);
+  box-shadow: 0 6px 20px rgba(200, 215, 225, 0.3);
 }
 
 /* MOBILE ACTIONS (HIDDEN IN DESKTOP) */

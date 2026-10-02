@@ -4,10 +4,13 @@ const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
 const mongoose = require('mongoose');
+const bcrypt = require('bcryptjs');
 const ModelUser = require('../models/ModelUser');
 const { extractDateOfBirth } = require('../utils/dateExtractor');
 const { verifyIdentityDocument } = require('../services/identityVerificationService');
 const { livenessVerificationSessionService } = require('../services/livenessVerificationSessionService');
+const { databaseUnavailable } = require('../middleware/requireDatabase');
+const { USER_SESSION_COOKIE, cookieOptions, issueUserSession } = require('../utils/sessionCookies');
 
 const allowedIdTypes = new Set(['nic', 'license', 'passport']);
 
@@ -56,6 +59,9 @@ const validateRegistrationFields = (data, files) => {
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(data.email)) {
     return 'Enter a valid email address.';
   }
+  if (['weight', 'height', 'waist', 'hip'].some((field) => !Number.isFinite(Number(data[field])) || Number(data[field]) <= 0)) {
+    return 'Weight, height, waist, and hip must be numbers greater than 0.';
+  }
   if (!files.profileImage?.length) {
     return 'A profile image is required.';
   }
@@ -90,6 +96,12 @@ const handleVerificationUpload = (req, res, next) => {
     next();
   });
 };
+
+router.get('/', async (_req, res) => {
+  if (mongoose.connection.readyState !== 1) return databaseUnavailable(res);
+  const models = await ModelUser.find({ approvalStatus: 'approved' }).select('fullName categories height waist hip profileImage location').sort({ createdAt: -1 });
+  return res.json({ models });
+});
 
 router.post('/verify-identity', handleVerificationUpload, async (req, res) => {
   const files = req.files || {};
@@ -144,7 +156,7 @@ router.post('/liveness/start', async (req, res) => {
     return res.status(201).json(session);
   } catch (error) {
     console.error('Liveness session creation failed:', error.message);
-    return res.status(500).json({ error: 'Could not start liveness verification. Please try again.' });
+    return res.status(error.status || 500).json({ error: error.status ? error.message : 'Could not start liveness verification. Please try again.' });
   }
 });
 
@@ -167,14 +179,22 @@ router.post('/register', upload.fields([
   { name: 'profileImage', maxCount: 1 },
   { name: 'portfolio', maxCount: 6 },
   { name: 'idFront', maxCount: 1 },
-  { name: 'idBack', maxCount: 1 },
-  { name: 'selfieMedia', maxCount: 1 }
+  { name: 'idBack', maxCount: 1 }
 ]), async (req, res) => {
   const files = req.files || {};
   let livenessCredentials = null;
   let livenessClaimed = false;
   let registrationPersisted = false;
   try {
+    if (mongoose.connection.readyState !== 1) {
+      await removeUploadedFiles(files);
+      return databaseUnavailable(res);
+    }
+    if (!process.env.JWT_SECRET) {
+      await removeUploadedFiles(files);
+      return res.status(503).json({ error: 'User authentication is not configured.' });
+    }
+
     const data = req.body;
     const validationError = validateIdentityFields(data);
     if (validationError) {
@@ -200,11 +220,6 @@ router.post('/register', upload.fields([
       await removeUploadedFiles(files);
       return res.status(400).json({ success: false, error: 'Both sides of the ID are required for national ID and driving license registrations.' });
     }
-    if (!files.selfieMedia?.length) {
-      await removeUploadedFiles(files);
-      return res.status(400).json({ success: false, error: 'A selfie or selfie video is still required by the existing registration form.' });
-    }
-
     livenessCredentials = {
       verificationId: data.livenessVerificationId,
       attemptId: data.livenessAttemptId,
@@ -243,7 +258,7 @@ router.post('/register', upload.fields([
     }
 
     const registrationData = { ...data };
-    for (const field of ['verification', 'verified', 'verificationStatus', 'verificationSummary', 'aiConfidence', 'aiChecks', 'livenessVerificationId', 'livenessAttemptId']) {
+    for (const field of ['verification', 'verified', 'verificationStatus', 'verificationSummary', 'aiConfidence', 'aiChecks', 'approvalStatus', 'approvedAt', 'approvedBy', 'rejectionReason', 'livenessVerificationId', 'livenessAttemptId']) {
       delete registrationData[field];
     }
 
@@ -254,7 +269,6 @@ router.post('/register', upload.fields([
       portfolioImages: files.portfolio ? files.portfolio.map((file) => file.path) : [],
       idFrontImage: idFront.path,
       idBackImage: files.idBack ? files.idBack[0].path : null,
-      selfieMedia: files.selfieMedia ? files.selfieMedia[0].path : null,
       verificationStatus: 'identity_verified',
       verificationSummary: 'Identity document name and date of birth matched.',
       aiChecks: {
@@ -265,22 +279,16 @@ router.post('/register', upload.fields([
       createdAt: new Date().toISOString()
     };
 
-    if (mongoose.connection.readyState === 1) {
-      const newModel = new ModelUser(modelRecord);
-      await newModel.save();
-      registrationPersisted = true;
-      await sessionService.consume(livenessCredentials);
-      livenessClaimed = false;
-      return res.status(201).json({ message: 'Model registered successfully', model: newModel });
-    }
+    modelRecord.email = modelRecord.email.trim().toLowerCase();
+    modelRecord.password = await bcrypt.hash(modelRecord.password, 12);
 
-    const existingModels = req.app.locals.readLocalModels();
-    existingModels.push(modelRecord);
-    req.app.locals.writeLocalModels(existingModels);
+    const newModel = new ModelUser(modelRecord);
+    await newModel.save();
     registrationPersisted = true;
+    res.cookie(USER_SESSION_COOKIE, issueUserSession(newModel, 'model'), cookieOptions());
     await sessionService.consume(livenessCredentials);
     livenessClaimed = false;
-    res.status(201).json({ message: 'Model registered successfully using local fallback storage', model: modelRecord });
+    return res.status(201).json({ message: 'Model registered successfully', model: { id: newModel._id, fullName: newModel.fullName, email: newModel.email, approvalStatus: newModel.approvalStatus } });
   } catch (error) {
     if (!registrationPersisted) await removeUploadedFiles(files);
     if (livenessClaimed && !registrationPersisted && livenessCredentials) {

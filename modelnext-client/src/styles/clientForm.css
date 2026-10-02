@@ -20,7 +20,7 @@
 
 /* TITLE */
 .form-box h1 {
-  color: #f2ca50;
+  color: var(--mn-casper);
   margin-bottom: 10px;
 }
 
@@ -44,14 +44,14 @@
 
 .form-box input:focus,
 .form-box select:focus {
-  border-color: #f2ca50;
+  border-color: var(--mn-casper);
 }
 
 /* BUTTON */
 .form-box button {
   width: 100%;
   padding: 14px;
-  background: linear-gradient(135deg, #f2ca50, #d4af37);
+  background: linear-gradient(135deg, var(--mn-casper), var(--mn-casper));
   border: none;
   color: black;
   font-weight: bold;

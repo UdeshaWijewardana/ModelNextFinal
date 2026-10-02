@@ -1,8 +1,8 @@
 :root {
-  --bg-cream: #F9F5F0;
-  --bg-white: #FFFFFF;
-  --text-black: #1A1A1A;
-  --accent-gold: #C5A572;
+  --bg-cream: var(--mn-black);
+  --bg-white: var(--mn-surface-raised);
+  --text-black: var(--mn-text-primary);
+  --accent-gold: var(--mn-casper);
   --font-serif: 'Playfair Display', serif;
   --font-sans: 'Montserrat', sans-serif;
 }
@@ -11,9 +11,11 @@
 
 body {
   font-family: var(--font-sans);
-  background-color: var(--bg-cream);
-  color: var(--text-black);
+  background-color: var(--mn-black);
+  color: var(--mn-text-primary);
 }
+
+#root { min-height: 100vh; background: var(--mn-black); }
 
 a { text-decoration: none; color: inherit; transition: 0.3s; }
 

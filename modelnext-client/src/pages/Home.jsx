@@ -1,6 +1,7 @@
 import { useNavigate } from "react-router-dom";
 import { useState, useEffect, useRef } from "react";
 import Navbar from "../components/Navbar";
+import { apiFetch, readJson } from "../api";
 import "../styles/home.css";
 
 export default function Home() {
@@ -9,47 +10,21 @@ export default function Home() {
   const videoRef = useRef(null);
   const bannerRef = useRef(null);
   const [offsetY, setOffsetY] = useState(0);
-
-  const featuredModels = [
-    {
-      name: "Aurelia Rose",
-      number: "MN-2048",
-      title: "Editorial & Luxury Runway",
-      image:
-        "https://images.unsplash.com/photo-1544005313-94ddf0286df2",
-    },
-    {
-      name: "Mila Laurent",
-      number: "MN-1874",
-      title: "Commercial & Fashion Week",
-      image:
-        "https://images.unsplash.com/photo-1524504388940-b1c1722653e1",
-    },
-    {
-      name: "Noah Sterling",
-      number: "MN-2210",
-      title: "High-End Brand Campaigns",
-      image:
-        "https://images.unsplash.com/photo-1500648767791-00dcc994a43e",
-    },
-    {
-      name: "Elena Voss",
-      number: "MN-1932",
-      title: "Beauty & Bridal Editorial",
-      image:
-        "https://images.unsplash.com/photo-1517841905240-472988babdf9",
-    },
-    {
-      name: "Julian Cross",
-      number: "MN-2089",
-      title: "Luxury Lifestyle Campaigns",
-      image:
-        "https://images.unsplash.com/photo-1529626455594-4ff0802cfb7e",
-    },
-  ];
+  const [featuredModels, setFeaturedModels] = useState([]);
 
   useEffect(() => {
     // Video sound control logic can go here if needed
+  }, []);
+
+  useEffect(() => {
+    readJson(apiFetch("/models"))
+      .then(({ models }) => setFeaturedModels(models.slice(0, 5).map((model) => ({
+        name: model.fullName,
+        number: model._id,
+        title: model.categories?.join(" & ") || "ModelNext Talent",
+        image: model.profileImage ? `http://localhost:5000/${model.profileImage}` : "",
+      }))))
+      .catch(() => setFeaturedModels([]));
   }, []);
 
   useEffect(() => {

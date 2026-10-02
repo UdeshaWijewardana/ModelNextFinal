@@ -34,7 +34,7 @@
 }
 
 .event-left h2 {
-  color: #f2ca50;
+  color: var(--mn-casper);
   font-size: 24px;
 }
 
@@ -117,8 +117,8 @@ textarea::placeholder {
 input:focus,
 select:focus,
 textarea:focus {
-  border-color: #f2ca50;
-  box-shadow: 0 0 10px rgba(242,202,80,0.25);
+  border-color: var(--mn-casper);
+  box-shadow: 0 0 10px rgba(200, 215, 225,0.25);
 }
 
 /* ================= TEXTAREA ================= */
@@ -144,7 +144,7 @@ textarea {
 }
 
 .upload-box:hover {
-  border-color: #f2ca50;
+  border-color: var(--mn-casper);
 }
 
 .upload-box img {
@@ -164,7 +164,7 @@ textarea {
   margin-top: 15px;
   padding: 10px;
 
-  background: linear-gradient(135deg, #f2ca50, #d4af37);
+  background: linear-gradient(135deg, var(--mn-casper), var(--mn-casper));
   color: #000;
   border: none;
 
@@ -177,7 +177,7 @@ textarea {
 
 .submit-btn:hover {
   transform: translateY(-1px);
-  box-shadow: 0 8px 20px rgba(242,202,80,0.3);
+  box-shadow: 0 8px 20px rgba(200, 215, 225,0.3);
 }
 
 /* ================= RESPONSIVE ================= */

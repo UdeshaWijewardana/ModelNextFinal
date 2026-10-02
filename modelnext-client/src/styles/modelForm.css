@@ -19,7 +19,7 @@
 }
 
 .logo {
-  color: #c9a95c;
+  color: var(--mn-casper);
   margin-bottom: 50px;
   font-size: 24px;
   font-weight: 700;
@@ -48,9 +48,9 @@
 }
 
 .step-circle.active {
-  background: #c9a95c;
+  background: var(--mn-casper);
   color: #1a1a1a;
-  border-color: #c9a95c;
+  border-color: var(--mn-casper);
 }
 
 .step-item p {
@@ -130,7 +130,7 @@ input::placeholder, select::placeholder {
 
 input:focus, select:focus {
   outline: none;
-  border-color: #c9a95c;
+  border-color: var(--mn-casper);
   background: #2a2a2a;
   box-shadow: 0 0 8px rgba(201, 169, 92, 0.2);
 }
@@ -179,12 +179,12 @@ input:focus, select:focus {
 }
 
 .grid-item input:hover {
-  border-color: #c9a95c;
+  border-color: var(--mn-casper);
   background: #333;
 }
 
 .grid-item input:focus {
-  border-color: #c9a95c;
+  border-color: var(--mn-casper);
   background: #333;
 }
 
@@ -247,7 +247,7 @@ form .subtitle {
 }
 
 .next-btn {
-  background: #c9a95c;
+  background: var(--mn-casper);
   color: white;
   flex: 1;
 }
@@ -260,7 +260,7 @@ form .subtitle {
 button {
   margin-top: 15px;
   padding: 10px;
-  background: #c9a95c;
+  background: var(--mn-casper);
   border: none;
   color: white;
   border-radius: 6px;
@@ -330,7 +330,7 @@ button:hover {
 .verification-note {
   margin-top: 16px;
   padding: 12px 14px;
-  border-left: 3px solid #c9a95c;
+  border-left: 3px solid var(--mn-casper);
   background: rgba(201, 169, 92, 0.11);
   color: #e8dcb4;
   font-size: 13px;

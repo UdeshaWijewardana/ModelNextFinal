@@ -76,67 +76,17 @@ export default function PhotographerForm() {
       const res = await fetch("http://localhost:5000/api/photographers/register", {
         method: "POST",
         body: formData,
+        credentials: "include",
       });
 
       const data = await res.json();
 
       if (!res.ok) throw new Error(data.error || "Failed to register");
 
-      // Store photographer data in localStorage for dashboard
-      localStorage.setItem('photographerData', JSON.stringify(data.photographer));
-      localStorage.setItem('currentUser', JSON.stringify({
-        role: "photographer",
-        email: data.photographer.email || form.email,
-        name: data.photographer.name || form.name,
-        location: data.photographer.location || form.location,
-        phone: data.photographer.phone || form.phone,
-        verified: false,
-        details: data.photographer
-      }));
-
-      // Save to registeredPhotographers list
-      const photographers = JSON.parse(localStorage.getItem('registeredPhotographers')) || [];
-      if (!photographers.some(p => p.email === (data.photographer.email || form.email))) {
-        photographers.push(data.photographer);
-        localStorage.setItem('registeredPhotographers', JSON.stringify(photographers));
-      }
-
-      alert("Photographer Registered Successfully!");
-      navigate("/photographer-dashboard");
+      navigate("/photographer-dashboard", { state: { registrationSubmitted: true } });
     } catch (err) {
       console.error(err);
-      
-      // Fallback local storage mock if backend server is not running
-      const mockPhotographer = {
-        name: form.name,
-        email: form.email,
-        phone: form.phone,
-        location: form.location,
-        portfolio: form.portfolio,
-        profileImage: preview || "https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?auto=format&fit=crop&w=800&q=80",
-        verified: false
-      };
-      
-      localStorage.setItem('photographerData', JSON.stringify(mockPhotographer));
-      localStorage.setItem('currentUser', JSON.stringify({
-        role: "photographer",
-        email: form.email,
-        name: form.name,
-        location: form.location,
-        phone: form.phone,
-        verified: false,
-        details: mockPhotographer
-      }));
-
-      // Save to registeredPhotographers list
-      const photographers = JSON.parse(localStorage.getItem('registeredPhotographers')) || [];
-      if (!photographers.some(p => p.email === form.email)) {
-        photographers.push(mockPhotographer);
-        localStorage.setItem('registeredPhotographers', JSON.stringify(photographers));
-      }
-
-      alert("Photographer Registered Successfully!");
-      navigate("/photographer-dashboard");
+      setError(err.message || "Unable to submit photographer registration.");
     }
   };
 

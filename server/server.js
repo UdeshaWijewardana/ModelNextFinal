@@ -1,7 +1,6 @@
 require('dotenv').config();
 const express = require('express');
 const mongoose = require('mongoose');
-const fs = require('fs');
 const path = require('path');
 const cors = require('cors');
 
@@ -10,42 +9,25 @@ const agencyRoutes = require('./routes/agencyRoutes');
 const clientRoutes = require('./routes/clientRoutes');
 const modelRoutes = require('./routes/modelRoutes');
 const photographerRoutes = require('./routes/photographerRoutes');
-const authRoutes = require('./routes/authRoutes');
+const { router: authRoutes } = require('./routes/authRoutes');
+const adminRoutes = require('./routes/adminRoutes');
+const { router: eventRoutes } = require('./routes/eventRoutes');
+const notificationRoutes = require('./routes/notificationRoutes');
 
 const app = express();
-const dataFilePath = path.join(__dirname, 'data', 'models.json');
 
 // ✅ Middleware
-app.use(cors());
+app.use(cors({ origin: 'http://localhost:3000', credentials: true }));
 app.use(express.json());
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // ✅ Static folder (for uploaded images)
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
-// ✅ Local fallback storage for registrations when MongoDB is unavailable
-const readLocalModels = () => {
-  try {
-    if (!fs.existsSync(dataFilePath)) return [];
-    const raw = fs.readFileSync(dataFilePath, 'utf8');
-    return JSON.parse(raw);
-  } catch (error) {
-    console.error('⚠️ Local data read failed:', error.message);
-    return [];
-  }
-};
-
-const writeLocalModels = (models) => {
-  fs.writeFileSync(dataFilePath, JSON.stringify(models, null, 2));
-};
-
-app.locals.readLocalModels = readLocalModels;
-app.locals.writeLocalModels = writeLocalModels;
-
-// ✅ MongoDB Connection with fallback
+// ✅ MongoDB is required for persistent application operations.
 const connectDatabase = async () => {
   if (!process.env.MONGO_URI) {
-    console.warn('⚠️ No MONGO_URI configured. Using local fallback storage.');
+    console.warn('⚠️ No MONGO_URI configured. Persistent operations are unavailable.');
     return;
   }
 
@@ -57,7 +39,7 @@ const connectDatabase = async () => {
     console.log('✅ MongoDB Connected');
   } catch (err) {
     console.error('❌ MongoDB Error:', err.message);
-    console.warn('⚠️ Continuing with local fallback storage.');
+    console.warn('⚠️ Persistent operations are unavailable until MongoDB connects.');
   }
 };
 
@@ -70,6 +52,9 @@ app.use('/api/clients', clientRoutes);
 app.use('/api/models', modelRoutes);
 app.use('/api/photographers', photographerRoutes);
 app.use('/api/auth', authRoutes);
+app.use('/api/admin', adminRoutes);
+app.use('/api/events', eventRoutes);
+app.use('/api/notifications', notificationRoutes);
 
 // ✅ Start server
 const PORT = process.env.PORT || 5000;
