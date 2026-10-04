@@ -17,7 +17,8 @@ export default function Home() {
   }, []);
 
   useEffect(() => {
-    readJson(apiFetch("/models"))
+    apiFetch("/models")
+      .then(readJson)
       .then(({ models }) => setFeaturedModels(models.slice(0, 5).map((model) => ({
         name: model.fullName,
         number: model._id,

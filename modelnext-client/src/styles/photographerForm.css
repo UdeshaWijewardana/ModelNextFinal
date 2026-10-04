@@ -10,7 +10,8 @@
 
 /* BOX */
 .photo-box {
-  width: 400px;
+  width: min(400px, calc(100% - 32px));
+  box-sizing: border-box;
   background: #111;
   padding: 40px;
   border-radius: 12px;
@@ -100,4 +101,16 @@
   position: absolute;
   inset: 0;
   opacity: 0;
+}
+
+@media (max-width: 520px) {
+  .photo-page {
+    align-items: flex-start;
+    padding: 24px 16px;
+  }
+
+  .photo-box {
+    width: 100%;
+    padding: 28px 24px;
+  }
 }

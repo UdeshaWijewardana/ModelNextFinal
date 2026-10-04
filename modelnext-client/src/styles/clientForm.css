@@ -10,7 +10,8 @@
 
 /* FORM BOX */
 .form-box {
-  width: 400px;
+  width: min(400px, calc(100% - 32px));
+  box-sizing: border-box;
   background: #111;
   padding: 40px;
   border-radius: 12px;
@@ -61,4 +62,16 @@
 
 .form-box button:hover {
   opacity: 0.85;
+}
+
+@media (max-width: 520px) {
+  .form-page {
+    align-items: flex-start;
+    padding: 24px 16px;
+  }
+
+  .form-page .form-box {
+    width: 100%;
+    padding: 28px 24px;
+  }
 }

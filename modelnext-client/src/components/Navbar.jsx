@@ -34,7 +34,14 @@ export default function Navbar() {
           >
             Home
           </NavLink>
-          <NavLink 
+          <NavLink
+            to="/about"
+            className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}
+            onClick={() => setIsOpen(false)}
+          >
+            About Us
+          </NavLink>
+          <NavLink
             to="/agencies" 
             className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}
             onClick={() => setIsOpen(false)}

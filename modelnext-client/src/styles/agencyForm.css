@@ -10,7 +10,8 @@
 
 /* BOX */
 .agency-box {
-  width: 420px;
+  width: min(420px, calc(100% - 32px));
+  box-sizing: border-box;
   background: #111;
   padding: 40px;
   border-radius: 12px;
@@ -132,4 +133,16 @@
   position: absolute;
   inset: 0;
   opacity: 0;
+}
+
+@media (max-width: 520px) {
+  .agency-page {
+    align-items: flex-start;
+    padding: 24px 16px;
+  }
+
+  .agency-box {
+    width: 100%;
+    padding: 28px 24px;
+  }
 }

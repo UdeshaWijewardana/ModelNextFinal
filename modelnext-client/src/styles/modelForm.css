@@ -79,7 +79,7 @@
 }
 
 /* FORM */
-.form-box {
+.main-container .form-box {
   flex: 1;
   display: flex;
   justify-content: center;
@@ -89,7 +89,7 @@
   background: linear-gradient(135deg, #1a1a1a 0%, #222 100%);
 }
 
-.form-box::after {
+.main-container .form-box::after {
   content: '';
   position: absolute;
   right: 0;
@@ -101,7 +101,7 @@
   opacity: 0.9;
 }
 
-form {
+.main-container form {
   width: 550px;
   background: #1f1f1f;
   padding: 50px;
@@ -112,7 +112,8 @@ form {
 }
 
 /* INPUT */
-input, select {
+.main-container input,
+.main-container select {
   width: 100%;
   margin: 10px 0 20px 0;
   padding: 14px;
@@ -124,11 +125,13 @@ input, select {
   transition: all 0.3s;
 }
 
-input::placeholder, select::placeholder {
+.main-container input::placeholder,
+.main-container select::placeholder {
   color: #666;
 }
 
-input:focus, select:focus {
+.main-container input:focus,
+.main-container select:focus {
   outline: none;
   border-color: var(--mn-casper);
   background: #2a2a2a;
@@ -189,7 +192,7 @@ input:focus, select:focus {
 }
 
 /* LABEL */
-label {
+.main-container label {
   color: #b3b3b3;
   display: block;
   margin-top: 15px;
@@ -198,19 +201,19 @@ label {
   font-size: 14px;
 }
 
-label span {
+.main-container label span {
   color: #ff6b6b;
 }
 
 /* HEADING */
-form h1 {
+.main-container form h1 {
   color: #ffffff;
   margin-bottom: 10px;
   font-size: 28px;
   font-weight: 700;
 }
 
-form .subtitle {
+.main-container form .subtitle {
   color: #888;
   margin-bottom: 30px;
   font-size: 14px;
@@ -257,7 +260,7 @@ form .subtitle {
   box-shadow: 0 8px 20px rgba(201, 169, 92, 0.3);
 }
 
-button {
+.main-container button {
   margin-top: 15px;
   padding: 10px;
   background: var(--mn-casper);
@@ -269,7 +272,7 @@ button {
   transition: background 0.3s;
 }
 
-button:hover {
+.main-container button:hover {
   background: #b8964a;
 }
 
@@ -337,7 +340,7 @@ button:hover {
   line-height: 1.5;
 }
 
-.form-box form.registration-liveness-form {
+.main-container .form-box form.registration-liveness-form {
   width: min(760px, calc(100vw - 380px));
   box-sizing: border-box;
   padding: 24px;
@@ -354,42 +357,77 @@ button:hover {
   }
 }
 
-@media (max-width: 760px) {
-  .main-container.registration-liveness {
-    flex-direction: column;
+@media (max-height: 820px) and (min-width: 761px) {
+  .main-container:not(.registration-verification-flow) form {
+    padding: 21px 36px;
   }
 
-  .registration-liveness .sidebar {
+  .main-container:not(.registration-verification-flow) input,
+  .main-container:not(.registration-verification-flow) select {
+    margin: 6px 0 12px;
+    padding: 12px;
+  }
+
+  .main-container:not(.registration-verification-flow) .button-group {
+    margin-top: 18px;
+  }
+}
+
+@media (max-width: 760px) {
+  .main-container {
+    flex-direction: column;
+    min-height: 100vh;
+    height: auto;
+  }
+
+  .main-container .sidebar {
     display: flex;
-    width: auto;
+    width: 100%;
+    box-sizing: border-box;
     gap: 8px;
     padding: 12px 16px;
     overflow-x: auto;
   }
 
-  .registration-liveness .logo,
-  .registration-liveness .step-item > div:last-child {
+  .main-container .logo,
+  .main-container .step-item > div:last-child {
     display: none;
   }
 
-  .registration-liveness .step-item {
+  .main-container .step-item {
     margin: 0;
   }
 
-  .registration-liveness .step-circle {
+  .main-container .step-circle {
     width: 32px;
     min-width: 32px;
     height: 32px;
   }
 
-  .registration-liveness .form-box {
+  .main-container .form-box {
     width: 100%;
     min-width: 0;
     box-sizing: border-box;
     padding: 12px;
   }
 
-  .form-box form.registration-liveness-form {
+  .main-container form {
+    width: 100%;
+    padding: 24px;
+    box-sizing: border-box;
+  }
+
+  .main-container .grid {
+    flex-direction: column;
+    gap: 0;
+  }
+
+  .main-container .portfolio-grid {
+    grid-template-columns: 1fr;
+    gap: 14px;
+  }
+
+  .main-container .form-box form.registration-liveness-form {
     width: 100%;
     padding: 16px;
   }
