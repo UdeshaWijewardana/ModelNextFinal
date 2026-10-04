@@ -256,6 +256,17 @@ router.post('/register', upload.fields([
         parsedCategories = data.categories.split(',');
       }
     }
+    let parsedSkills = [];
+    if (data.skills) {
+      try {
+        parsedSkills = JSON.parse(data.skills);
+      } catch (_error) {
+        parsedSkills = data.skills
+          .split(',')
+          .map((skill) => skill.trim())
+          .filter(Boolean);
+      }
+    }
 
     const registrationData = { ...data };
     for (const field of ['verification', 'verified', 'verificationStatus', 'verificationSummary', 'aiConfidence', 'aiChecks', 'approvalStatus', 'approvedAt', 'approvedBy', 'rejectionReason', 'livenessVerificationId', 'livenessAttemptId']) {
@@ -265,6 +276,7 @@ router.post('/register', upload.fields([
     const modelRecord = {
       ...registrationData,
       categories: parsedCategories,
+      skills: parsedSkills,
       profileImage: files.profileImage ? files.profileImage[0].path : null,
       portfolioImages: files.portfolio ? files.portfolio.map((file) => file.path) : [],
       idFrontImage: idFront.path,

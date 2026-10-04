@@ -14,6 +14,9 @@ const ownerName = (role, account) => role === 'model' ? account.fullName : (acco
 const safeEvent = (event) => ({
   id: event._id, title: event.title, eventType: event.eventType, startDate: event.startDate, endDate: event.endDate,
   location: event.location, organizerName: event.organizerName, description: event.description, image: event.image,
+  requiredGender: event.requiredGender, minAge: event.minAge, maxAge: event.maxAge,
+  minHeight: event.minHeight, maxHeight: event.maxHeight,
+  requiredCategories: event.requiredCategories || [], requiredSkills: event.requiredSkills || [],
   status: event.status, ownerId: event.ownerId, ownerRole: event.ownerRole, createdAt: event.createdAt,
 });
 
@@ -39,9 +42,34 @@ router.post('/', requireUser, requireDatabase, async (req, res) => {
   const owner = await accountModels[req.user.role].findById(req.user.id);
   if (!owner) return res.status(401).json({ error: 'Authentication is invalid or expired.' });
   if (req.user.role !== 'client' && owner.approvalStatus !== 'approved') return res.status(403).json({ error: 'Event creation is unavailable until administrator approval.' });
-  const { title, eventType, startDate, endDate, location, description, image } = req.body || {};
+  const {
+    title, eventType, startDate, endDate, location, description, image,
+    requiredGender, minAge, maxAge, minHeight, maxHeight, requiredCategories, requiredSkills,
+  } = req.body || {};
   if (![title, eventType, startDate, location, description].every((value) => typeof value === 'string' && value.trim())) return res.status(400).json({ error: 'Title, type, start date, location, and description are required.' });
-  const event = await Event.create({ title, eventType, startDate, endDate: endDate || undefined, location, description, image, organizerName: ownerName(req.user.role, owner), ownerId: owner._id, ownerRole: req.user.role });
+  const numericRequirement = (value, field) => {
+    if (value === undefined || value === '') return undefined;
+    const number = Number(value);
+    if (!Number.isFinite(number) || number < 0) throw new Error(`${field} must be a non-negative number.`);
+    return number;
+  };
+  let requirements;
+  try {
+    requirements = {
+      requiredGender: typeof requiredGender === 'string' && requiredGender.trim() ? requiredGender.trim() : undefined,
+      minAge: numericRequirement(minAge, 'Minimum age'),
+      maxAge: numericRequirement(maxAge, 'Maximum age'),
+      minHeight: numericRequirement(minHeight, 'Minimum height'),
+      maxHeight: numericRequirement(maxHeight, 'Maximum height'),
+      requiredCategories: Array.isArray(requiredCategories) ? requiredCategories.filter((item) => typeof item === 'string' && item.trim()).map((item) => item.trim()) : [],
+      requiredSkills: Array.isArray(requiredSkills) ? requiredSkills.filter((item) => typeof item === 'string' && item.trim()).map((item) => item.trim()) : [],
+    };
+  } catch (error) {
+    return res.status(400).json({ error: error.message });
+  }
+  if (requirements.minAge !== undefined && requirements.maxAge !== undefined && requirements.minAge > requirements.maxAge) return res.status(400).json({ error: 'Minimum age cannot exceed maximum age.' });
+  if (requirements.minHeight !== undefined && requirements.maxHeight !== undefined && requirements.minHeight > requirements.maxHeight) return res.status(400).json({ error: 'Minimum height cannot exceed maximum height.' });
+  const event = await Event.create({ title, eventType, startDate, endDate: endDate || undefined, location, description, image, ...requirements, organizerName: ownerName(req.user.role, owner), ownerId: owner._id, ownerRole: req.user.role });
   return res.status(201).json({ event: safeEvent(event) });
 });
 

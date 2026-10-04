@@ -13,6 +13,7 @@ const { router: authRoutes } = require('./routes/authRoutes');
 const adminRoutes = require('./routes/adminRoutes');
 const { router: eventRoutes } = require('./routes/eventRoutes');
 const notificationRoutes = require('./routes/notificationRoutes');
+const matchingRoutes = require('./routes/matchingRoutes');
 
 const app = express();
 
@@ -55,6 +56,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/events', eventRoutes);
 app.use('/api/notifications', notificationRoutes);
+app.use('/api/matching', matchingRoutes);
 
 // ✅ Start server
 const PORT = process.env.PORT || 5000;

@@ -12,6 +12,7 @@ const modelSchema = new mongoose.Schema({
   email: { type: String, required: true, unique: true },
   password: { type: String, required: true, select: false },
   categories: [{ type: String }],
+  skills: [{ type: String, trim: true }],
   profileImage: { type: String },
   portfolioImages: [{ type: String }],
   weight: { type: String },

@@ -12,6 +12,7 @@ import ProfileDetails from './pages/ProfileDetails';
 import RoleSelection from './pages/RoleSelection';
 import AgencyDashboard from './pages/AgencyDashboard';
 import PhotographerDashboard from './pages/PhotographerDashboard';
+import AIModelRecommendations from './pages/AIModelRecommendations';
 
 // NEW PAGES
 import Agencies from './pages/Agencies';
@@ -64,6 +65,7 @@ function App() {
         <Route path="/client-portal" element={<ClientDashboard />} />
         <Route path="/agency-dashboard" element={<AgencyDashboard />} />
         <Route path="/photographer-dashboard" element={<PhotographerDashboard />} />
+        <Route path="/client-portal/ai-matches/:eventId" element={<AIModelRecommendations />} />
 
         {/* PROFILE */}
         <Route path="/profile" element={<ProfileDetails />} />

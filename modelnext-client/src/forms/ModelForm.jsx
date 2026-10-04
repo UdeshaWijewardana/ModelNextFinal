@@ -18,7 +18,8 @@ const ModelForm = () => {
     height: "",
     waist: "",
     hip: "",
-    idType: "nic"
+    idType: "nic",
+    skills: ""
   });
 
   const [profile, setProfile] = useState(null);
@@ -247,6 +248,7 @@ const ModelForm = () => {
     formData.append("waist", form.waist);
     formData.append("hip", form.hip);
     formData.append("idType", form.idType);
+    formData.append("skills", form.skills);
     formData.append("livenessVerificationId", livenessSession.verificationId);
     formData.append("livenessAttemptId", livenessSession.attemptId);
     formData.append("profileImage", profile);
@@ -408,6 +410,10 @@ const ModelForm = () => {
                 </div>
               </div>
 
+              <label>Skills <span>(optional)</span></label>
+              <input name="skills" value={form.skills} placeholder="e.g., Runway, Editorial, Commercial" onChange={handleChange} />
+              <p className="field-help">Separate skills with commas so clients can find the most suitable models.</p>
+
               <div className="grid">
                 <div>
                   <label>Waist Size (cm) <span>*</span></label>
@@ -565,6 +571,7 @@ const ModelForm = () => {
                 <p><strong>Registration details</strong></p>
                 <p>{form.fullName.trim()} · {form.email.trim()} · {form.location.trim()}</p>
                 <p>Measurements: {form.weight} kg · {form.height} cm · waist {form.waist} cm · hip {form.hip} cm</p>
+                <p>Skills: {form.skills.trim() || "No skills added"}</p>
                 <p>Portfolio: profile image and six portfolio images selected.</p>
                 <p>{identityVerified ? "✓ Identity document verified" : "Identity document verification incomplete"}</p>
                 <p>{livenessCompleted ? "✓ Liveness verification complete" : "Liveness verification incomplete"}</p>
