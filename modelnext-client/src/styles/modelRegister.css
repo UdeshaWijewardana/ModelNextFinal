@@ -1,0 +1,210 @@
+/* RESET */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+/* MAIN LAYOUT */
+.main-container {
+  display: flex;
+  height: 100vh;
+  background: #ece7df;
+  font-family: "Poppins", sans-serif;
+}
+
+/* ================= SIDEBAR ================= */
+.sidebar {
+  width: 260px;
+  background: #f7f3ed;
+  padding: 40px 25px;
+  border-right: 1px solid #ddd;
+}
+
+.logo {
+  font-size: 22px;
+  font-weight: 700;
+  margin-bottom: 40px;
+}
+
+.sidebar p {
+  margin: 18px 0;
+  font-size: 14px;
+  color: #999;
+  cursor: pointer;
+  position: relative;
+  transition: 0.3s;
+}
+
+/* STEP DESCRIPTION */
+.sidebar span {
+  display: block;
+  font-size: 11px;
+  color: #bbb;
+}
+
+/* ACTIVE STEP */
+.sidebar .active {
+  color: #c9a646;
+  font-weight: 600;
+}
+
+.sidebar .active::before {
+  content: "";
+  position: absolute;
+  left: -15px;
+  top: 6px;
+  width: 8px;
+  height: 8px;
+  background: #c9a646;
+  border-radius: 50%;
+}
+
+/* ================= FORM AREA ================= */
+.form-box {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 40px;
+}
+
+/* CARD */
+form {
+  background: #ffffff;
+  padding: 50px;
+  border-radius: 14px;
+  width: 620px;
+  box-shadow: 0 10px 35px rgba(0, 0, 0, 0.06);
+}
+
+/* TITLE */
+h2 {
+  font-size: 28px;
+  margin-bottom: 10px;
+  font-weight: 600;
+}
+
+/* SUBTITLE */
+.subtitle {
+  font-size: 14px;
+  color: #777;
+  margin-bottom: 25px;
+}
+
+/* INPUTS */
+input {
+  width: 100%;
+  padding: 12px 14px;
+  margin-bottom: 15px;
+  border-radius: 8px;
+  border: 1px solid #ddd;
+  font-size: 14px;
+  transition: 0.3s;
+}
+
+input:focus {
+  border-color: #c9a646;
+  outline: none;
+  box-shadow: 0 0 5px rgba(201, 166, 70, 0.3);
+}
+
+/* FILE INPUT */
+input[type="file"] {
+  padding: 8px;
+  background: #fafafa;
+}
+
+/* ================= BUTTONS ================= */
+button {
+  padding: 12px 22px;
+  border-radius: 30px;
+  border: none;
+  background: linear-gradient(135deg, #c9a646, #a8842f);
+  color: white;
+  font-weight: 500;
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+button:hover {
+  transform: scale(1.03);
+  box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+}
+
+/* BUTTON GROUP */
+.btn-group {
+  margin-top: 10px;
+}
+
+.btn-group button {
+  margin-right: 10px;
+}
+
+/* ================= FACE BOX ================= */
+.face-box {
+  margin-top: 20px;
+  padding: 20px;
+  border: 2px dashed #ddd;
+  border-radius: 12px;
+  text-align: center;
+  background: #fafafa;
+}
+
+.face-box video {
+  border-radius: 10px;
+  margin-top: 10px;
+}
+
+.face-box img {
+  margin-top: 10px;
+  border-radius: 10px;
+  border: 1px solid #ddd;
+}
+
+/* ================= RESPONSIVE ================= */
+@media (max-width: 900px) {
+  .main-container {
+    flex-direction: column;
+  }
+
+  .sidebar {
+    width: 100%;
+    display: flex;
+    justify-content: space-around;
+    border-right: none;
+    border-bottom: 1px solid #ddd;
+  }
+
+  .form-box {
+    padding: 20px;
+  }
+
+  form {
+    width: 100%;
+    padding: 30px;
+  }
+}
+/* ===== FACE VERIFICATION STATUS ===== */
+
+.status-box {
+  margin-top: 15px;
+  text-align: left;
+  font-size: 14px;
+}
+
+.status-box p {
+  margin: 6px 0;
+  color: #444;
+}
+
+/* SUCCESS MESSAGE */
+.success-box {
+  margin-top: 20px;
+  padding: 15px;
+  background: #e8f5e9;
+  border-radius: 10px;
+  color: #2e7d32;
+  font-weight: 600;
+  text-align: center;
+}

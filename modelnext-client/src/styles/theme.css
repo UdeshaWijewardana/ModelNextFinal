@@ -1,0 +1,64 @@
+:root {
+  --mn-black: #000000;
+  --mn-surface: #141518;
+  --mn-surface-raised: #202126;
+  --mn-dove-grey: #68686c;
+  --mn-casper: #c8d7e1;
+  --mn-casper-strong: #9fb9ca;
+  --mn-white: #ffffff;
+  --mn-text-primary: #f7fafc;
+  --mn-text-secondary: #c1c8ce;
+  --mn-border: #45474d;
+  --mn-success: #79c88c;
+  --mn-warning: #e4ad55;
+  --mn-error: #e57373;
+  --mn-focus: #c8d7e1;
+}
+
+* { box-sizing: border-box; }
+html { background: var(--mn-black); }
+body { background: var(--mn-black); color: var(--mn-text-primary); }
+button, input, select, textarea { font: inherit; }
+button { min-height: 40px; border-radius: 6px; }
+button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible, a:focus-visible { outline: 3px solid var(--mn-focus); outline-offset: 3px; }
+input, select, textarea { background: var(--mn-surface-raised); color: var(--mn-text-primary); border: 1px solid var(--mn-border); border-radius: 6px; padding: 11px 12px; }
+input::placeholder, textarea::placeholder { color: var(--mn-text-secondary); opacity: .8; }
+input:focus, select:focus, textarea:focus { border-color: var(--mn-casper-strong); box-shadow: 0 0 0 3px rgba(200, 215, 225, .16); outline: none; }
+button:disabled, input:disabled { cursor: not-allowed; opacity: .58; }
+
+.gold-text { color: var(--mn-casper) !important; background: none !important; -webkit-text-fill-color: currentColor !important; }
+.gold-btn, .btn-gold, .nav-btn-register, .submit-btn, .form-box button, .agency-form-container button, .photographer-form-container button { background: var(--mn-casper) !important; color: var(--mn-black) !important; border-color: var(--mn-casper) !important; }
+.gold-btn:hover, .btn-gold:hover, .nav-btn-register:hover, .submit-btn:hover, .form-box button:hover, .agency-form-container button:hover, .photographer-form-container button:hover { background: var(--mn-casper-strong) !important; }
+.btn-outline, .nav-btn-login { background: transparent !important; color: var(--mn-text-primary) !important; border-color: var(--mn-casper-strong) !important; }
+
+.navbar, .admin-page, .models-page, .photographers-page, .agencies-page, .events-page { background: var(--mn-black) !important; color: var(--mn-text-primary) !important; }
+.navbar-logo, .nav-item.active, .nav-btn-login:hover { color: var(--mn-casper) !important; -webkit-text-fill-color: var(--mn-casper) !important; }
+.nav-item.active::after, .nav-item::after { background: var(--mn-casper) !important; }
+.admin-panel-card, .model-card, .photographer-card, .agency-card, .event-card { background: var(--mn-surface) !important; border-color: var(--mn-border) !important; }
+.admin-table th, .admin-table td { border-color: var(--mn-border) !important; color: var(--mn-text-primary); }
+.role-badge.model { color: var(--mn-casper) !important; border-color: var(--mn-casper-strong) !important; background: rgba(200, 215, 225, .12) !important; }
+.approve-btn { color: var(--mn-success) !important; border-color: var(--mn-success) !important; }
+.approve-btn:hover { background: var(--mn-success) !important; color: var(--mn-black) !important; }
+.reject-btn { color: var(--mn-error) !important; border-color: var(--mn-error) !important; }
+.reject-btn:hover { background: var(--mn-error) !important; color: var(--mn-black) !important; }
+
+.account-dashboard { max-width: 850px; margin: 40px auto; font-family: Montserrat, sans-serif; }
+.account-status-banner { margin: 18px 0; padding: 16px; border: 1px solid; border-radius: 8px; line-height: 1.5; }
+.account-status-banner p { margin: 7px 0 0; }
+.account-status-banner.pending { color: var(--mn-warning); border-color: var(--mn-warning); background: rgba(228, 173, 85, .12); }
+.account-status-banner.approved { color: var(--mn-success); border-color: var(--mn-success); background: rgba(121, 200, 140, .12); }
+.account-status-banner.rejected, .account-error { color: var(--mn-error); border-color: var(--mn-error); background: rgba(229, 115, 115, .12); }
+.account-error { border: 1px solid; border-radius: 8px; padding: 12px; }
+.account-profile-form label { display: block; margin: 12px 0; text-transform: capitalize; }
+.account-profile-form input { display: block; width: 100%; margin-top: 5px; }
+.account-profile-form.is-locked { opacity: .9; }
+.account-lock-note { color: var(--mn-text-secondary); }
+
+@media (max-width: 768px) {
+  .navbar-container { padding: 0 18px; }
+  .admin-container, .models-container, .photographers-container, .agencies-container { padding-left: 18px; padding-right: 18px; }
+  .admin-table-wrapper { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  main { max-width: 100%; padding-left: 18px !important; padding-right: 18px !important; }
+  .account-dashboard { margin-top: 24px; }
+  .account-status-banner { overflow-wrap: anywhere; }
+}
