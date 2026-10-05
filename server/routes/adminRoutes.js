@@ -1,4 +1,5 @@
-const crypto = require('crypto');
+const fs = require('fs');
+const path = require('path');
 const express = require('express');
 const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
@@ -7,6 +8,7 @@ const Admin = require('../models/Admin');
 const ModelUser = require('../models/ModelUser');
 const Photographer = require('../models/Photographer');
 const Agency = require('../models/Agency');
+const Client = require('../models/Client');
 const Event = require('../models/Event');
 const Notification = require('../models/Notification');
 const { requireAdmin } = require('../middleware/requireAdmin');
@@ -23,19 +25,6 @@ const safeAdmin = (admin) => ({
   role: admin.role,
 });
 
-const hasRequiredAuthConfiguration = () => Boolean(
-  process.env.ADMIN_INVITE_CODE && process.env.JWT_SECRET
-);
-
-const invitationMatches = (submittedCode) => {
-  const configuredCode = process.env.ADMIN_INVITE_CODE;
-  if (!configuredCode || typeof submittedCode !== 'string') return false;
-
-  const submitted = Buffer.from(submittedCode.trim());
-  const configured = Buffer.from(configuredCode);
-  return submitted.length === configured.length && crypto.timingSafeEqual(submitted, configured);
-};
-
 const issueToken = (admin) => jwt.sign(
   { role: admin.role },
   process.env.JWT_SECRET,
@@ -46,6 +35,7 @@ const registrationModels = {
   model: ModelUser,
   photographer: Photographer,
   agency: Agency,
+  client: Client,
 };
 
 const safeRegistration = (role, registration) => ({
@@ -63,16 +53,37 @@ const safeRegistration = (role, registration) => ({
 });
 
 const getRegistrationModel = (role) => registrationModels[role] || null;
+const serverRoot = path.join(__dirname, '..');
+
+const publicUploadUrl = (storedPath) => {
+  const normalized = typeof storedPath === 'string' ? storedPath.replace(/\\/g, '/') : '';
+  if (!normalized.startsWith('uploads/') || normalized.includes('..')) return null;
+  return `/uploads/${encodeURIComponent(path.posix.basename(normalized))}`;
+};
+
+const modelEvidence = (registration, kind) => ({
+  'id-front': { storedPath: registration.idFrontImage, directory: 'uploads' },
+  'id-back': { storedPath: registration.idBackImage, directory: 'uploads' },
+  'liveness-front': { storedPath: registration.livenessEvidence?.frontImage, directory: 'verification-evidence' },
+  'liveness-left': { storedPath: registration.livenessEvidence?.leftImage, directory: 'verification-evidence' },
+  'liveness-right': { storedPath: registration.livenessEvidence?.rightImage, directory: 'verification-evidence' },
+}[kind] || null);
+
+const evidenceUrl = (registration, kind) => (
+  modelEvidence(registration, kind)?.storedPath
+    ? `/api/admin/registrations/model/${registration._id}/evidence/${kind}`
+    : null
+);
 
 router.post('/register', async (req, res) => {
-  const { name, email, password, invitationCode } = req.body || {};
+  const { name, email, password } = req.body || {};
 
-  if (!hasRequiredAuthConfiguration()) {
+  if (!process.env.JWT_SECRET) {
     return res.status(503).json({ error: 'Administrator registration is not configured.' });
   }
   if (mongoose.connection.readyState !== 1) return databaseUnavailable(res);
-  if (!name?.trim() || !email?.trim() || !password || !invitationCode) {
-    return res.status(400).json({ error: 'Name, email, password, and invitation code are required.' });
+  if (!name?.trim() || !email?.trim() || !password) {
+    return res.status(400).json({ error: 'Name, email, and password are required.' });
   }
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
     return res.status(400).json({ error: 'Enter a valid email address.' });
@@ -80,10 +91,6 @@ router.post('/register', async (req, res) => {
   if (password.length < PASSWORD_MIN_LENGTH) {
     return res.status(400).json({ error: `Password must be at least ${PASSWORD_MIN_LENGTH} characters.` });
   }
-  if (!invitationMatches(invitationCode)) {
-    return res.status(401).json({ error: 'Invalid invitation code.' });
-  }
-
   try {
     const normalizedEmail = email.trim().toLowerCase();
     const existingAdmin = await Admin.exists({ email: normalizedEmail });
@@ -155,6 +162,70 @@ router.get('/registrations', requireAdmin, requireDatabase, async (req, res) => 
   } catch (error) {
     console.error('Registration review list failed:', error.message);
     return res.status(500).json({ error: 'Unable to load registration applications.' });
+  }
+});
+
+router.get('/registrations/model/:id/identity-review', requireAdmin, requireDatabase, async (req, res) => {
+  try {
+    const registration = await ModelUser.findById(req.params.id);
+    if (!registration) return res.status(404).json({ error: 'Model registration application was not found.' });
+
+    return res.json({
+      registration: safeRegistration('model', registration),
+      identityReview: {
+        document: {
+          frontUrl: evidenceUrl(registration, 'id-front'),
+          backUrl: evidenceUrl(registration, 'id-back'),
+        },
+        ocr: {
+          status: registration.verificationStatus || 'Not provided',
+          summary: registration.verificationSummary || 'Not provided',
+          checks: registration.aiChecks ? {
+            readable: Boolean(registration.aiChecks.ocrReadable),
+            nameMatched: Boolean(registration.aiChecks.nameMatched),
+            dateOfBirthMatched: Boolean(registration.aiChecks.dateOfBirthMatched),
+          } : null,
+        },
+        registeredIdentity: {
+          profileImageUrl: publicUploadUrl(registration.profileImage),
+          portfolioImageUrls: (registration.portfolioImages || []).map(publicUploadUrl).filter(Boolean),
+        },
+        liveness: {
+          status: registration.livenessVerificationStatus === 'completed' ? 'completed' : 'Not provided',
+          frontUrl: evidenceUrl(registration, 'liveness-front'),
+          leftUrl: evidenceUrl(registration, 'liveness-left'),
+          rightUrl: evidenceUrl(registration, 'liveness-right'),
+        },
+      },
+    });
+  } catch (error) {
+    return res.status(error.name === 'CastError' ? 400 : 500).json({
+      error: error.name === 'CastError' ? 'Invalid registration application.' : 'Unable to load identity verification evidence.',
+    });
+  }
+});
+
+router.get('/registrations/model/:id/evidence/:kind', requireAdmin, requireDatabase, async (req, res) => {
+  try {
+    const registration = await ModelUser.findById(req.params.id).select('idFrontImage idBackImage livenessEvidence');
+    if (!registration) return res.status(404).json({ error: 'Model registration application was not found.' });
+
+    const evidence = modelEvidence(registration, req.params.kind);
+    const normalized = evidence?.storedPath?.replace(/\\/g, '/');
+    if (!normalized || !normalized.startsWith(`${evidence.directory}/`) || normalized.includes('..')) {
+      return res.status(404).json({ error: 'Verification evidence was not provided.' });
+    }
+
+    const root = path.resolve(serverRoot, evidence.directory);
+    const filePath = path.resolve(serverRoot, normalized);
+    if (!filePath.startsWith(`${root}${path.sep}`) || !fs.existsSync(filePath)) {
+      return res.status(404).json({ error: 'Verification evidence was not found.' });
+    }
+    return res.sendFile(filePath);
+  } catch (error) {
+    return res.status(error.name === 'CastError' ? 400 : 500).json({
+      error: error.name === 'CastError' ? 'Invalid registration application.' : 'Unable to load verification evidence.',
+    });
   }
 });
 

@@ -43,6 +43,12 @@ router.post('/login', requireDatabase, async (req, res) => {
     for (const candidate of candidates) if (candidate.account && await canUsePassword(candidate.account, password)) matched.push(candidate);
     if (matched.length !== 1) return res.status(401).json({ error: 'Invalid email or password.' });
     const { role, account } = matched[0];
+    if (account.approvalStatus !== 'approved') {
+      const error = account.approvalStatus === 'rejected'
+        ? 'Your registration has been rejected. Contact support if you need assistance.'
+        : 'Your registration is pending administrator approval.';
+      return res.status(403).json({ error });
+    }
     res.cookie(USER_SESSION_COOKIE, issueUserSession(account, role), cookieOptions());
     return res.json({ message: 'Login successful.', user: safeAccount(role, account) });
   } catch (error) {

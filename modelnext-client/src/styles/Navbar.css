@@ -102,7 +102,7 @@
 .nav-actions-desktop {
   display: flex;
   align-items: center;
-  gap: 15px;
+  gap: 10px;
 }
 
 .nav-btn-login {
@@ -147,6 +147,40 @@
   box-shadow: 0 6px 20px rgba(128, 0, 32, 0.28);
 }
 
+.nav-btn-subtle {
+  background: transparent;
+  border: 0;
+  color: var(--mn-silver);
+  padding: 9px 5px;
+  cursor: pointer;
+  font-weight: 700;
+  text-transform: uppercase;
+  font-size: 10px;
+  letter-spacing: 1.2px;
+}
+
+.nav-btn-subtle:hover { color: var(--mn-ivory); }
+
+.nav-btn-logout { padding-left: 14px; padding-right: 14px; }
+
+.nav-user-label {
+  max-width: 116px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--mn-silver);
+  font-size: 11px;
+  letter-spacing: 0.5px;
+}
+
+.nav-auth-loading {
+  width: 132px;
+  height: 34px;
+  border: 1px solid var(--mn-border);
+  border-radius: 4px;
+  opacity: 0.55;
+}
+
 /* MOBILE ACTIONS (HIDDEN IN DESKTOP) */
 .mobile-actions {
   display: none;
@@ -186,7 +220,17 @@
   }
 }
 
-@media screen and (max-width: 900px) {
+@media screen and (max-width: 1500px) {
+  .nav-item-secondary, .nav-user-label { display: none; }
+}
+
+@media screen and (max-width: 1220px) {
+  .nav-user-label { display: none; }
+  .nav-menu { gap: 13px; }
+  .nav-item { font-size: 11px; letter-spacing: 0.65px; }
+}
+
+@media screen and (max-width: 1100px) {
   .menu-toggle {
     display: flex;
     z-index: 1001;
@@ -231,6 +275,8 @@
     text-align: center;
   }
 
+  .nav-item-secondary { display: block; }
+
   .nav-item.active::after, .nav-item:hover::after {
     width: 50%;
   }
@@ -250,4 +296,13 @@
   .mobile-actions button {
     width: 100%;
   }
+
+  .mobile-actions .nav-btn-subtle {
+    border: 1px solid var(--mn-border-strong);
+    border-radius: 4px;
+    color: var(--mn-ivory);
+    padding: 11px;
+  }
+
+  .mobile-actions .nav-auth-loading { width: 100%; }
 }

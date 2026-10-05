@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { SERVER_BASE_URL } from "../api";
 import "../styles/agencyForm.css";
 
 export default function AgencyForm() {
@@ -98,7 +99,7 @@ export default function AgencyForm() {
     if (form.coverImage) formData.append("coverImage", form.coverImage);
 
     try {
-      const res = await fetch("http://localhost:5000/api/agencies/register", {
+      const res = await fetch(`${SERVER_BASE_URL}/api/agencies/register`, {
         method: "POST",
         body: formData,
         credentials: "include",

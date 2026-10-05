@@ -1,4 +1,11 @@
-export const API_BASE_URL = "http://localhost:5000/api";
+const configuredApiBaseUrl = process.env.REACT_APP_API_BASE_URL;
+const frontendHostname = typeof window === "undefined" ? "localhost" : window.location.hostname;
+const localBackendOrigin = `http://${frontendHostname}:5000`;
+
+// Keep the API on the same loopback hostname as the development page. This
+// preserves HttpOnly SameSite=Lax session cookies for both localhost and 127.0.0.1.
+export const API_BASE_URL = configuredApiBaseUrl || `${localBackendOrigin}/api`;
+export const SERVER_BASE_URL = API_BASE_URL.replace(/\/api$/, "");
 
 export const apiFetch = (path, options = {}) => fetch(`${API_BASE_URL}${path}`, {
   credentials: "include",

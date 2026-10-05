@@ -18,7 +18,36 @@ const matchingRoutes = require('./routes/matchingRoutes');
 const app = express();
 
 // ✅ Middleware
-app.use(cors({ origin: 'http://localhost:3000', credentials: true }));
+// In development, accept credentialed requests from any port on the exact
+// loopback hosts used by local frontend servers. Production remains limited to
+// origins explicitly configured through CLIENT_ORIGIN or CLIENT_ORIGINS.
+const configuredClientOrigins = new Set(
+  [process.env.CLIENT_ORIGIN, process.env.CLIENT_ORIGINS]
+    .filter(Boolean)
+    .flatMap((value) => value.split(','))
+    .map((value) => value.trim())
+    .filter(Boolean)
+);
+
+const isDevelopmentLoopbackOrigin = (origin) => {
+  try {
+    const url = new URL(origin);
+    return url.protocol === 'http:' && (url.hostname === 'localhost' || url.hostname === '127.0.0.1');
+  } catch (_error) {
+    return false;
+  }
+};
+
+const isAllowedCorsOrigin = (origin) => {
+  if (!origin) return true;
+  if (configuredClientOrigins.has(origin)) return true;
+  return process.env.NODE_ENV !== 'production' && isDevelopmentLoopbackOrigin(origin);
+};
+
+app.use(cors({
+  origin: (origin, callback) => callback(null, isAllowedCorsOrigin(origin)),
+  credentials: true,
+}));
 app.use(express.json());
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 

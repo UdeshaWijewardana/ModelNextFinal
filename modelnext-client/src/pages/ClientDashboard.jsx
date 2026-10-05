@@ -66,13 +66,13 @@ export default function ClientDashboard() {
     setLoading(true);
     setError("");
     try {
-      const [{ user: current }, mine, notificationData, listed] = await Promise.all([
-        getCurrentUser(),
+      const { user: current } = await getCurrentUser();
+      if (current.role !== "client") throw new Error("This account cannot access the client portal.");
+      const [mine, notificationData, listed] = await Promise.all([
         readJson(await apiFetch("/events/mine")),
         readJson(await apiFetch("/notifications")),
         readJson(await apiFetch("/events")),
       ]);
-      if (current.role !== "client") throw new Error("This account cannot access the client portal.");
       const ownedEvents = mine.events || [];
       setUser(current);
       setEvents(ownedEvents);
@@ -81,11 +81,15 @@ export default function ClientDashboard() {
       setPublicEvents(listed.events || []);
       await loadRecommendations(ownedEvents);
     } catch (err) {
+      if (/authentication is required|authentication is invalid|authentication has expired/i.test(err.message || "")) {
+        navigate("/login", { replace: true });
+        return;
+      }
       setError(err.message || "Could not load your dashboard.");
     } finally {
       setLoading(false);
     }
-  }, [loadRecommendations]);
+  }, [loadRecommendations, navigate]);
 
   useEffect(() => { load(); }, [load]);
 

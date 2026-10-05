@@ -52,7 +52,7 @@ button:disabled, input:disabled { cursor: not-allowed; opacity: .58; }
 .reject-btn { color: var(--mn-error) !important; border-color: var(--mn-error) !important; }
 .reject-btn:hover { background: var(--mn-error) !important; color: var(--mn-black) !important; }
 
-.account-dashboard { max-width: 850px; margin: 40px auto; font-family: Montserrat, sans-serif; }
+.account-dashboard { max-width: 850px; margin: 0 auto; padding: 120px 32px 60px; font-family: Montserrat, sans-serif; }
 .account-status-banner { margin: 18px 0; padding: 16px; border: 1px solid; border-radius: 8px; line-height: 1.5; }
 .account-status-banner p { margin: 7px 0 0; }
 .account-status-banner.pending { color: var(--mn-warning); border-color: var(--mn-warning); background: rgba(228, 173, 85, .12); }
@@ -69,6 +69,6 @@ button:disabled, input:disabled { cursor: not-allowed; opacity: .58; }
   .admin-container, .models-container, .photographers-container, .agencies-container { padding-left: 18px; padding-right: 18px; }
   .admin-table-wrapper { overflow-x: auto; -webkit-overflow-scrolling: touch; }
   main { max-width: 100%; padding-left: 18px !important; padding-right: 18px !important; }
-  .account-dashboard { margin-top: 24px; }
+  .account-dashboard { padding-top: 104px; }
   .account-status-banner { overflow-wrap: anywhere; }
 }

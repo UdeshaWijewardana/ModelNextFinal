@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { SERVER_BASE_URL } from "../api";
 import WebcamTest from "../components/WebcamTest";
 import "../styles/modelForm.css";
 
@@ -120,7 +121,7 @@ const ModelForm = () => {
     setIsVerifying(true);
     setLivenessError("");
     try {
-      const response = await fetch("http://localhost:5000/api/models/liveness/start", { method: "POST" });
+      const response = await fetch(`${SERVER_BASE_URL}/api/models/liveness/start`, { method: "POST" });
       const session = await response.json();
       if (!response.ok) throw new Error(session.error || "Could not start liveness verification.");
       setLivenessSession(session);
@@ -133,11 +134,39 @@ const ModelForm = () => {
     }
   };
 
-  const completeLivenessSession = async () => {
+  const uploadLivenessEvidence = async (captures) => {
+    if (!livenessSession) throw new Error("Start a new liveness verification session before capturing evidence.");
+
+    for (const captureType of ["front", "left", "right"]) {
+      const capture = captures?.[captureType];
+      if (!(capture instanceof Blob)) throw new Error(`The ${captureType.toUpperCase()} liveness capture was unavailable. Please try again.`);
+
+      const evidenceData = new FormData();
+      evidenceData.append("verificationId", livenessSession.verificationId);
+      evidenceData.append("attemptId", livenessSession.attemptId);
+      evidenceData.append("captureType", captureType);
+      evidenceData.append("capture", capture, `liveness-${captureType}.jpg`);
+
+      const response = await fetch(`${SERVER_BASE_URL}/api/models/liveness/evidence`, {
+        method: "POST",
+        body: evidenceData,
+        credentials: "include",
+      });
+      const result = await response.json();
+      if (!response.ok) {
+        const error = new Error(result.error || "Could not secure liveness verification evidence.");
+        error.code = result.code;
+        throw error;
+      }
+    }
+  };
+
+  const completeLivenessSession = async (captures) => {
     if (!livenessSession) return;
     setLivenessError("");
     try {
-      const response = await fetch("http://localhost:5000/api/models/liveness/complete", {
+      await uploadLivenessEvidence(captures);
+      const response = await fetch(`${SERVER_BASE_URL}/api/models/liveness/complete`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -178,7 +207,7 @@ const ModelForm = () => {
     verificationData.append("idFront", idFront);
 
     try {
-      const response = await fetch("http://localhost:5000/api/models/verify-identity", {
+      const response = await fetch(`${SERVER_BASE_URL}/api/models/verify-identity`, {
         method: "POST",
         body: verificationData
       });
@@ -262,7 +291,7 @@ const ModelForm = () => {
     if (idBack) formData.append("idBack", idBack);
 
     try {
-      const response = await fetch("http://localhost:5000/api/models/register", {
+      const response = await fetch(`${SERVER_BASE_URL}/api/models/register`, {
         method: "POST",
         body: formData,
         credentials: "include"

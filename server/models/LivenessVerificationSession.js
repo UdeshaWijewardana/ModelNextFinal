@@ -13,6 +13,23 @@ const livenessVerificationSessionSchema = new mongoose.Schema({
   expiresAt: { type: Date, required: true, expires: 0 },
   completedAt: { type: Date, default: null },
   consumedAt: { type: Date, default: null },
+  evidence: {
+    front: {
+      path: { type: String },
+      digest: { type: String },
+      capturedAt: { type: Date },
+    },
+    left: {
+      path: { type: String },
+      digest: { type: String },
+      capturedAt: { type: Date },
+    },
+    right: {
+      path: { type: String },
+      digest: { type: String },
+      capturedAt: { type: Date },
+    },
+  },
 }, { versionKey: false });
 
 module.exports = mongoose.model('LivenessVerificationSession', livenessVerificationSessionSchema);

@@ -22,6 +22,12 @@ const modelSchema = new mongoose.Schema({
   idFrontImage: { type: String },
   idBackImage: { type: String },
   selfieMedia: { type: String },
+  livenessVerificationStatus: { type: String, enum: ['completed'] },
+  livenessEvidence: {
+    frontImage: { type: String },
+    leftImage: { type: String },
+    rightImage: { type: String },
+  },
   verificationStatus: { type: String, default: 'pending_ai_review' },
   verificationSummary: { type: String },
   aiConfidence: { type: Number },

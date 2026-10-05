@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { SERVER_BASE_URL } from "../api";
 import "../styles/photographerForm.css";
 
 export default function PhotographerForm() {
@@ -73,7 +74,7 @@ export default function PhotographerForm() {
     }
 
     try {
-      const res = await fetch("http://localhost:5000/api/photographers/register", {
+      const res = await fetch(`${SERVER_BASE_URL}/api/photographers/register`, {
         method: "POST",
         body: formData,
         credentials: "include",
