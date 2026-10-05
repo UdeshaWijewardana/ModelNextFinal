@@ -86,6 +86,15 @@ function createLivenessVerificationSessionService({
 
   };
 
+  const evidenceTypes = new Set(['front', 'left', 'right']);
+
+  const assertEvidence = (session) => {
+    const missing = [...evidenceTypes].filter((type) => !session.evidence?.[type]?.path);
+    if (missing.length) {
+      throw sessionError('LIVENESS_EVIDENCE_INCOMPLETE', 'Capture each required liveness view before completing verification.', 403);
+    }
+  };
+
   const service = {
     async start() {
       const createdAt = now();
@@ -100,6 +109,7 @@ function createLivenessVerificationSessionService({
         expiresAt,
         completedAt: null,
         consumedAt: null,
+      evidence: {},
       };
 
       // The session records browser-reported prototype challenge completion, not independently verified physical movement.
@@ -111,6 +121,8 @@ function createLivenessVerificationSessionService({
     },
 
     async complete(credentials) {
+      const validated = await validateSession(credentials, 'pending');
+      assertEvidence(validated.session);
       try {
         await transition(credentials, 'pending', 'completed', 'completedAt');
       } catch (error) {
@@ -121,6 +133,47 @@ function createLivenessVerificationSessionService({
 
     async assertCompleted(credentials) {
       await validateSession(credentials, 'completed');
+    },
+
+    async recordEvidence(credentials, type, evidence) {
+      if (!evidenceTypes.has(type) || !evidence?.path || !evidence?.digest) {
+        throw sessionError('LIVENESS_EVIDENCE_INVALID', 'A valid liveness evidence image is required.', 400);
+      }
+
+      const validated = await validateSession(credentials, 'pending');
+      const existing = validated.session.evidence?.[type];
+      if (existing?.digest) {
+        if (existing.digest === evidence.digest) return { reused: true, evidence: existing };
+        throw sessionError('LIVENESS_EVIDENCE_EXISTS', 'This liveness view has already been captured for the session.', 409);
+      }
+
+      const capture = { path: evidence.path, digest: evidence.digest, capturedAt: now() };
+      const field = `evidence.${type}`;
+      const updated = await model.findOneAndUpdate(
+        {
+          _id: validated.session._id,
+          tokenHash: validated.tokenHash,
+          attemptIdHash: validated.attemptIdHash,
+          status: 'pending',
+          [`${field}.path`]: { $exists: false },
+          expiresAt: { $gt: now() },
+        },
+        { $set: { [field]: capture } },
+        { new: true },
+      ).exec();
+
+      if (updated) return { reused: false, evidence: capture };
+
+      const current = await readSession(validated.tokenHash);
+      const currentEvidence = current?.session?.evidence?.[type];
+      if (currentEvidence?.digest === evidence.digest) return { reused: true, evidence: currentEvidence };
+      throw sessionError('LIVENESS_EVIDENCE_INVALID', 'The liveness session is no longer available for evidence capture.', 409);
+    },
+
+    async getCompletedEvidence(credentials) {
+      const validated = await validateSession(credentials, 'completed');
+      assertEvidence(validated.session);
+      return validated.session.evidence;
     },
 
     async claim(credentials) {

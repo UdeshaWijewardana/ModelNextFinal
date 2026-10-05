@@ -1,7 +1,7 @@
 import { useNavigate } from "react-router-dom";
 import { useState, useEffect, useRef } from "react";
 import Navbar from "../components/Navbar";
-import { apiFetch, readJson } from "../api";
+import { apiFetch, readJson, SERVER_BASE_URL } from "../api";
 import "../styles/home.css";
 
 export default function Home() {
@@ -23,7 +23,7 @@ export default function Home() {
         name: model.fullName,
         number: model._id,
         title: model.categories?.join(" & ") || "ModelNext Talent",
-        image: model.profileImage ? `http://localhost:5000/${model.profileImage}` : "",
+        image: model.profileImage ? `${SERVER_BASE_URL}/${model.profileImage.replace(/^[/\\]+/, "")}` : null,
       }))))
       .catch(() => setFeaturedModels([]));
   }, []);
@@ -202,7 +202,7 @@ export default function Home() {
         <div className="trending-grid">
           {featuredModels.map((model, index) => (
             <article className={`model-card ${index === 0 ? "large" : ""}`} key={model.number}>
-              <img src={model.image} alt={model.name} />
+              {model.image ? <img src={model.image} alt={model.name} /> : <div className="trending-model-placeholder" aria-hidden="true">{model.name?.charAt(0) || "M"}</div>}
               <div className="model-overlay"></div>
               <div className="model-content">
                 <span className="model-badge">{model.number} • Registered</span>

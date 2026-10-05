@@ -1,14 +1,15 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { apiFetch, readJson } from "../api";
 import "../styles/AdminRegister.css";
 
 export default function AdminRegister() {
   const navigate = useNavigate();
-  const [formData, setFormData] = useState({ name: "", email: "", password: "", confirmPassword: "", inviteCode: "" });
+  const [formData, setFormData] = useState({ name: "", email: "", password: "", confirmPassword: "" });
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [visibleFields, setVisibleFields] = useState({ password: false, confirmPassword: false, inviteCode: false });
+  const [visibleFields, setVisibleFields] = useState({ password: false, confirmPassword: false });
 
   const handleInputChange = (event) => setFormData({ ...formData, [event.target.name]: event.target.value });
   const toggleVisibility = (field) => setVisibleFields((current) => ({ ...current, [field]: !current[field] }));
@@ -16,9 +17,9 @@ export default function AdminRegister() {
   const handleSubmit = async (event) => {
     event.preventDefault();
     setError("");
-    const { name, email, password, confirmPassword, inviteCode } = formData;
+    const { name, email, password, confirmPassword } = formData;
 
-    if (!name || !email || !password || !inviteCode) {
+    if (!name || !email || !password) {
       setError("Please fill in all required fields.");
       return;
     }
@@ -29,18 +30,17 @@ export default function AdminRegister() {
 
     setIsSubmitting(true);
     try {
-      const response = await fetch("http://localhost:5000/api/admin/register", {
-        credentials: "include",
+      const response = await apiFetch("/admin/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, email, password, invitationCode: inviteCode })
+        body: JSON.stringify({ name, email, password })
       });
-      const data = await response.json();
-      if (!response.ok) throw new Error(data.error || "Unable to create administrator account.");
+      await readJson(response);
       setSuccess(true);
       setTimeout(() => navigate("/admin"), 1200);
     } catch (err) {
-      setError(err.message || "Unable to create administrator account.");
+      const isNetworkFailure = err instanceof TypeError && /fetch/i.test(err.message);
+      setError(isNetworkFailure ? "Cannot connect to the server. Start the ModelNext backend on port 5000 and try again." : (err.message || "Unable to create administrator account."));
     } finally {
       setIsSubmitting(false);
     }
@@ -57,7 +57,7 @@ export default function AdminRegister() {
           value={formData[name]}
           onChange={handleInputChange}
           required
-          autoComplete={name === "inviteCode" ? "off" : "new-password"}
+          autoComplete="new-password"
         />
         <button
           type="button"
@@ -105,7 +105,6 @@ export default function AdminRegister() {
                 {passwordField("password", "Password")}
                 {passwordField("confirmPassword", "Confirm Password")}
               </div>
-              {passwordField("inviteCode", "Invitation Security Code")}
               <button type="submit" className="admin-register-submit" disabled={isSubmitting}>
                 {isSubmitting ? "Creating account…" : "Create Admin Account"}
               </button>

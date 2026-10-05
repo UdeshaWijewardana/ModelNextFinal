@@ -29,12 +29,14 @@ import PhotographerForm from "./forms/PhotographerForm";
 import AgencyForm from "./forms/AgencyForm";
 import ClientForm from "./forms/ClientForm";
 import WebcamTest from "./components/WebcamTest";
+import { AuthProvider } from "./context/AuthContext";
 
 import './App.css';
 
 function App() {
   return (
     <Router>
+      <AuthProvider>
       <Routes>
 
         {/* CORE */}
@@ -72,6 +74,7 @@ function App() {
         <Route path="/webcam-test" element={<WebcamTest />} />
 
       </Routes>
+      </AuthProvider>
     </Router>
   );
 }

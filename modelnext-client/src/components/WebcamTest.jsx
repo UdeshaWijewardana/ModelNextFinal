@@ -277,6 +277,7 @@ const WebcamTest = ({ autoStart = false, onVerificationComplete }) => {
   const completionNotifiedRef = useRef(false);
   const confirmCompletionRef = useRef(null);
   const startCameraRef = useRef(null);
+  const evidenceCapturesRef = useRef({});
 
   useEffect(() => {
     isMountedRef.current = true;
@@ -386,6 +387,14 @@ const WebcamTest = ({ autoStart = false, onVerificationComplete }) => {
                   setHeadPosition((currentPosition) => (
                     currentPosition === candidatePosition ? currentPosition : candidatePosition
                   ));
+                  const activePhase = challengeRef.current.phase;
+                  if (activePhase === CHALLENGE_STATES.HEAD_LEFT && candidatePosition === "LEFT") {
+                    void captureEvidenceFrame("left");
+                  } else if (activePhase === CHALLENGE_STATES.HEAD_RIGHT && candidatePosition === "RIGHT") {
+                    void captureEvidenceFrame("right");
+                  } else if (activePhase === CHALLENGE_STATES.RETURN_CENTER && candidatePosition === "CENTER") {
+                    void captureEvidenceFrame("front");
+                  }
                   dispatchChallenge({ type: "HEAD_POSITION", position: candidatePosition });
                 }
               } else {
@@ -474,6 +483,36 @@ const WebcamTest = ({ autoStart = false, onVerificationComplete }) => {
     setChallenge((current) => transitionChallenge(current, event));
   }
 
+  function captureEvidenceFrame(view) {
+    if (evidenceCapturesRef.current[view]) return evidenceCapturesRef.current[view];
+
+    const capture = new Promise((resolve, reject) => {
+      const video = videoRef.current;
+      if (!video || video.readyState < HTMLMediaElement.HAVE_CURRENT_DATA || !video.videoWidth || !video.videoHeight) {
+        reject(new Error("The camera frame was unavailable for verification evidence."));
+        return;
+      }
+
+      const canvas = document.createElement("canvas");
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
+      const context = canvas.getContext("2d");
+      if (!context) {
+        reject(new Error("The camera frame could not be prepared for verification evidence."));
+        return;
+      }
+      context.drawImage(video, 0, 0, canvas.width, canvas.height);
+      canvas.toBlob((blob) => {
+        if (blob) resolve(blob);
+        else reject(new Error("The camera frame could not be captured for verification evidence."));
+      }, "image/jpeg", 0.92);
+    });
+
+    evidenceCapturesRef.current[view] = capture;
+    capture.catch(() => { delete evidenceCapturesRef.current[view]; });
+    return capture;
+  }
+
   const getVisionFileset = () => {
     if (!visionPromiseRef.current) {
       visionPromiseRef.current = FilesetResolver.forVisionTasks(VISION_WASM_URL);
@@ -512,6 +551,7 @@ const WebcamTest = ({ autoStart = false, onVerificationComplete }) => {
     setHeadPosition("WAITING");
     setHasFaceLandmarks(false);
     setSuccessFeedback("");
+    evidenceCapturesRef.current = {};
     previousPhaseRef.current = CHALLENGE_STATES.WAITING_FOR_FACE;
     window.clearTimeout(transitionTimeoutRef.current);
     window.clearTimeout(challengeTimeoutRef.current);
@@ -674,8 +714,13 @@ const WebcamTest = ({ autoStart = false, onVerificationComplete }) => {
     if (!onVerificationComplete) return;
     setIsConfirmingCompletion(true);
     try {
-      // Browser-local challenge completion is reported to registration; camera data stays in this component.
-      await onVerificationComplete();
+      const [front, left, right] = await Promise.all([
+        evidenceCapturesRef.current.front,
+        evidenceCapturesRef.current.left,
+        evidenceCapturesRef.current.right,
+      ]);
+      // Each image is captured from the live stream only after its existing challenge state is confirmed.
+      await onVerificationComplete({ front, left, right });
       setCompletionConfirmationError(null);
     } catch (error) {
       setCompletionConfirmationError(error);
@@ -860,7 +905,7 @@ const WebcamTest = ({ autoStart = false, onVerificationComplete }) => {
             </ol>
           </section>
 
-          <p className="privacy-note">Camera processing is performed locally in your browser.</p>
+          <p className="privacy-note">Camera processing is performed locally. Successful FRONT, LEFT, and RIGHT captures are retained only for administrator identity review.</p>
         </div>
       </section>
     </main>

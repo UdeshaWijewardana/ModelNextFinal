@@ -1,6 +1,8 @@
 import React, { useCallback, useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { apiFetch, getCurrentUser, logout, readJson } from "../api";
+import { apiFetch, getCurrentUser, readJson } from "../api";
+import { useAuth } from "../context/AuthContext";
+import Navbar from "./Navbar";
 
 const fieldsByRole = {
   model: ["fullName", "username", "address", "phone", "birthdate", "location", "gender", "weight", "height", "waist", "hip"],
@@ -17,6 +19,7 @@ const statusCopy = {
 export default function AccountDashboard({ role, title }) {
   const navigate = useNavigate();
   const location = useLocation();
+  const { logout } = useAuth();
   const [user, setUser] = useState(null);
   const [form, setForm] = useState({});
   const [notifications, setNotifications] = useState([]);
@@ -43,12 +46,12 @@ export default function AccountDashboard({ role, title }) {
     try { await readJson(await apiFetch(`/notifications/${id}/read`, { method: "PATCH", body: "{}" })); setNotifications((items) => items.map((item) => item._id === id ? { ...item, read: true } : item)); }
     catch (err) { setError(err.message); }
   };
-  const signOut = async () => { await logout(); navigate("/login"); };
-  if (!user) return <main className="account-dashboard">{error || "Loading account..."}</main>;
+  const signOut = async () => { await logout(); navigate("/"); };
+  if (!user) return <><Navbar /><main className="account-dashboard">{error || "Loading account..."}</main></>;
   const approvalStatus = user.approvalStatus || "pending";
   const status = statusCopy[approvalStatus] || statusCopy.pending;
   const editable = approvalStatus === "approved";
-  return <main className="account-dashboard">
+  return <><Navbar /><main className="account-dashboard">
     <h1>{title}</h1><p>{user.name} · {user.email}</p>
     {location.state?.registrationSubmitted && <section className="account-status-banner approved" role="status"><strong>REGISTRATION SUBMITTED SUCCESSFULLY</strong><p>Thank you for registering with ModelNext. Your account is pending administrator approval. You can review your account information while it is being reviewed.</p></section>}
     <section className={`account-status-banner ${approvalStatus}`} role="status"><strong>{status.title}</strong><p>{status.message}</p>{approvalStatus === "rejected" && user.rejectionReason && <p><strong>Reason:</strong> {user.rejectionReason}</p>}</section>
@@ -60,5 +63,5 @@ export default function AccountDashboard({ role, title }) {
     </form>
     <h2>Notifications</h2>{notifications.length === 0 ? <p>No notifications.</p> : notifications.map((item) => <p key={item._id}><button disabled={item.read} onClick={() => markRead(item._id)}>{item.read ? "Read" : "Mark read"}</button> {item.message}</p>)}
     <button onClick={signOut}>Logout</button>
-  </main>;
+  </main></>;
 }

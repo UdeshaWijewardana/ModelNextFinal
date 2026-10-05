@@ -3,6 +3,7 @@ const router = express.Router();
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
+const crypto = require('crypto');
 const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
 const ModelUser = require('../models/ModelUser');
@@ -27,6 +28,29 @@ const storage = multer.diskStorage({
 
 const upload = multer({ storage });
 
+const evidenceDirectory = path.join(__dirname, '..', 'verification-evidence');
+const evidenceMimeTypes = new Map([
+  ['image/jpeg', '.jpg'],
+  ['image/png', '.png'],
+  ['image/webp', '.webp'],
+]);
+const evidenceStorage = multer.diskStorage({
+  destination: (_req, _file, cb) => {
+    try {
+      fs.mkdirSync(evidenceDirectory, { recursive: true });
+      cb(null, evidenceDirectory);
+    } catch (error) {
+      cb(error);
+    }
+  },
+  filename: (_req, file, cb) => cb(null, `${crypto.randomUUID()}${evidenceMimeTypes.get(file.mimetype) || ''}`),
+});
+const evidenceUpload = multer({
+  storage: evidenceStorage,
+  limits: { fileSize: 5 * 1024 * 1024, files: 1 },
+  fileFilter: (_req, file, cb) => cb(null, evidenceMimeTypes.has(file.mimetype)),
+});
+
 const removeUploadedFiles = async (files) => {
   const uploadedFiles = Object.values(files || {}).flat();
   await Promise.all(uploadedFiles.map(async (file) => {
@@ -37,6 +61,23 @@ const removeUploadedFiles = async (files) => {
     }
   }));
 };
+
+const removeUploadedFile = async (file) => {
+  if (!file?.path) return;
+  try {
+    await fs.promises.unlink(file.path);
+  } catch (error) {
+    if (error.code !== 'ENOENT') console.error('Verification evidence cleanup failed:', error.message);
+  }
+};
+
+const fileDigest = async (filePath) => new Promise((resolve, reject) => {
+  const hash = crypto.createHash('sha256');
+  const stream = fs.createReadStream(filePath);
+  stream.on('error', reject);
+  stream.on('data', (chunk) => hash.update(chunk));
+  stream.on('end', () => resolve(hash.digest('hex')));
+});
 
 const validateIdentityFields = (data) => {
   if (!data.fullName?.trim() || !data.birthdate || !data.idType) {
@@ -160,6 +201,39 @@ router.post('/liveness/start', async (req, res) => {
   }
 });
 
+router.post('/liveness/evidence', (req, res, next) => {
+  evidenceUpload.single('capture')(req, res, (error) => {
+    if (error) return res.status(400).json({ error: 'Upload one valid liveness image no larger than 5 MB.' });
+    next();
+  });
+}, async (req, res) => {
+  let keepFile = false;
+  try {
+    const captureType = req.body?.captureType;
+    if (!['front', 'left', 'right'].includes(captureType) || !isUploadedImage(req.file)) {
+      return res.status(400).json({ error: 'A valid FRONT, LEFT, or RIGHT liveness image is required.' });
+    }
+
+    const credentials = {
+      verificationId: req.body?.verificationId,
+      attemptId: req.body?.attemptId,
+    };
+    const result = await getLivenessSessionService(req).recordEvidence(credentials, captureType, {
+      path: path.posix.join('verification-evidence', req.file.filename),
+      digest: await fileDigest(req.file.path),
+    });
+    keepFile = !result.reused;
+    return res.status(201).json({ captured: true, captureType, reused: result.reused });
+  } catch (error) {
+    return res.status(error.status || 500).json({
+      ...(error.status ? { code: error.code } : {}),
+      error: error.status ? error.message : 'Could not store liveness verification evidence.',
+    });
+  } finally {
+    if (!keepFile) await removeUploadedFile(req.file);
+  }
+});
+
 router.post('/liveness/complete', async (req, res) => {
   try {
     await getLivenessSessionService(req).complete({
@@ -226,6 +300,7 @@ router.post('/register', upload.fields([
     };
     const sessionService = getLivenessSessionService(req);
     await sessionService.assertCompleted(livenessCredentials);
+    const livenessEvidence = await sessionService.getCompletedEvidence(livenessCredentials);
 
     // Registration always reruns OCR on the uploaded document; client verification flags are not trusted.
     const verificationResult = await getIdentityVerifier(req)({
@@ -287,6 +362,12 @@ router.post('/register', upload.fields([
         ocrReadable: true,
         nameMatched: verificationResult.checks.nameMatch,
         dateOfBirthMatched: verificationResult.checks.dateOfBirthMatch
+      },
+      livenessVerificationStatus: 'completed',
+      livenessEvidence: {
+        frontImage: livenessEvidence.front.path,
+        leftImage: livenessEvidence.left.path,
+        rightImage: livenessEvidence.right.path,
       },
       createdAt: new Date().toISOString()
     };

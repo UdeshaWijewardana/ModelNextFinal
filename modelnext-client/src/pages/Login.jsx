@@ -1,9 +1,11 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { apiFetch } from "../api";
+import { accountRouteForRole, useAuth } from "../context/AuthContext";
 
 export default function Login() {
   const navigate = useNavigate();
+  const { setAuthenticated } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -24,6 +26,8 @@ export default function Login() {
         body: JSON.stringify({ email, password })
       });
       if (adminResponse.ok) {
+        const adminData = await adminResponse.json();
+        setAuthenticated({ account: adminData.admin, kind: "admin" });
         navigate("/admin");
         return;
       }
@@ -37,14 +41,15 @@ export default function Login() {
 
       if (!res.ok) throw new Error(data.error || "Login failed");
 
-      // Route based on role returned by backend
-      if (data.user.role === "model") navigate("/dashboard");
-      else if (data.user.role === "client") navigate("/client-portal");
-      else if (data.user.role === "agency") navigate("/agency-dashboard");
-      else if (data.user.role === "photographer") navigate("/photographer-dashboard");
-      else navigate("/");
+      setAuthenticated({ account: data.user });
+      navigate(accountRouteForRole(data.user.role));
     } catch (err) {
-      setError(err.message);
+      const isNetworkError = err instanceof TypeError && /fetch/i.test(err.message);
+      setError(
+        isNetworkError
+          ? "Unable to connect to the server. Please make sure the server is running."
+          : (err.message || "Login failed")
+      );
     }
   };
 

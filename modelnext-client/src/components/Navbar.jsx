@@ -1,13 +1,41 @@
 import React, { useState } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 import '../styles/Navbar.css';
 
 export default function Navbar() {
   const navigate = useNavigate();
+  const { status, account, accountRoute, isAuthenticated, logout } = useAuth();
   const [isOpen, setIsOpen] = useState(false);
 
   const toggleMenu = () => {
     setIsOpen(!isOpen);
+  };
+
+  const closeAndNavigate = (path) => { navigate(path); setIsOpen(false); };
+  const goBack = () => {
+    const hasInternalHistory = window.history.state?.idx > 0 || document.referrer.startsWith(window.location.origin);
+    navigate(hasInternalHistory ? -1 : '/');
+    setIsOpen(false);
+  };
+  const signOut = async () => {
+    await logout();
+    closeAndNavigate('/');
+  };
+  const accountName = account?.name || account?.fullName || account?.agencyName || 'My Account';
+
+  const authActions = (mobile = false) => {
+    if (status === 'loading') return <div className={`nav-auth-loading ${mobile ? 'is-mobile' : ''}`} aria-label="Checking session" />;
+    if (!isAuthenticated) return <>
+      <button className="nav-btn-login" onClick={() => closeAndNavigate('/login')}>LOGIN</button>
+      <button className="nav-btn-register" onClick={() => closeAndNavigate('/register')}>REGISTER</button>
+    </>;
+    return <>
+      <button className="nav-btn-subtle" onClick={goBack}>BACK</button>
+      <button className="nav-btn-login" onClick={() => closeAndNavigate(accountRoute)}>MY ACCOUNT</button>
+      {!mobile && <span className="nav-user-label" title={accountName}>{accountName}</span>}
+      <button className="nav-btn-register nav-btn-logout" onClick={signOut}>LOGOUT</button>
+    </>;
   };
 
   return (
@@ -36,7 +64,7 @@ export default function Navbar() {
           </NavLink>
           <NavLink
             to="/about"
-            className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}
+            className={({ isActive }) => `nav-item nav-item-secondary ${isActive ? 'active' : ''}`}
             onClick={() => setIsOpen(false)}
           >
             About Us
@@ -71,32 +99,18 @@ export default function Navbar() {
           </NavLink>
           <NavLink 
             to="/contact" 
-            className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}
+            className={({ isActive }) => `nav-item nav-item-secondary ${isActive ? 'active' : ''}`}
             onClick={() => setIsOpen(false)}
           >
             Contact Us
           </NavLink>
 
           {/* MOBILE ACTIONS */}
-          <div className="mobile-actions">
-            <button className="nav-btn-login" onClick={() => { navigate('/login'); setIsOpen(false); }}>
-              LOGIN
-            </button>
-            <button className="nav-btn-register" onClick={() => { navigate('/register'); setIsOpen(false); }}>
-              REGISTER
-            </button>
-          </div>
+          <div className="mobile-actions">{authActions(true)}</div>
         </div>
 
         {/* DESKTOP ACTIONS */}
-        <div className="nav-actions-desktop">
-          <button className="nav-btn-login" onClick={() => navigate('/login')}>
-            LOGIN
-          </button>
-          <button className="nav-btn-register" onClick={() => navigate('/register')}>
-            REGISTER
-          </button>
-        </div>
+        <div className="nav-actions-desktop">{authActions()}</div>
       </div>
     </nav>
   );
