@@ -50,17 +50,17 @@ export default function Login() {
 
   const styles = {
     container: { display: 'flex', minHeight: '100vh', fontFamily: "'Montserrat', sans-serif" },
-    leftPanel: { flex: 1, background: '#1A1A1A', display: 'flex', flexDirection: 'column', justifyContent: 'center', padding: '0 10%', position: 'relative' },
+    leftPanel: { flex: 1, background: 'var(--mn-surface)', display: 'flex', flexDirection: 'column', justifyContent: 'center', padding: '0 10%', position: 'relative' },
     rightPanel: { flex: 1, position: 'relative', display: 'none' }, // will override with media query if needed, but inline is fine for this split layout
     bgImage: { width: '100%', height: '100%', objectFit: 'cover', position: 'absolute', top: 0, left: 0 },
-    logo: { fontFamily: "'Playfair Display', serif", fontSize: '28px', color: '#FFF', position: 'absolute', top: '40px', left: '10%', cursor: 'pointer', fontWeight: '700' },
-    title: { fontFamily: "'Playfair Display', serif", fontSize: '48px', color: '#FFF', marginBottom: '15px' },
-    subtitle: { color: '#AAA', fontSize: '15px', marginBottom: '40px', lineHeight: '1.6' },
+    logo: { fontFamily: "'Playfair Display', serif", fontSize: '28px', color: 'var(--mn-ivory)', position: 'absolute', top: '40px', left: '10%', cursor: 'pointer', fontWeight: '700' },
+    title: { fontFamily: "'Playfair Display', serif", fontSize: '48px', color: 'var(--mn-ivory)', marginBottom: '15px' },
+    subtitle: { color: 'var(--mn-silver)', fontSize: '15px', marginBottom: '40px', lineHeight: '1.6' },
     form: { display: 'flex', flexDirection: 'column', gap: '20px', maxWidth: '400px' },
-    input: { padding: '16px 20px', background: '#2A2A2A', border: '1px solid #444', color: '#FFF', fontSize: '14px', outline: 'none' },
-    button: { padding: '18px', background: 'var(--mn-casper)', border: 'none', color: '#000', fontSize: '13px', fontWeight: 'bold', letterSpacing: '2px', cursor: 'pointer', marginTop: '10px' },
+    input: { padding: '16px 20px', background: 'var(--mn-surface-raised)', border: '1px solid var(--mn-border)', color: 'var(--mn-ivory)', fontSize: '14px', outline: 'none' },
+    button: { padding: '18px', background: 'var(--mn-burgundy)', border: 'none', color: 'var(--mn-ivory)', fontSize: '13px', fontWeight: 'bold', letterSpacing: '2px', cursor: 'pointer', marginTop: '10px' },
     error: { color: '#E57373', fontSize: '13px', marginTop: '-10px', background: 'rgba(229, 115, 115, 0.1)', padding: '10px', borderLeft: '3px solid #E57373' },
-    registerLink: { color: '#888', fontSize: '13px', cursor: 'pointer', marginTop: '30px', display: 'inline-block' }
+    registerLink: { color: 'var(--mn-muted)', fontSize: '13px', cursor: 'pointer', marginTop: '30px', display: 'inline-block' }
   };
 
   return (
@@ -95,7 +95,7 @@ export default function Login() {
           </form>
 
           <div style={styles.registerLink} onClick={() => navigate("/role")}>
-            Don't have an account? <b style={{color: 'var(--mn-casper)', marginLeft: '5px'}}>Join the Network</b>
+            Don't have an account? <b style={{color: 'var(--mn-burgundy)', marginLeft: '5px'}}>Join the Network</b>
           </div>
         </div>
       </div>

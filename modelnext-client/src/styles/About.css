@@ -12,7 +12,7 @@
 
 .about-eyebrow {
   margin: 0 0 12px;
-  color: var(--mn-casper);
+  color: var(--mn-burgundy);
   font-size: 12px;
   font-weight: 700;
   letter-spacing: .22em;
@@ -80,7 +80,7 @@
 
 .about-hero-lede {
   margin: 28px 0 14px;
-  color: var(--mn-casper);
+  color: var(--mn-burgundy);
   font-size: clamp(21px, 2.3vw, 30px);
   line-height: 1.25;
 }
@@ -215,7 +215,7 @@
 .about-card-index,
 .about-step-number {
   display: block;
-  color: var(--mn-casper);
+  color: var(--mn-burgundy);
   font-size: 12px;
   font-weight: 700;
   letter-spacing: .18em;
@@ -300,7 +300,7 @@
 }
 
 .about-trust-mark {
-  color: var(--mn-casper);
+  color: var(--mn-burgundy);
   font-size: 22px;
 }
 

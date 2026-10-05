@@ -41,7 +41,7 @@
 
 .admin-register-brand {
   padding: 0;
-  color: var(--mn-casper);
+  color: var(--mn-burgundy);
   font-size: 24px;
   font-weight: 800;
   letter-spacing: .08em;
@@ -49,10 +49,10 @@
 }
 
 .admin-register-back { padding: 6px 0; color: var(--mn-text-secondary); font-size: 12px; font-weight: 600; letter-spacing: .08em; }
-.admin-register-back:hover, .admin-register-login-copy button:hover { color: var(--mn-casper); }
+.admin-register-back:hover, .admin-register-login-copy button:hover { color: var(--mn-burgundy); }
 
 .admin-register-content { width: min(100%, 760px); margin: auto 0; padding: 44px 0 10px; }
-.admin-register-eyebrow { margin: 0 0 12px; color: var(--mn-casper); font-size: 11px; font-weight: 700; letter-spacing: .22em; text-transform: uppercase; }
+.admin-register-eyebrow { margin: 0 0 12px; color: var(--mn-burgundy); font-size: 11px; font-weight: 700; letter-spacing: .22em; text-transform: uppercase; }
 
 .admin-register-content h1,
 .admin-register-success h2,
@@ -71,29 +71,29 @@
   width: 100%; min-height: 48px; margin: 0; padding: 12px 14px; background: var(--mn-surface-raised); color: var(--mn-text-primary);
   border: 1px solid var(--mn-border); border-radius: 6px; transition: border-color .2s ease, box-shadow .2s ease;
 }
-.admin-register-field input:focus { border-color: var(--mn-casper-strong); box-shadow: 0 0 0 3px var(--mn-surface-raised); }
+.admin-register-field input:focus { border-color: var(--mn-burgundy-hover); box-shadow: 0 0 0 3px var(--mn-surface-raised); }
 
 .admin-register-password-row { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
 .admin-register-password-wrap { position: relative; }
 .admin-register-password-wrap input { padding-right: 68px; }
 .admin-register-visibility {
-  position: absolute; top: 0; right: 10px; bottom: 0; display: inline-flex; align-items: center; min-height: 0; height: 28px; margin: auto; padding: 0 4px; color: var(--mn-casper);
+  position: absolute; top: 0; right: 10px; bottom: 0; display: inline-flex; align-items: center; min-height: 0; height: 28px; margin: auto; padding: 0 4px; color: var(--mn-burgundy);
   font-size: 11px; font-weight: 700; line-height: 1; transform: none;
 }
 .admin-register-visibility:hover { color: var(--mn-text-primary); }
 
 .admin-register-submit {
-  width: 100%; min-height: 50px; margin-top: 4px; border: 1px solid var(--mn-casper); border-radius: 6px;
-  background: var(--mn-casper); color: var(--mn-black); cursor: pointer; font-size: 12px; font-weight: 800;
+  width: 100%; min-height: 50px; margin-top: 4px; border: 1px solid var(--mn-burgundy); border-radius: 6px;
+  background: var(--mn-burgundy); color: var(--mn-black); cursor: pointer; font-size: 12px; font-weight: 800;
   letter-spacing: .12em; text-transform: uppercase; transition: background .2s ease, border-color .2s ease, transform .2s ease;
 }
-.admin-register-submit:hover:not(:disabled) { background: var(--mn-casper-strong); border-color: var(--mn-casper-strong); transform: translateY(-1px); }
+.admin-register-submit:hover:not(:disabled) { background: var(--mn-burgundy-hover); border-color: var(--mn-burgundy-hover); transform: translateY(-1px); }
 
 .admin-register-error { margin: 0; padding: 11px 12px; border-left: 3px solid var(--mn-error); background: var(--mn-surface-raised); color: var(--mn-error); font-size: 13px; line-height: 1.45; }
 .admin-register-success h2 { font-size: 30px; }
 .admin-register-success > p:last-child { margin: 13px 0 0; color: var(--mn-text-secondary); }
 .admin-register-login-copy { margin: 18px 0 0; color: var(--mn-text-secondary); font-size: 13px; }
-.admin-register-login-copy button { min-height: auto; padding: 0; color: var(--mn-casper); font-weight: 700; }
+.admin-register-login-copy button { min-height: auto; padding: 0; color: var(--mn-burgundy); font-weight: 700; }
 
 .admin-register-visual { position: relative; min-height: 100vh; overflow: hidden; background: var(--mn-surface); }
 .admin-register-visual > img,
@@ -102,9 +102,9 @@
 .admin-register-visual-overlay { background: linear-gradient(90deg, var(--mn-black), transparent 68%); }
 
 .admin-register-visual-copy { position: absolute; z-index: 1; right: clamp(28px, 4vw, 70px); bottom: clamp(34px, 7vw, 88px); width: min(340px, calc(100% - 56px)); color: var(--mn-text-primary); }
-.admin-register-visual-copy p { margin: 0; color: var(--mn-casper); font-size: 11px; font-weight: 700; letter-spacing: .2em; text-transform: uppercase; }
+.admin-register-visual-copy p { margin: 0; color: var(--mn-burgundy); font-size: 11px; font-weight: 700; letter-spacing: .2em; text-transform: uppercase; }
 .admin-register-visual-copy h2 { margin-top: 7px; font-size: clamp(32px, 3.2vw, 52px); line-height: .95; text-transform: uppercase; }
-.admin-register-visual-copy span { display: block; width: 52px; height: 2px; margin: 22px 0; background: var(--mn-casper); }
+.admin-register-visual-copy span { display: block; width: 52px; height: 2px; margin: 22px 0; background: var(--mn-burgundy); }
 .admin-register-visual-copy small { color: var(--mn-text-secondary); font-size: 13px; line-height: 1.65; }
 
 @media (max-width: 1080px) {

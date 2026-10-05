@@ -15,7 +15,7 @@ export default function Navbar() {
       <div className="navbar-container">
         {/* LOGO */}
         <div className="navbar-logo" onClick={() => { navigate('/'); setIsOpen(false); }}>
-          ModelNext
+          <span className="brand-model">Model</span><span className="brand-next">Next</span>
         </div>
 
         {/* MOBILE MENU TOGGLE */}

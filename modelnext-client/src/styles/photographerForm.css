@@ -21,7 +21,7 @@
 
 /* TITLE */
 .photo-box h1 {
-  color: var(--mn-casper);
+  color: var(--mn-burgundy);
   margin-bottom: 10px;
 }
 
@@ -44,22 +44,22 @@
   margin-bottom: 12px;
   background: #1c1c1c;
   border: 1px solid #333;
-  color: white;
+  color: var(--mn-ivory);
   border-radius: 6px;
   outline: none;
 }
 
 .photo-box input:focus {
-  border-color: var(--mn-casper);
+  border-color: var(--mn-burgundy);
 }
 
 /* BUTTON */
 .photo-box button {
   width: 100%;
   padding: 14px;
-  background: linear-gradient(135deg, var(--mn-casper), var(--mn-casper));
+  background: linear-gradient(135deg, var(--mn-burgundy), var(--mn-burgundy));
   border: none;
-  color: black;
+  color: var(--mn-black);
   font-weight: bold;
   cursor: pointer;
 }
@@ -77,7 +77,7 @@
   margin: 0 auto 20px;
   position: relative;
   overflow: hidden;
-  border: 3px solid var(--mn-casper);
+  border: 3px solid var(--mn-burgundy);
   cursor: pointer;
 }
 

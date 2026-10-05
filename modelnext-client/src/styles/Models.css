@@ -7,7 +7,7 @@
 
 .models-hero {
   padding: 140px 20px 60px;
-  background: linear-gradient(180deg, rgba(200, 215, 225, 0.05) 0%, rgba(19, 19, 19, 0) 100%);
+  background: linear-gradient(180deg, rgba(128, 0, 32, 0.05) 0%, rgba(19, 19, 19, 0) 100%);
   text-align: center;
 }
 
@@ -57,16 +57,16 @@
 }
 
 .filter-btn:hover {
-  border-color: var(--mn-casper);
-  color: var(--mn-casper);
-  background: rgba(200, 215, 225, 0.03);
+  border-color: var(--mn-burgundy);
+  color: var(--mn-burgundy);
+  background: rgba(128, 0, 32, 0.03);
 }
 
 .filter-btn.active {
-  background: linear-gradient(135deg, var(--mn-casper), var(--mn-casper));
+  background: linear-gradient(135deg, var(--mn-burgundy), var(--mn-burgundy));
   color: #131313;
   border-color: transparent;
-  box-shadow: 0 4px 15px rgba(200, 215, 225, 0.25);
+  box-shadow: 0 4px 15px rgba(128, 0, 32, 0.25);
 }
 
 /* GRID */
@@ -88,7 +88,7 @@
 
 .model-card:hover {
   transform: translateY(-8px);
-  border-color: rgba(200, 215, 225, 0.25);
+  border-color: rgba(128, 0, 32, 0.25);
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
 }
 
@@ -115,13 +115,13 @@
   left: 15px;
   background: rgba(19, 19, 19, 0.85);
   backdrop-filter: blur(5px);
-  color: var(--mn-casper);
+  color: var(--mn-burgundy);
   padding: 4px 12px;
   border-radius: 20px;
   font-size: 11px;
   font-weight: 700;
   letter-spacing: 0.5px;
-  border: 1px solid rgba(200, 215, 225, 0.3);
+  border: 1px solid rgba(128, 0, 32, 0.3);
 }
 
 .model-details {
@@ -134,12 +134,12 @@
 .model-name {
   font-size: 18px;
   font-weight: 700;
-  color: #fff;
+  color: var(--mn-ivory);
   margin-bottom: 4px;
 }
 
 .model-agency {
-  color: var(--mn-casper);
+  color: var(--mn-burgundy);
   font-size: 11px;
   font-weight: 600;
   text-transform: uppercase;
@@ -176,7 +176,7 @@
 .model-view-btn {
   background: transparent;
   border: 1px solid rgba(255, 255, 255, 0.1);
-  color: #fff;
+  color: var(--mn-ivory);
   padding: 10px;
   width: 100%;
   cursor: pointer;
@@ -189,10 +189,10 @@
 }
 
 .model-card:hover .model-view-btn {
-  background: linear-gradient(135deg, var(--mn-casper), var(--mn-casper));
+  background: linear-gradient(135deg, var(--mn-burgundy), var(--mn-burgundy));
   color: #131313;
   border-color: transparent;
-  box-shadow: 0 4px 15px rgba(200, 215, 225, 0.2);
+  box-shadow: 0 4px 15px rgba(128, 0, 32, 0.2);
 }
 
 @media screen and (max-width: 768px) {

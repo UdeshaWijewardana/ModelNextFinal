@@ -7,7 +7,7 @@
 
 .agencies-hero {
   padding: 140px 20px 60px;
-  background: linear-gradient(180deg, rgba(200, 215, 225, 0.05) 0%, rgba(19, 19, 19, 0) 100%);
+  background: linear-gradient(180deg, rgba(128, 0, 32, 0.05) 0%, rgba(19, 19, 19, 0) 100%);
   text-align: center;
 }
 
@@ -28,7 +28,7 @@
 }
 
 .gold-text {
-  background: linear-gradient(135deg, var(--mn-casper), var(--mn-casper));
+  background: linear-gradient(135deg, var(--mn-burgundy), var(--mn-burgundy));
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
 }
@@ -57,7 +57,7 @@
 
 .agency-card:hover {
   transform: translateY(-8px);
-  border-color: rgba(200, 215, 225, 0.25);
+  border-color: rgba(128, 0, 32, 0.25);
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
 }
 
@@ -84,12 +84,12 @@
   right: 15px;
   background: rgba(19, 19, 19, 0.8);
   backdrop-filter: blur(5px);
-  color: var(--mn-casper);
+  color: var(--mn-burgundy);
   padding: 4px 8px;
   border-radius: 4px;
   font-size: 12px;
   font-weight: 700;
-  border: 1px solid rgba(200, 215, 225, 0.3);
+  border: 1px solid rgba(128, 0, 32, 0.3);
 }
 
 .agency-info {
@@ -100,7 +100,7 @@
 }
 
 .agency-location {
-  color: var(--mn-casper);
+  color: var(--mn-burgundy);
   font-size: 11px;
   font-weight: 700;
   text-transform: uppercase;
@@ -112,7 +112,7 @@
   font-size: 20px;
   font-weight: 700;
   margin-bottom: 12px;
-  color: #fff;
+  color: var(--mn-ivory);
   line-height: 1.3;
 }
 
@@ -142,14 +142,14 @@
 }
 
 .agency-card:hover .agency-tag {
-  background: rgba(200, 215, 225, 0.08);
-  color: var(--mn-casper);
+  background: rgba(128, 0, 32, 0.08);
+  color: var(--mn-burgundy);
 }
 
 .agency-btn {
   background: transparent;
   border: 1px solid rgba(255, 255, 255, 0.1);
-  color: #fff;
+  color: var(--mn-ivory);
   padding: 12px;
   width: 100%;
   cursor: pointer;
@@ -162,10 +162,10 @@
 }
 
 .agency-card:hover .agency-btn {
-  background: linear-gradient(135deg, var(--mn-casper), var(--mn-casper));
+  background: linear-gradient(135deg, var(--mn-burgundy), var(--mn-burgundy));
   color: #131313;
   border-color: transparent;
-  box-shadow: 0 4px 15px rgba(200, 215, 225, 0.2);
+  box-shadow: 0 4px 15px rgba(128, 0, 32, 0.2);
 }
 
 @media screen and (max-width: 768px) {

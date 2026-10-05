@@ -2,8 +2,8 @@
   --webcam-ink: var(--mn-text-primary);
   --webcam-muted: var(--mn-text-secondary);
   --webcam-line: var(--mn-border);
-  --webcam-accent: var(--mn-casper-strong);
-  --webcam-accent-soft: rgba(200, 215, 225, .18);
+  --webcam-accent: var(--mn-burgundy-hover);
+  --webcam-accent-soft: rgba(128, 0, 32, .18);
   --webcam-warn: var(--mn-error);
   width: min(760px, calc(100% - 24px));
   margin: 24px auto;
@@ -115,7 +115,7 @@
   padding: 10px 14px;
   border-radius: 4px;
   background: rgb(12 24 31 / 76%);
-  color: #fff;
+  color: var(--mn-ivory);
   font-size: 13px;
   text-align: center;
 }
@@ -147,7 +147,7 @@
   border: 1px solid var(--webcam-accent);
   border-radius: 5px;
   background: var(--webcam-accent);
-  color: #fff;
+  color: var(--mn-ivory);
   font: inherit;
   font-weight: 650;
   cursor: pointer;

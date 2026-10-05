@@ -1,42 +1,52 @@
 :root {
-  --mn-black: #000000;
-  --mn-surface: #141518;
-  --mn-surface-raised: #202126;
-  --mn-dove-grey: #68686c;
-  --mn-casper: #c8d7e1;
-  --mn-casper-strong: #9fb9ca;
-  --mn-white: #ffffff;
-  --mn-text-primary: #f7fafc;
-  --mn-text-secondary: #c1c8ce;
-  --mn-border: #45474d;
-  --mn-success: #79c88c;
-  --mn-warning: #e4ad55;
-  --mn-error: #e57373;
-  --mn-focus: #c8d7e1;
+  --mn-black: #080808;
+  --mn-bg: #0D0D0E;
+  --mn-surface: #151416;
+  --mn-surface-raised: #1D1B1E;
+  --mn-burgundy-deep: #650018;
+  --mn-burgundy: #800020;
+  --mn-burgundy-hover: #961A36;
+  --mn-ivory: #F5F1EA;
+  --mn-silver: #C8C2BC;
+  --mn-muted: #918A86;
+  --mn-border: #332F31;
+  --mn-border-strong: #494245;
+  --mn-success: #79C88C;
+  --mn-warning: #E4AD55;
+  --mn-error: #E57373;
+
+  /* Semantic aliases retain the existing component vocabulary. */
+  --mn-white: var(--mn-ivory);
+  --mn-text-primary: var(--mn-ivory);
+  --mn-text-secondary: var(--mn-silver);
+  --mn-dove-grey: var(--mn-muted);
+  --mn-focus: var(--mn-burgundy);
+  --mn-accent: var(--mn-burgundy);
+  --mn-accent-hover: var(--mn-burgundy-hover);
 }
 
 * { box-sizing: border-box; }
-html { background: var(--mn-black); }
-body { background: var(--mn-black); color: var(--mn-text-primary); }
+html { background: var(--mn-bg); }
+body { background: var(--mn-bg); color: var(--mn-text-primary); }
 button, input, select, textarea { font: inherit; }
 button { min-height: 40px; border-radius: 6px; }
 button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible, a:focus-visible { outline: 3px solid var(--mn-focus); outline-offset: 3px; }
 input, select, textarea { background: var(--mn-surface-raised); color: var(--mn-text-primary); border: 1px solid var(--mn-border); border-radius: 6px; padding: 11px 12px; }
-input::placeholder, textarea::placeholder { color: var(--mn-text-secondary); opacity: .8; }
-input:focus, select:focus, textarea:focus { border-color: var(--mn-casper-strong); box-shadow: 0 0 0 3px rgba(200, 215, 225, .16); outline: none; }
+input::placeholder, textarea::placeholder { color: var(--mn-muted); opacity: 1; }
+input:focus, select:focus, textarea:focus { border-color: var(--mn-burgundy); box-shadow: 0 0 0 3px rgba(128, 0, 32, .24); outline: none; }
 button:disabled, input:disabled { cursor: not-allowed; opacity: .58; }
 
-.gold-text { color: var(--mn-casper) !important; background: none !important; -webkit-text-fill-color: currentColor !important; }
-.gold-btn, .btn-gold, .nav-btn-register, .submit-btn, .form-box button, .agency-form-container button, .photographer-form-container button { background: var(--mn-casper) !important; color: var(--mn-black) !important; border-color: var(--mn-casper) !important; }
-.gold-btn:hover, .btn-gold:hover, .nav-btn-register:hover, .submit-btn:hover, .form-box button:hover, .agency-form-container button:hover, .photographer-form-container button:hover { background: var(--mn-casper-strong) !important; }
-.btn-outline, .nav-btn-login { background: transparent !important; color: var(--mn-text-primary) !important; border-color: var(--mn-casper-strong) !important; }
+.gold-text { color: var(--mn-burgundy) !important; background: none !important; -webkit-text-fill-color: currentColor !important; }
+.gold-btn, .btn-gold, .nav-btn-register, .submit-btn, .form-box button, .agency-form-container button, .photographer-form-container button { background: var(--mn-burgundy) !important; color: var(--mn-ivory) !important; border-color: var(--mn-burgundy) !important; }
+.gold-btn:hover, .btn-gold:hover, .nav-btn-register:hover, .submit-btn:hover, .form-box button:hover, .agency-form-container button:hover, .photographer-form-container button:hover { background: var(--mn-burgundy-hover) !important; border-color: var(--mn-burgundy-hover) !important; }
+.btn-outline, .nav-btn-login { background: transparent !important; color: var(--mn-text-primary) !important; border-color: var(--mn-border-strong) !important; }
 
-.navbar, .admin-page, .models-page, .photographers-page, .agencies-page, .events-page { background: var(--mn-black) !important; color: var(--mn-text-primary) !important; }
-.navbar-logo, .nav-item.active, .nav-btn-login:hover { color: var(--mn-casper) !important; -webkit-text-fill-color: var(--mn-casper) !important; }
-.nav-item.active::after, .nav-item::after { background: var(--mn-casper) !important; }
+.navbar, .admin-page, .models-page, .photographers-page, .agencies-page, .events-page { background: var(--mn-bg) !important; color: var(--mn-text-primary) !important; }
+.navbar-logo, .nav-item.active, .nav-btn-login:hover { color: var(--mn-burgundy) !important; -webkit-text-fill-color: var(--mn-burgundy) !important; }
+.nav-item.active::after, .nav-item::after { background: var(--mn-burgundy) !important; }
 .admin-panel-card, .model-card, .photographer-card, .agency-card, .event-card { background: var(--mn-surface) !important; border-color: var(--mn-border) !important; }
 .admin-table th, .admin-table td { border-color: var(--mn-border) !important; color: var(--mn-text-primary); }
-.role-badge.model { color: var(--mn-casper) !important; border-color: var(--mn-casper-strong) !important; background: rgba(200, 215, 225, .12) !important; }
+.role-badge.model { color: var(--mn-burgundy) !important; border-color: var(--mn-burgundy) !important; background: rgba(128, 0, 32, .12) !important; }
 .approve-btn { color: var(--mn-success) !important; border-color: var(--mn-success) !important; }
 .approve-btn:hover { background: var(--mn-success) !important; color: var(--mn-black) !important; }
 .reject-btn { color: var(--mn-error) !important; border-color: var(--mn-error) !important; }

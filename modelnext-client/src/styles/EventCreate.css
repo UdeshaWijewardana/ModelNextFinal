@@ -1,8 +1,8 @@
 /* ================= MAIN WRAPPER ================= */
 .event-wrapper {
   display: flex;
-  height: 100vh; /* 🔥 exact screen height */
-  overflow: hidden; /* 🔥 NO SCROLL */
+  height: 100vh; /* ÃÂ°ÃÂÃÂÃÂ¥ exact screen height */
+  overflow: hidden; /* ÃÂ°ÃÂÃÂÃÂ¥ NO SCROLL */
   font-family: 'Inter', sans-serif;
 }
 
@@ -12,7 +12,7 @@
   position: relative;
   overflow: hidden;
   display: flex;
-  background: #000;
+  background: var(--mn-black);
 }
 
 .hero-img {
@@ -34,7 +34,7 @@
 }
 
 .event-left h2 {
-  color: var(--mn-casper);
+  color: var(--mn-burgundy);
   font-size: 24px;
 }
 
@@ -50,7 +50,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 20px; /* 🔥 reduced */
+  padding: 20px; /* ÃÂ°ÃÂÃÂÃÂ¥ reduced */
   overflow: hidden;
 }
 
@@ -58,7 +58,7 @@
 .event-card {
   width: 100%;
   max-width: 480px;
-  max-height: 90vh; /* 🔥 prevents overflow */
+  max-height: 90vh; /* ÃÂ°ÃÂÃÂÃÂ¥ prevents overflow */
   overflow: hidden;
 
   background: linear-gradient(145deg, #111, #1a1a1a);
@@ -75,7 +75,7 @@
 /* ================= TITLE ================= */
 .event-card h2 {
   text-align: center;
-  color: #fff;
+  color: var(--mn-ivory);
   margin-bottom: 5px;
   font-size: 20px;
 }
@@ -99,11 +99,11 @@ input,
 select,
 textarea {
   width: 100%;
-  padding: 10px; /* 🔥 smaller */
+  padding: 10px; /* ÃÂ°ÃÂÃÂÃÂ¥ smaller */
   border-radius: 8px;
   border: 1px solid rgba(255,255,255,0.08);
   background: rgba(255,255,255,0.05);
-  color: #fff;
+  color: var(--mn-ivory);
   font-size: 13px;
   outline: none;
   transition: 0.2s;
@@ -117,8 +117,8 @@ textarea::placeholder {
 input:focus,
 select:focus,
 textarea:focus {
-  border-color: var(--mn-casper);
-  box-shadow: 0 0 10px rgba(200, 215, 225,0.25);
+  border-color: var(--mn-burgundy);
+  box-shadow: 0 0 10px rgba(128, 0, 32,0.25);
 }
 
 /* ================= TEXTAREA ================= */
@@ -131,7 +131,7 @@ textarea {
 /* ================= UPLOAD ================= */
 .upload-box {
   margin-top: 10px;
-  height: 80px; /* 🔥 reduced */
+  height: 80px; /* ÃÂ°ÃÂÃÂÃÂ¥ reduced */
   border-radius: 10px;
   border: 2px dashed rgba(255,255,255,0.1);
 
@@ -144,7 +144,7 @@ textarea {
 }
 
 .upload-box:hover {
-  border-color: var(--mn-casper);
+  border-color: var(--mn-burgundy);
 }
 
 .upload-box img {
@@ -164,7 +164,7 @@ textarea {
   margin-top: 15px;
   padding: 10px;
 
-  background: linear-gradient(135deg, var(--mn-casper), var(--mn-casper));
+  background: linear-gradient(135deg, var(--mn-burgundy), var(--mn-burgundy));
   color: #000;
   border: none;
 
@@ -177,7 +177,7 @@ textarea {
 
 .submit-btn:hover {
   transform: translateY(-1px);
-  box-shadow: 0 8px 20px rgba(200, 215, 225,0.3);
+  box-shadow: 0 8px 20px rgba(128, 0, 32,0.3);
 }
 
 /* ================= RESPONSIVE ================= */

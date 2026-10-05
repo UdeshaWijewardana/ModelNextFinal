@@ -1,7 +1,7 @@
 .contact-page {
   position: relative;
   background:
-    radial-gradient(circle at top left, rgba(200, 215, 225, 0.14), transparent 28%),
+    radial-gradient(circle at top left, rgba(128, 0, 32, 0.14), transparent 28%),
     linear-gradient(135deg, #090909 0%, #141414 100%);
   color: #ece7de;
   min-height: 100vh;
@@ -23,7 +23,7 @@
   position: relative;
   padding: 150px 20px 70px;
   background:
-    linear-gradient(135deg, rgba(200, 215, 225, 0.16), rgba(19, 19, 19, 0.2)),
+    linear-gradient(135deg, rgba(128, 0, 32, 0.16), rgba(19, 19, 19, 0.2)),
     url('https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&w=1600&q=80') center/cover no-repeat;
   text-align: center;
   overflow: hidden;
@@ -50,7 +50,7 @@
   text-transform: uppercase;
   letter-spacing: 2px;
   margin-bottom: 15px;
-  color: #fff;
+  color: var(--mn-ivory);
 }
 
 .contact-hero-content p {
@@ -101,7 +101,7 @@
   font-size: 28px;
   font-weight: 800;
   text-transform: uppercase;
-  color: #fff;
+  color: var(--mn-ivory);
   margin-bottom: 15px;
 }
 
@@ -130,13 +130,13 @@
 
 .info-item:hover {
   transform: translateX(6px);
-  border-color: rgba(200, 215, 225, 0.3);
+  border-color: rgba(128, 0, 32, 0.3);
 }
 
 .info-icon {
   font-size: 20px;
-  background: rgba(200, 215, 225, 0.12);
-  color: var(--mn-casper);
+  background: rgba(128, 0, 32, 0.12);
+  color: var(--mn-burgundy);
   width: 44px;
   height: 44px;
   border-radius: 50%;
@@ -144,12 +144,12 @@
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  border: 1px solid rgba(200, 215, 225, 0.24);
+  border: 1px solid rgba(128, 0, 32, 0.24);
 }
 
 .info-item h4 {
   font-size: 14px;
-  color: #fff;
+  color: var(--mn-ivory);
   margin-bottom: 5px;
   text-transform: uppercase;
   letter-spacing: 0.5px;
@@ -186,8 +186,8 @@
 }
 
 .social-icons span:hover {
-  color: var(--mn-casper);
-  border-color: rgba(200, 215, 225, 0.35);
+  color: var(--mn-burgundy);
+  border-color: rgba(128, 0, 32, 0.35);
   transform: translateY(-2px);
 }
 
@@ -204,7 +204,7 @@
 .contact-form h3 {
   font-size: 24px;
   font-weight: 700;
-  color: #fff;
+  color: var(--mn-ivory);
   margin-bottom: 28px;
 }
 
@@ -228,7 +228,7 @@
   background: rgba(255, 255, 255, 0.04);
   border: 1px solid rgba(255, 255, 255, 0.08);
   padding: 14px 16px;
-  color: #fff;
+  color: var(--mn-ivory);
   border-radius: 10px;
   outline: none;
   font-family: inherit;
@@ -239,14 +239,14 @@
 
 .form-group input:focus,
 .form-group textarea:focus {
-  border-color: var(--mn-casper);
+  border-color: var(--mn-burgundy);
   background: rgba(255, 255, 255, 0.06);
   transform: translateY(-1px);
-  box-shadow: 0 0 0 3px rgba(200, 215, 225, 0.14);
+  box-shadow: 0 0 0 3px rgba(128, 0, 32, 0.14);
 }
 
 .submit-btn {
-  background: linear-gradient(135deg, var(--mn-casper), var(--mn-casper));
+  background: linear-gradient(135deg, var(--mn-burgundy), var(--mn-burgundy));
   border: none;
   color: #131313;
   padding: 15px;
@@ -258,13 +258,13 @@
   cursor: pointer;
   border-radius: 999px;
   transition: all 0.3s ease;
-  box-shadow: 0 10px 24px rgba(200, 215, 225, 0.2);
+  box-shadow: 0 10px 24px rgba(128, 0, 32, 0.2);
   margin-top: 10px;
 }
 
 .submit-btn:hover {
   transform: translateY(-2px);
-  box-shadow: 0 14px 30px rgba(200, 215, 225, 0.3);
+  box-shadow: 0 14px 30px rgba(128, 0, 32, 0.3);
 }
 
 .submit-btn:disabled {
@@ -299,7 +299,7 @@
 
 .success-state h3 {
   font-size: 24px;
-  color: #fff;
+  color: var(--mn-ivory);
   margin: 0;
 }
 
@@ -313,7 +313,7 @@
 .reset-btn {
   background: transparent;
   border: 1px solid rgba(255, 255, 255, 0.12);
-  color: #fff;
+  color: var(--mn-ivory);
   padding: 12px 24px;
   cursor: pointer;
   font-weight: 700;

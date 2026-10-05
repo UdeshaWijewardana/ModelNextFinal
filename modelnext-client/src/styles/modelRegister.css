@@ -71,7 +71,7 @@
 
 /* CARD */
 form {
-  background: #ffffff;
+  background: var(--mn-ivory);
   padding: 50px;
   border-radius: 14px;
   width: 620px;
@@ -121,7 +121,7 @@ button {
   border-radius: 30px;
   border: none;
   background: linear-gradient(135deg, #c9a646, #a8842f);
-  color: white;
+  color: var(--mn-ivory);
   font-weight: 500;
   cursor: pointer;
   transition: 0.3s;

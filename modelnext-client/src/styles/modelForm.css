@@ -19,7 +19,7 @@
 }
 
 .logo {
-  color: var(--mn-casper);
+  color: var(--mn-burgundy);
   margin-bottom: 50px;
   font-size: 24px;
   font-weight: 700;
@@ -48,9 +48,9 @@
 }
 
 .step-circle.active {
-  background: var(--mn-casper);
+  background: var(--mn-burgundy);
   color: #1a1a1a;
-  border-color: var(--mn-casper);
+  border-color: var(--mn-burgundy);
 }
 
 .step-item p {
@@ -120,7 +120,7 @@
   border: 1px solid #333;
   border-radius: 6px;
   background: #2a2a2a;
-  color: #ffffff;
+  color: var(--mn-ivory);
   font-size: 14px;
   transition: all 0.3s;
 }
@@ -133,7 +133,7 @@
 .main-container input:focus,
 .main-container select:focus {
   outline: none;
-  border-color: var(--mn-casper);
+  border-color: var(--mn-burgundy);
   background: #2a2a2a;
   box-shadow: 0 0 8px rgba(201, 169, 92, 0.2);
 }
@@ -182,12 +182,12 @@
 }
 
 .grid-item input:hover {
-  border-color: var(--mn-casper);
+  border-color: var(--mn-burgundy);
   background: #333;
 }
 
 .grid-item input:focus {
-  border-color: var(--mn-casper);
+  border-color: var(--mn-burgundy);
   background: #333;
 }
 
@@ -207,7 +207,7 @@
 
 /* HEADING */
 .main-container form h1 {
-  color: #ffffff;
+  color: var(--mn-ivory);
   margin-bottom: 10px;
   font-size: 28px;
   font-weight: 700;
@@ -250,8 +250,8 @@
 }
 
 .next-btn {
-  background: var(--mn-casper);
-  color: white;
+  background: var(--mn-burgundy);
+  color: var(--mn-ivory);
   flex: 1;
 }
 
@@ -263,9 +263,9 @@
 .main-container button {
   margin-top: 15px;
   padding: 10px;
-  background: var(--mn-casper);
+  background: var(--mn-burgundy);
   border: none;
-  color: white;
+  color: var(--mn-ivory);
   border-radius: 6px;
   cursor: pointer;
   font-weight: 600;
@@ -333,7 +333,7 @@
 .verification-note {
   margin-top: 16px;
   padding: 12px 14px;
-  border-left: 3px solid var(--mn-casper);
+  border-left: 3px solid var(--mn-burgundy);
   background: rgba(201, 169, 92, 0.11);
   color: #e8dcb4;
   font-size: 13px;
