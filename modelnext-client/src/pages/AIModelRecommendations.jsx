@@ -386,11 +386,18 @@ export default function AIModelRecommendations() {
                         );
 
                         const params = new URLSearchParams({
-                        name: match.fullName || "Model",
-                        role: "Fashion Model",
-                        img: imageUrl,
-                        location: match.location || "Sri Lanka",
-                        });
+  modelId: match.id || "",
+  name: match.fullName || "Model",
+  role: "Fashion Model",
+  img: imageUrl,
+  location: match.location || "Sri Lanka",
+
+  // Keep the AI event attached to the profile.
+  eventId: event?.id || eventId,
+  eventTitle: event?.title || "Selected Event",
+  eventType: event?.eventType || "Event",
+  eventLocation: event?.location || "",
+});
 
                         navigate(`/profile?${params.toString()}`);
                     }}
@@ -420,7 +427,7 @@ const styles = {
     minHeight: "100vh",
     background:
       "linear-gradient(135deg, #050505 0%, #101010 50%, #050505 100%)",
-    color: "#ffffff",
+    color: "var(--mn-ivory)",
     padding: "32px 24px 60px",
     boxSizing: "border-box",
   },
@@ -436,8 +443,8 @@ const styles = {
 
   backButton: {
     background: "transparent",
-    border: "1px solid #444",
-    color: "#ffffff",
+    border: "1px solid var(--mn-border-strong)",
+    color: "var(--mn-ivory)",
     padding: "10px 17px",
     borderRadius: "8px",
     cursor: "pointer",
@@ -457,8 +464,8 @@ const styles = {
     height: "58px",
     minWidth: "58px",
     borderRadius: "16px",
-    background: "#d9edf7",
-    color: "#111111",
+    background: "var(--mn-burgundy)",
+    color: "var(--mn-ivory)",
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
@@ -468,7 +475,7 @@ const styles = {
 
   eyebrow: {
     margin: "0 0 6px",
-    color: "#9bbdcd",
+    color: "var(--mn-burgundy)",
     fontSize: "10px",
     letterSpacing: "2px",
     fontWeight: "700",
@@ -483,7 +490,7 @@ const styles = {
 
   subtitle: {
     margin: "9px 0 0",
-    color: "#999999",
+    color: "var(--mn-silver)",
     fontSize: "14px",
   },
 
@@ -492,8 +499,8 @@ const styles = {
     alignItems: "center",
     justifyContent: "space-between",
     gap: "20px",
-    background: "#151515",
-    border: "1px solid #303030",
+    background: "var(--mn-surface)",
+    border: "1px solid var(--mn-border)",
     borderRadius: "16px",
     padding: "23px",
     marginBottom: "40px",
@@ -505,7 +512,7 @@ const styles = {
 
   eventLabel: {
     margin: "0 0 6px",
-    color: "#9bbdcd",
+    color: "var(--mn-burgundy)",
     fontSize: "9px",
     letterSpacing: "2px",
     fontWeight: "700",
@@ -519,7 +526,7 @@ const styles = {
 
   eventMeta: {
     margin: "8px 0 0",
-    color: "#777777",
+    color: "var(--mn-muted)",
     fontSize: "13px",
   },
 
@@ -531,19 +538,19 @@ const styles = {
     minWidth: "112px",
     padding: "12px 16px",
     borderRadius: "12px",
-    background: "#202020",
+    background: "var(--mn-surface-raised)",
   },
 
   resultNumber: {
     fontSize: "22px",
     lineHeight: 1,
     fontWeight: "800",
-    color: "#ffffff",
+    color: "var(--mn-ivory)",
   },
 
   resultLabel: {
     marginTop: "6px",
-    color: "#888888",
+    color: "var(--mn-muted)",
     fontSize: "10px",
   },
 
@@ -567,7 +574,7 @@ const styles = {
 
   sectionDescription: {
     margin: 0,
-    color: "#666666",
+    color: "var(--mn-muted)",
     fontSize: "12px",
   },
 
@@ -580,8 +587,8 @@ const styles = {
 
   modelCard: {
     overflow: "hidden",
-    background: "#151515",
-    border: "1px solid #303030",
+    background: "var(--mn-surface)",
+    border: "1px solid var(--mn-border)",
     borderRadius: "18px",
     boxShadow:
       "0 12px 35px rgba(0, 0, 0, 0.25)",
@@ -595,7 +602,7 @@ const styles = {
     position: "relative",
     height: "430px",
     overflow: "hidden",
-    background: "#202020",
+    background: "var(--mn-surface-raised)",
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
@@ -607,7 +614,7 @@ const styles = {
     objectFit: "contain",
     objectPosition: "center center",
     display: "block",
-    background: "#202020",
+    background: "var(--mn-surface-raised)",
   },
 
   imagePlaceholder: {
@@ -616,8 +623,8 @@ const styles = {
     alignItems: "center",
     justifyContent: "center",
     background:
-      "linear-gradient(135deg, #222222, #303030)",
-    color: "#d9edf7",
+      "linear-gradient(135deg, var(--mn-surface-raised), var(--mn-border))",
+    color: "var(--mn-burgundy)",
     fontSize: "70px",
     fontWeight: "700",
   },
@@ -638,8 +645,8 @@ const styles = {
     padding: "7px 10px",
     borderRadius: "8px",
     background: "rgba(0, 0, 0, 0.78)",
-    border: "1px solid #555",
-    color: "#ffffff",
+    border: "1px solid var(--mn-border-strong)",
+    color: "var(--mn-ivory)",
     fontSize: "11px",
     fontWeight: "700",
   },
@@ -652,8 +659,8 @@ const styles = {
     width: "68px",
     height: "68px",
     borderRadius: "50%",
-    background: "#d9edf7",
-    color: "#111111",
+    background: "var(--mn-burgundy)",
+    color: "var(--mn-ivory)",
     display: "flex",
     flexDirection: "column",
     alignItems: "center",
@@ -694,15 +701,15 @@ const styles = {
 
   recommendation: {
     margin: "6px 0 0",
-    color: "#9bbdcd",
+    color: "var(--mn-burgundy)",
     fontSize: "12px",
     fontWeight: "600",
   },
 
   compatibleBadge: {
     flexShrink: 0,
-    border: "1px solid #405866",
-    color: "#9bbdcd",
+    border: "1px solid var(--mn-burgundy)",
+    color: "var(--mn-burgundy)",
     borderRadius: "20px",
     padding: "5px 9px",
     fontSize: "8px",
@@ -712,21 +719,21 @@ const styles = {
 
   details: {
     marginTop: "20px",
-    borderTop: "1px solid #292929",
-    borderBottom: "1px solid #292929",
+    borderTop: "1px solid var(--mn-border)",
+    borderBottom: "1px solid var(--mn-border)",
     padding: "12px 0",
   },
 
   detailRow: {
     display: "flex",
     margin: "7px 0",
-    color: "#bbbbbb",
+    color: "var(--mn-silver)",
     fontSize: "12px",
   },
 
   detailLabel: {
     width: "80px",
-    color: "#666666",
+    color: "var(--mn-muted)",
   },
 
   categories: {
@@ -739,9 +746,9 @@ const styles = {
   category: {
     padding: "5px 10px",
     borderRadius: "20px",
-    background: "#202020",
-    border: "1px solid #383838",
-    color: "#cccccc",
+    background: "var(--mn-surface-raised)",
+    border: "1px solid var(--mn-border)",
+    color: "var(--mn-silver)",
     fontSize: "10px",
   },
 
@@ -753,8 +760,8 @@ const styles = {
     padding: "13px 15px",
     border: "none",
     borderRadius: "9px",
-    background: "#d9edf7",
-    color: "#111111",
+    background: "var(--mn-burgundy)",
+    color: "var(--mn-ivory)",
     fontSize: "13px",
     fontWeight: "700",
     cursor: "pointer",
@@ -775,8 +782,8 @@ const styles = {
     height: "62px",
     margin: "0 auto 20px",
     borderRadius: "18px",
-    background: "#d9edf7",
-    color: "#111111",
+    background: "var(--mn-burgundy)",
+    color: "var(--mn-ivory)",
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
@@ -790,7 +797,7 @@ const styles = {
 
   loadingText: {
     marginTop: "10px",
-    color: "#888888",
+    color: "var(--mn-muted)",
     fontSize: "14px",
   },
 
@@ -805,8 +812,8 @@ const styles = {
     height: "50px",
     margin: "0 auto 18px",
     borderRadius: "50%",
-    background: "#d9edf7",
-    color: "#111111",
+    background: "var(--mn-burgundy)",
+    color: "var(--mn-ivory)",
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
@@ -816,8 +823,8 @@ const styles = {
   emptyState: {
     textAlign: "center",
     padding: "80px 20px",
-    background: "#151515",
-    border: "1px solid #303030",
+    background: "var(--mn-surface)",
+    border: "1px solid var(--mn-border)",
     borderRadius: "16px",
   },
 
@@ -826,8 +833,8 @@ const styles = {
     height: "52px",
     margin: "0 auto 18px",
     borderRadius: "15px",
-    background: "#d9edf7",
-    color: "#111111",
+    background: "var(--mn-burgundy)",
+    color: "var(--mn-ivory)",
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
@@ -841,7 +848,7 @@ const styles = {
 
   emptyText: {
     marginTop: "10px",
-    color: "#888888",
+    color: "var(--mn-muted)",
     fontSize: "14px",
   },
 };
