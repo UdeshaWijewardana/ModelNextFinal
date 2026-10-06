@@ -386,11 +386,18 @@ export default function AIModelRecommendations() {
                         );
 
                         const params = new URLSearchParams({
-                        name: match.fullName || "Model",
-                        role: "Fashion Model",
-                        img: imageUrl,
-                        location: match.location || "Sri Lanka",
-                        });
+  modelId: match.id || "",
+  name: match.fullName || "Model",
+  role: "Fashion Model",
+  img: imageUrl,
+  location: match.location || "Sri Lanka",
+
+  // Keep the AI event attached to the profile.
+  eventId: event?.id || eventId,
+  eventTitle: event?.title || "Selected Event",
+  eventType: event?.eventType || "Event",
+  eventLocation: event?.location || "",
+});
 
                         navigate(`/profile?${params.toString()}`);
                     }}

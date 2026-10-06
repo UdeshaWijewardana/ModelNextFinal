@@ -20,3 +20,44 @@
 @media (max-width: 1050px) { .admin-sidebar { width: 205px; }.admin-stat-grid { grid-template-columns: repeat(2, 1fr); }.admin-overview-grid { grid-template-columns: 1fr; } }
 @media (max-width: 760px) { .admin-page { display: block; }.admin-sidebar { position: static; width: auto; min-height: auto; padding: 18px; border-right: 0; border-bottom: 1px solid var(--mn-border); }.admin-sidebar-brand { margin: 0 0 15px; }.admin-sidebar-kicker, .admin-sidebar-note { display: none; }.admin-sidebar-nav { display: flex; overflow-x: auto; padding-bottom: 2px; }.admin-sidebar-link { width: auto; min-width: max-content; }.admin-topbar { min-height: 76px; padding: 14px 20px; }.admin-topbar h1 { font-size: 20px; }.admin-topbar-actions { gap: 9px; }.admin-topbar-link { display: none; }.admin-content { padding: 25px 18px 50px; }.admin-intro { display: grid; }.admin-secondary-button { width: fit-content; }.admin-stat-grid { gap: 10px; }.admin-stat-card { min-height: 125px; padding: 16px; }.admin-stat-card strong { margin-top: 15px; font-size: 29px; }.identity-review-heading, .identity-review-actions { flex-direction: column; }.identity-live-grid { grid-template-columns: 1fr; }.admin-section-card { padding: 18px; }.admin-section-heading { align-items: flex-start; }.admin-search { display: grid; gap: 5px; }.admin-search input { width: 150px; } }
 @media (max-width: 440px) { .admin-stat-grid { grid-template-columns: 1fr 1fr; }.admin-user-summary { display: none; }.admin-intro h2 { font-size: 28px; }.role-summary-grid { grid-template-columns: 1fr; } }
+.admin-event-info {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.admin-event-info small {
+  color: #777;
+  font-size: 11px;
+}
+
+.admin-event-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.admin-event-approved {
+  color: #34d399;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.admin-event-rejected {
+  color: #fb7185;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+@media (max-width: 768px) {
+  .admin-event-row {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .admin-event-actions {
+    justify-content: flex-start;
+  }
+}
