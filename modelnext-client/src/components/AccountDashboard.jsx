@@ -56,6 +56,7 @@ export default function AccountDashboard({ role, title }) {
     {location.state?.registrationSubmitted && <section className="account-status-banner approved" role="status"><strong>REGISTRATION SUBMITTED SUCCESSFULLY</strong><p>Thank you for registering with ModelNext. Your account is pending administrator approval. You can review your account information while it is being reviewed.</p></section>}
     <section className={`account-status-banner ${approvalStatus}`} role="status"><strong>{status.title}</strong><p>{status.message}</p>{approvalStatus === "rejected" && user.rejectionReason && <p><strong>Reason:</strong> {user.rejectionReason}</p>}</section>
     {error && <p className="account-error" role="alert">{error}</p>}
+    {editable && <button type="button" onClick={() => navigate("/event-chats")}>Event group chats &amp; invitations</button>}
     <form className={`account-profile-form ${editable ? "is-editable" : "is-locked"}`} onSubmit={save}>
       {!editable && <p className="account-lock-note">Your submitted account details are view-only until approval.</p>}
       {fieldsByRole[role].map((field) => <label key={field}>{field}<input disabled={!editable} value={form[field] || ""} onChange={(e) => setForm({ ...form, [field]: e.target.value })} /></label>)}

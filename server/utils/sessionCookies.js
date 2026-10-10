@@ -1,4 +1,5 @@
 const jwt = require('jsonwebtoken');
+const { randomUUID } = require('node:crypto');
 
 const USER_SESSION_COOKIE = 'modelnext_user_session';
 const ADMIN_SESSION_COOKIE = 'modelnext_admin_session';
@@ -28,7 +29,7 @@ const clearCookie = (response, name) => response.clearCookie(name, {
 const issueUserSession = (account, role) => jwt.sign(
   { role },
   process.env.JWT_SECRET,
-  { subject: account._id.toString(), expiresIn: '8h' }
+  { subject: account._id.toString(), expiresIn: '8h', jwtid: randomUUID() }
 );
 
 module.exports = { USER_SESSION_COOKIE, ADMIN_SESSION_COOKIE, cookieOptions, readCookie, clearCookie, issueUserSession };

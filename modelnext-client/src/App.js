@@ -31,6 +31,8 @@ import ClientForm from "./forms/ClientForm";
 import WebcamTest from "./components/WebcamTest";
 import { AuthProvider } from "./context/AuthContext";
 
+import EventChats from './pages/EventChats';
+import EventChatRoom from './pages/EventChatRoom';
 import './App.css';
 
 function App() {
@@ -68,6 +70,9 @@ function App() {
         <Route path="/agency-dashboard" element={<AgencyDashboard />} />
         <Route path="/photographer-dashboard" element={<PhotographerDashboard />} />
         <Route path="/client-portal/ai-matches/:eventId" element={<AIModelRecommendations />} />
+
+        <Route path="/event-chats" element={<EventChats />} />
+        <Route path="/event-chats/:chatId" element={<EventChatRoom />} />
 
         {/* PROFILE */}
         <Route path="/profile" element={<ProfileDetails />} />

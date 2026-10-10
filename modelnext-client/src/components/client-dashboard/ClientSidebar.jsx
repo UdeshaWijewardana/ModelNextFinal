@@ -22,6 +22,7 @@ export default function ClientSidebar({ isOpen, active, onNavigate, unreadCount 
       <div className="client-brand"><span className="client-brand-mark">M</span><span><span className="brand-model">Model</span><span className="brand-next">Next</span></span></div>
       <p className="client-sidebar-label">HIRING FOR PROJECTS</p>
       <nav className="client-nav-list">
+        <button type="button" className="client-nav-item" onClick={() => navigate("/event-chats")}>Event group chats</button>
         {primaryItems.map(([label, icon, key]) => (
           <button key={key} type="button" className={`client-nav-item ${active === key ? "is-active" : ""}`} onClick={() => onNavigate(key)}>
             <span aria-hidden="true">{icon}</span><span>{label}</span>
