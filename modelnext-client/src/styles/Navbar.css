@@ -306,3 +306,8 @@
 
   .mobile-actions .nav-auth-loading { width: 100%; }
 }
+
+/* Keep the expanded account navigation reachable on short mobile screens. */
+@media screen and (max-width: 1100px) {
+  .nav-menu { overflow-y: auto; justify-content: flex-start; padding: 85px 0 24px; gap: 18px; }
+}

@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { apiFetch, getCurrentUser, readJson } from "../api";
+import EventChatAction from "../event-chat/EventChatAction";
 import ClientSidebar from "../components/client-dashboard/ClientSidebar";
 import DashboardStatCard from "../components/client-dashboard/DashboardStatCard";
 import SectionHeader from "../components/client-dashboard/SectionHeader";
@@ -1256,6 +1257,7 @@ const bookingCounts = {
                     </div>
 
                     <div className="client-project-actions">
+                      {event.status === "approved" && <EventChatAction eventId={event.id}/>}
                       <button
                         type="button"
                         className="client-secondary-button"

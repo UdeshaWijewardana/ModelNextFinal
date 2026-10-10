@@ -8,3 +8,5 @@ server/.env
 # Allow the server data directory to be shared if needed
 !server/data/
 !server/data/models.json
+# Private event chat media must never be committed
+server/private/

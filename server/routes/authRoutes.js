@@ -67,7 +67,11 @@ router.get('/me', requireUser, requireDatabase, async (req, res) => {
   }
 });
 
-router.post('/logout', (req, res) => { clearCookie(res, USER_SESSION_COOKIE); return res.status(204).end(); });
+router.post('/logout', (req, res) => {
+  req.app.get('eventChatRealtime')?.disconnectSession(req);
+  clearCookie(res, USER_SESSION_COOKIE);
+  return res.status(204).end();
+});
 
 const editableFields = {
   model: ['fullName', 'username', 'address', 'phone', 'birthdate', 'location', 'gender', 'categories', 'profileImage', 'portfolioImages', 'weight', 'height', 'waist', 'hip'],

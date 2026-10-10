@@ -3,6 +3,8 @@ const express = require('express');
 const mongoose = require('mongoose');
 const path = require('path');
 const cors = require('cors');
+const http = require('node:http');
+const { createEventChatRealtime } = require('./services/eventChatRealtime');
 
 const dashboardRoutes = require('./routes/dashboardRoutes');
 const agencyRoutes = require('./routes/agencyRoutes');
@@ -14,8 +16,10 @@ const adminRoutes = require('./routes/adminRoutes');
 const { router: eventRoutes } = require('./routes/eventRoutes');
 const notificationRoutes = require('./routes/notificationRoutes');
 const matchingRoutes = require('./routes/matchingRoutes');
+const eventChatRoutes = require('./routes/eventChatRoutes');
 
 const app = express();
+const httpServer = http.createServer(app);
 
 // ✅ Middleware
 // In development, accept credentialed requests from any port on the exact
@@ -43,6 +47,10 @@ const isAllowedCorsOrigin = (origin) => {
   if (configuredClientOrigins.has(origin)) return true;
   return process.env.NODE_ENV !== 'production' && isDevelopmentLoopbackOrigin(origin);
 };
+
+// REST and Socket.IO share one listener and the same origin policy.
+const eventChatRealtime = createEventChatRealtime(httpServer, { isAllowedOrigin: isAllowedCorsOrigin });
+app.set('eventChatRealtime', eventChatRealtime);
 
 app.use(cors({
   origin: (origin, callback) => callback(null, isAllowedCorsOrigin(origin)),
@@ -86,7 +94,9 @@ app.use('/api/admin', adminRoutes);
 app.use('/api/events', eventRoutes);
 app.use('/api/notifications', notificationRoutes);
 app.use('/api/matching', matchingRoutes);
+app.use('/api/event-chats', eventChatRoutes);
+
 
 // ✅ Start server
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
+httpServer.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));

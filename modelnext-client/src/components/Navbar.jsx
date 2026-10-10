@@ -5,7 +5,7 @@ import '../styles/Navbar.css';
 
 export default function Navbar() {
   const navigate = useNavigate();
-  const { status, account, accountRoute, isAuthenticated, logout } = useAuth();
+  const { status, account, accountRoute, isAuthenticated, logout, kind } = useAuth();
   const [isOpen, setIsOpen] = useState(false);
 
   const toggleMenu = () => {
@@ -105,6 +105,7 @@ export default function Navbar() {
             Contact Us
           </NavLink>
 
+          {isAuthenticated && kind === 'user' && <NavLink to="/event-chats" className="nav-item" onClick={() => setIsOpen(false)}>Group Chats</NavLink>}
           {/* MOBILE ACTIONS */}
           <div className="mobile-actions">{authActions(true)}</div>
         </div>
