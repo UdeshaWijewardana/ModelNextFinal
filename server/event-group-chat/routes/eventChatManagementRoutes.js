@@ -1,10 +1,10 @@
 const express = require('express');
-const Event = require('../models/Event');
+const Event = require('../../models/Event');
 const EventChat = require('../models/EventChat');
 const ChatInvitation = require('../models/ChatInvitation');
 const ChatJoinRequest = require('../models/ChatJoinRequest');
-const { requireUser } = require('../middleware/requireUser');
-const { requireDatabase } = require('../middleware/requireDatabase');
+const { requireUser } = require('../../middleware/requireUser');
+const { requireDatabase } = require('../../middleware/requireDatabase');
 const {
   accounts, fail, assertId, sameAccount, isOwner, isMember, approvedAccount,
   chatAccess, addMember, transaction, notify, publicAccount, profileMap,

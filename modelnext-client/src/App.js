@@ -9,9 +9,11 @@ import EventCreate from './pages/EventCreate'; // ✅ ADDED
 import ModelDashboard from './pages/ModelDashboard';
 import ClientDashboard from './pages/ClientDashboard';
 import ProfileDetails from './pages/ProfileDetails';
+import ModelPublicProfile from './pages/ModelPublicProfile';
 import RoleSelection from './pages/RoleSelection';
 import AgencyDashboard from './pages/AgencyDashboard';
 import PhotographerDashboard from './pages/PhotographerDashboard';
+import PhotographerPublicProfile from './pages/PhotographerPublicProfile';
 import AIModelRecommendations from './pages/AIModelRecommendations';
 
 // NEW PAGES
@@ -31,8 +33,8 @@ import ClientForm from "./forms/ClientForm";
 import WebcamTest from "./components/WebcamTest";
 import { AuthProvider } from "./context/AuthContext";
 
-import EventChats from './pages/EventChats';
-import EventChatRoom from './pages/EventChatRoom';
+import EventChats from './pages/event-group-chat/EventChats';
+import EventChatRoom from './pages/event-group-chat/EventChatRoom';
 import './App.css';
 
 function App() {
@@ -52,7 +54,9 @@ function App() {
         {/* NAVIGATION PAGES */}
         <Route path="/agencies" element={<Agencies />} />
         <Route path="/models" element={<Models />} />
+        <Route path="/models/:modelId" element={<ModelPublicProfile />} />
         <Route path="/photographers" element={<Photographers />} />
+        <Route path="/photographers/:photographerId" element={<PhotographerPublicProfile />} />
         <Route path="/events" element={<Events />} />
         <Route path="/contact" element={<Contact />} />
         <Route path="/admin" element={<AdminDashboard />} />

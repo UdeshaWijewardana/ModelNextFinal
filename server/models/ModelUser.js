@@ -15,6 +15,10 @@ const modelSchema = new mongoose.Schema({
   skills: [{ type: String, trim: true }],
   profileImage: { type: String },
   portfolioImages: [{ type: String }],
+  manualAvailability: [{
+    date: { type: String, match: /^\d{4}-\d{2}-\d{2}$/ },
+    status: { type: String, enum: ['available', 'unavailable'] },
+  }],
   weight: { type: String },
   height: { type: String },
   waist: { type: String },

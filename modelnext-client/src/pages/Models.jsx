@@ -43,27 +43,6 @@ export default function Models() {
                 )}`
               : "";
 
-            const profileQuery =
-              new URLSearchParams({
-                // Important for booking.
-                modelId: model._id || "",
-
-                name:
-                  model.fullName || "Model",
-
-                role:
-                  (
-                    model.categories || [
-                      "Fashion model",
-                    ]
-                  ).join(", "),
-
-                img: profileImage,
-
-                location:
-                  model.location || "",
-              });
-
             return (
               <article
                 className="model-card"
@@ -113,9 +92,7 @@ export default function Models() {
                     type="button"
                     className="model-view-btn"
                     onClick={() =>
-                      navigate(
-                        `/profile?${profileQuery}`
-                      )
+                      navigate(`/models/${model._id}`)
                     }
                   >
                     View profile

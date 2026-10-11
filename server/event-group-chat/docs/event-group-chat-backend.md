@@ -154,7 +154,7 @@ existing notification feed; live message delivery belongs to Phase 3.
 From the project root:
 
 ```powershell
-node --test server/test/testEventChatBackend.js
+node server/event-group-chat/tests/testEventChatBackend.js
 ```
 
 Tests use an isolated module loader, actual cookie/JWT middleware, a loopback HTTP

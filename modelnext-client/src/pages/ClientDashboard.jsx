@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { apiFetch, getCurrentUser, readJson } from "../api";
-import EventChatAction from "../event-chat/EventChatAction";
+import { useAuth } from "../context/AuthContext";
 import ClientSidebar from "../components/client-dashboard/ClientSidebar";
 import DashboardStatCard from "../components/client-dashboard/DashboardStatCard";
 import SectionHeader from "../components/client-dashboard/SectionHeader";
@@ -22,14 +22,6 @@ const initialProject = {
   requiredCategories: "",
   requiredSkills: "",
 };
-
-const projectFilters = [
-  "All",
-  "Upcoming",
-  "Ongoing",
-  "Completed",
-  "Cancelled",
-];
 
 const bookingFilters = [
   "All",
@@ -65,21 +57,6 @@ const formatDate = (value) => {
   }).format(date);
 };
 
-const formatDateTimeLocal = (value) => {
-  if (!value) return "";
-
-  const date = new Date(value);
-
-  if (Number.isNaN(date.getTime())) {
-    return "";
-  }
-
-  const offset = date.getTimezoneOffset();
-  const localDate = new Date(date.getTime() - offset * 60000);
-
-  return localDate.toISOString().slice(0, 16);
-};
-
 const projectState = (event, now = new Date()) => {
   if (event.status === "rejected") {
     return "Cancelled";
@@ -111,8 +88,18 @@ const normalizeBookingStatus = (status) => {
   return "Pending";
 };
 
+const dashboardSectionIds = {
+  dashboard: "dashboard-top",
+  profile: "profile",
+  bookings: "bookings",
+  messages: "messages",
+  notifications: "notifications",
+};
+
 export default function ClientDashboard() {
   const navigate = useNavigate();
+  const location = useLocation();
+  const { logout } = useAuth();
 
   const [user, setUser] = useState(null);
   const [events, setEvents] = useState([]);
@@ -135,11 +122,12 @@ export default function ClientDashboard() {
 
   /* Navigation */
   const [isSidebarOpen, setSidebarOpen] = useState(false);
-  const [activeNav, setActiveNav] = useState("dashboard");
+  const [activeNav, setActiveNav] = useState(
+    () => new URLSearchParams(location.search).get("section") || "dashboard"
+  );
 
   /* Search and filters */
   const [query, setQuery] = useState("");
-  const [projectFilter, setProjectFilter] = useState("All");
   const [bookingFilter, setBookingFilter] = useState("All");
 
   /* Project modal */
@@ -147,7 +135,6 @@ export default function ClientDashboard() {
   const [editingEvent, setEditingEvent] = useState(null);
   const [projectForm, setProjectForm] = useState(initialProject);
   const [savingProject, setSavingProject] = useState(false);
-  const [deletingEventId, setDeletingEventId] = useState(null);
 
   /*
    * Load AI recommendations for ONE selected event.
@@ -269,6 +256,22 @@ export default function ClientDashboard() {
     load();
   }, [load]);
 
+  useEffect(() => {
+    const requestedSection =
+      new URLSearchParams(location.search).get("section") || "dashboard";
+    const section = dashboardSectionIds[requestedSection]
+      ? requestedSection
+      : "dashboard";
+
+    setActiveNav(section);
+
+    requestAnimationFrame(() => {
+      document
+        .getElementById(dashboardSectionIds[section])
+        ?.scrollIntoView({ behavior: "smooth", block: "start" });
+    });
+  }, [location.search]);
+
   /*
    * Load AI matches whenever the user changes the selected event.
    */
@@ -370,70 +373,10 @@ export default function ClientDashboard() {
     setProjectModalOpen(true);
   };
 
-  const openEditProject = (event) => {
-    setEditingEvent(event);
-
-    setProjectForm({
-      title: event.title || "",
-      eventType: event.eventType || "Event",
-      startDate: formatDateTimeLocal(event.startDate),
-      endDate: formatDateTimeLocal(event.endDate),
-      location: event.location || "",
-      description: event.description || "",
-      requiredGender: event.requiredGender || "",
-      minAge: event.minAge ?? "",
-      maxAge: event.maxAge ?? "",
-      minHeight: event.minHeight ?? "",
-      maxHeight: event.maxHeight ?? "",
-      requiredCategories: (
-        event.requiredCategories || []
-      ).join(", "),
-      requiredSkills: (
-        event.requiredSkills || []
-      ).join(", "),
-    });
-
-    setProjectModalOpen(true);
-  };
-
   const closeProjectModal = () => {
     setProjectModalOpen(false);
     setEditingEvent(null);
     setProjectForm(initialProject);
-  };
-
-  /*
-   * Delete project.
-   */
-  const deleteEvent = async (event) => {
-    const confirmed = window.confirm(
-      `Are you sure you want to delete "${event.title}"?`
-    );
-
-    if (!confirmed) return;
-
-    setDeletingEventId(event.id);
-    setError("");
-
-    try {
-      await readJson(
-        await apiFetch(`/events/${event.id}`, {
-          method: "DELETE",
-        })
-      );
-
-      if (selectedAIEventId === event.id) {
-        setSelectedAIEventId("");
-      }
-
-      setNotice("Project deleted successfully.");
-
-      await load();
-    } catch (err) {
-      setError(err.message || "Could not delete this project.");
-    } finally {
-      setDeletingEventId(null);
-    }
   };
 
   /*
@@ -488,7 +431,6 @@ export default function ClientDashboard() {
    * Sidebar navigation.
    */
   const goTo = (target) => {
-    setActiveNav(target);
     setSidebarOpen(false);
 
     if (target === "discover") {
@@ -498,6 +440,11 @@ export default function ClientDashboard() {
 
     if (target === "events") {
       navigate("/events");
+      return;
+    }
+
+    if (target === "event-chats") {
+      navigate("/event-chats");
       return;
     }
 
@@ -511,27 +458,25 @@ export default function ClientDashboard() {
       return;
     }
 
-    if (target === "settings") {
-      setNotice(
-        "Client profile settings are not exposed by the current profile API."
-      );
+    if (!dashboardSectionIds[target]) {
       return;
     }
 
-    if (target === "saved") {
-      document
-        .getElementById("saved-talent")
-        ?.scrollIntoView({ behavior: "smooth" });
-      return;
-    }
+    navigate({
+      pathname: "/client-portal",
+      search: target === "dashboard" ? "" : `?section=${target}`,
+    });
+  };
 
-    document
-      .getElementById(
-        target === "dashboard"
-          ? "dashboard-top"
-          : target
-      )
-      ?.scrollIntoView({ behavior: "smooth" });
+  const backToWebsite = () => {
+    setSidebarOpen(false);
+    navigate("/");
+  };
+
+  const signOut = async () => {
+    setSidebarOpen(false);
+    await logout();
+    navigate("/", { replace: true });
   };
 
   /*
@@ -544,20 +489,6 @@ export default function ClientDashboard() {
       event.status !== "rejected" &&
       projectState(event, now) !== "Completed"
   ).length;
-
-  const filteredProjects = useMemo(() => {
-    return events
-      .filter(
-        (event) =>
-          projectFilter === "All" ||
-          projectState(event) === projectFilter
-      )
-      .filter((event) =>
-        `${event.title} ${event.eventType} ${event.location}`
-          .toLowerCase()
-          .includes(query.toLowerCase())
-      );
-  }, [events, projectFilter, query]);
 
   /*
    * BOOKING FILTER
@@ -709,6 +640,8 @@ const bookingCounts = {
         isOpen={isSidebarOpen}
         active={activeNav}
         onNavigate={goTo}
+        onBackToWebsite={backToWebsite}
+        onLogout={signOut}
         unreadCount={unreadCount}
       />
 
@@ -805,6 +738,27 @@ const bookingCounts = {
           </button>
         </section>
 
+        <section
+          className="client-panel client-profile-summary"
+          id="profile"
+          tabIndex="-1"
+        >
+          <SectionHeader
+            eyebrow="CLIENT ACCOUNT"
+            title="My Profile"
+          />
+          <div className="client-profile-summary-content">
+            <span className="client-profile-summary-avatar" aria-hidden="true">
+              {(user.name || "C").charAt(0).toUpperCase()}
+            </span>
+            <div>
+              <strong>{user.name || "Client"}</strong>
+              {user.email && <span>{user.email}</span>}
+              <small>Client account</small>
+            </div>
+          </div>
+        </section>
+
         {error && (
           <p
             className="client-dashboard-error"
@@ -830,10 +784,10 @@ const bookingCounts = {
         >
           <DashboardStatCard
             icon="▣"
-            label="Active Projects"
+            label="Active Events"
             value={activeProjects}
-            detail="Your current active projects"
-            onClick={() => goTo("projects")}
+            detail="Your current active events"
+            onClick={() => navigate("/events")}
           />
 
           <DashboardStatCard
@@ -842,14 +796,6 @@ const bookingCounts = {
             value={bookingCounts.all}
             detail={`${bookingCounts.confirmed} confirmed · ${bookingCounts.pending} pending`}
             onClick={() => goTo("bookings")}
-          />
-
-          <DashboardStatCard
-            icon="♡"
-            label="Saved Talent"
-            value="—"
-            detail="Saved-talent persistence is not available yet"
-            onClick={() => goTo("saved")}
           />
 
           <DashboardStatCard
@@ -1167,143 +1113,6 @@ const bookingCounts = {
           </aside>
         </div>
 
-        {/* MY PROJECTS */}
-        <section
-          className="client-panel client-projects"
-          id="projects"
-        >
-          <div className="client-project-heading">
-            <div>
-              <p className="client-eyebrow">
-                PROJECTS
-              </p>
-
-              <h2>My Projects</h2>
-
-              <p className="client-panel-caption">
-                Manage the events and projects you
-                have created.
-              </p>
-            </div>
-
-            <button
-              type="button"
-              className="client-primary-button"
-              onClick={openCreateProject}
-            >
-              ＋ New Project
-            </button>
-          </div>
-
-          <div className="client-filter-bar">
-            {projectFilters.map((filter) => (
-              <button
-                type="button"
-                key={filter}
-                className={
-                  projectFilter === filter
-                    ? "is-selected"
-                    : ""
-                }
-                onClick={() =>
-                  setProjectFilter(filter)
-                }
-              >
-                {filter}
-              </button>
-            ))}
-          </div>
-
-          <div className="client-project-list">
-            {filteredProjects.length === 0 ? (
-              <p className="client-empty">
-                No projects match this view.
-              </p>
-            ) : (
-              filteredProjects.map((event) => {
-                const state = projectState(
-                  event,
-                  now
-                );
-
-                return (
-                  <article
-                    className="client-project-row"
-                    key={event.id}
-                  >
-                    <div>
-                      <span
-                        className={`client-status client-status-${state.toLowerCase()}`}
-                      >
-                        {state === "Cancelled"
-                          ? "Rejected"
-                          : state}
-                      </span>
-
-                      <h3>{event.title}</h3>
-
-                      <p>
-                        {event.eventType} ·{" "}
-                        {event.location}
-                      </p>
-                    </div>
-
-                    <div className="client-project-meta">
-                      <span>
-                        {formatDate(
-                          event.startDate
-                        )}
-                      </span>
-                    </div>
-
-                    <div className="client-project-actions">
-                      {event.status === "approved" && <EventChatAction eventId={event.id}/>}
-                      <button
-                        type="button"
-                        className="client-secondary-button"
-                        onClick={() =>
-                          openEditProject(event)
-                        }
-                      >
-                        Edit
-                      </button>
-
-                      <button
-                        type="button"
-                        className="client-secondary-button"
-                        onClick={() =>
-                          navigate(
-                            `/client-portal/ai-matches/${event.id}`
-                          )
-                        }
-                      >
-                        AI Matches
-                      </button>
-
-                      <button
-                        type="button"
-                        className="client-danger-button"
-                        disabled={
-                          deletingEventId ===
-                          event.id
-                        }
-                        onClick={() =>
-                          deleteEvent(event)
-                        }
-                      >
-                        {deletingEventId ===
-                        event.id
-                          ? "Deleting…"
-                          : "Delete"}
-                      </button>
-                    </div>
-                  </article>
-                );
-              })
-            )}
-          </div>
-        </section>
-
         {/* ALL BOOKINGS */}
         <section
           className="client-panel client-bookings"
@@ -1493,9 +1302,16 @@ const bookingCounts = {
             />
 
             <p className="client-empty">
-              Event group chat is not available in
-              the current application yet.
+              Private direct messages are not available
+              in the current application yet.
             </p>
+            <button
+              type="button"
+              className="client-text-button"
+              onClick={() => goTo("event-chats")}
+            >
+              Open event group chats <span>→</span>
+            </button>
           </section>
 
           <section

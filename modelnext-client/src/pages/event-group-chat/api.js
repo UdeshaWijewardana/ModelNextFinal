@@ -1,4 +1,4 @@
-import { API_BASE_URL, apiFetch } from '../api';
+import { API_BASE_URL, apiFetch } from '../../api';
 
 export class ChatError extends Error {
   constructor(message, status) { super(message); this.status = status; }

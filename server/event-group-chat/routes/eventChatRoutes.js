@@ -2,16 +2,16 @@
 const express = require('express');
 const mongoose = require('mongoose');
 
-const Event = require('../models/Event');
+const Event = require('../../models/Event');
 const EventChat = require('../models/EventChat');
 const ChatInvitation = require('../models/ChatInvitation');
-const ModelUser = require('../models/ModelUser');
-const Photographer = require('../models/Photographer');
-const Agency = require('../models/Agency');
-const Client = require('../models/Client');
+const ModelUser = require('../../models/ModelUser');
+const Photographer = require('../../models/Photographer');
+const Agency = require('../../models/Agency');
+const Client = require('../../models/Client');
 
-const { requireUser } = require('../middleware/requireUser');
-const { requireDatabase } = require('../middleware/requireDatabase');
+const { requireUser } = require('../../middleware/requireUser');
+const { requireDatabase } = require('../../middleware/requireDatabase');
 const { chatAccess, addMember, notify, notifyBestEffort } = require('../services/eventChatService');
 
 

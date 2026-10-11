@@ -1,7 +1,7 @@
 const { Server } = require('socket.io');
 const jwt = require('jsonwebtoken');
 const crypto = require('node:crypto');
-const { USER_SESSION_COOKIE, readCookie } = require('../utils/sessionCookies');
+const { USER_SESSION_COOKIE, readCookie } = require('../../utils/sessionCookies');
 const { authenticateSocketRequest } = require('./eventChatSocketAuth');
 const { assertId, chatAccess, fail } = require('./eventChatService');
 const { sendTextMessage } = require('./eventChatMessageService');

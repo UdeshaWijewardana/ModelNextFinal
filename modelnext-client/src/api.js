@@ -14,7 +14,19 @@ export const apiFetch = (path, options = {}) => fetch(`${API_BASE_URL}${path}`, 
 });
 
 export const readJson = async (response) => {
-  const data = response.status === 204 ? null : await response.json();
+  if (response.status === 204) return null;
+
+  const contentType = response.headers.get("content-type") || "";
+
+  if (!contentType.includes("application/json")) {
+    throw new Error(
+      response.ok
+        ? "The service returned an unexpected response. Please try again."
+        : "The requested service is temporarily unavailable. Please try again."
+    );
+  }
+
+  const data = await response.json();
   if (!response.ok) throw new Error(data?.error || "Request failed.");
   return data;
 };

@@ -4,7 +4,7 @@ const mongoose = require('mongoose');
 const path = require('path');
 const cors = require('cors');
 const http = require('node:http');
-const { createEventChatRealtime } = require('./services/eventChatRealtime');
+const { createEventChatRealtime } = require('./event-group-chat/services/eventChatRealtime');
 
 const dashboardRoutes = require('./routes/dashboardRoutes');
 const agencyRoutes = require('./routes/agencyRoutes');
@@ -16,7 +16,7 @@ const adminRoutes = require('./routes/adminRoutes');
 const { router: eventRoutes } = require('./routes/eventRoutes');
 const notificationRoutes = require('./routes/notificationRoutes');
 const matchingRoutes = require('./routes/matchingRoutes');
-const eventChatRoutes = require('./routes/eventChatRoutes');
+const eventChatRoutes = require('./event-group-chat/routes/eventChatRoutes');
 
 const app = express();
 const httpServer = http.createServer(app);

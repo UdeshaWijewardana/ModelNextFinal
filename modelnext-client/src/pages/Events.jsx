@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import EventChatAction from "../event-chat/EventChatAction";
+import EventChatAction from "./event-group-chat/EventChatAction";
 import Navbar from "../components/Navbar";
 import { apiFetch, getCurrentUser, readJson } from "../api";
 

@@ -21,7 +21,7 @@
   justify-content: space-between;
   align-items: center;
   width: 100%;
-  max-width: 1400px;
+  max-width: 1540px;
   padding: 0 40px;
   box-sizing: border-box;
   position: relative;
@@ -48,7 +48,7 @@
 .nav-menu {
   display: flex;
   align-items: center;
-  gap: 25px;
+  gap: clamp(12px, 1.6vw, 24px);
 }
 
 .nav-item {
@@ -59,6 +59,7 @@
   text-transform: uppercase;
   letter-spacing: 1.2px;
   padding: 8px 4px;
+  white-space: nowrap;
   position: relative;
   transition: color 0.3s ease;
 }
@@ -189,6 +190,9 @@
 /* BURGER MENU ICON */
 .menu-toggle {
   display: none;
+  padding: 0;
+  border: 0;
+  background: transparent;
   flex-direction: column;
   justify-content: space-between;
   width: 25px;
@@ -230,7 +234,7 @@
   .nav-item { font-size: 11px; letter-spacing: 0.65px; }
 }
 
-@media screen and (max-width: 1100px) {
+@media screen and (max-width: 1240px) {
   .menu-toggle {
     display: flex;
     z-index: 1001;
@@ -308,6 +312,6 @@
 }
 
 /* Keep the expanded account navigation reachable on short mobile screens. */
-@media screen and (max-width: 1100px) {
+@media screen and (max-width: 1240px) {
   .nav-menu { overflow-y: auto; justify-content: flex-start; padding: 85px 0 24px; gap: 18px; }
 }

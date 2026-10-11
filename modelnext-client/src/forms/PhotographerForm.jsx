@@ -1,138 +1,19 @@
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useEffect, useRef, useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import { SERVER_BASE_URL } from "../api";
 import "../styles/photographerForm.css";
 
+const imageTypes = ["image/jpeg", "image/png", "image/webp"];
+const maxImageSize = 5 * 1024 * 1024;
+
 export default function PhotographerForm() {
-  const navigate = useNavigate();
-
-  const [form, setForm] = useState({
-    name: "",
-    email: "",
-    phone: "",
-    location: "",
-    portfolio: "",
-    password: "",
-    confirmPassword: "",
-    profileImage: null
-  });
-
-  const [preview, setPreview] = useState(null);
-  const [error, setError] = useState("");
-
-  // 🔹 Handle input
-  const handleChange = (e) => {
-    setForm({
-      ...form,
-      [e.target.name]: e.target.value
-    });
-  };
-
-  // 🔹 Handle image
-  const handleImage = (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-
-    setForm({
-      ...form,
-      profileImage: file
-    });
-
-    setPreview(URL.createObjectURL(file));
-  };
-
-  // 🔹 Submit
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setError("");
-
-    if (
-      !form.name ||
-      !form.email ||
-      !form.phone ||
-      !form.location ||
-      !form.password ||
-      !form.confirmPassword
-    ) {
-      setError("Please fill all required fields");
-      return;
-    }
-
-    if (!form.profileImage) {
-      setError("Profile image is required");
-      return;
-    }
-
-    if (form.password !== form.confirmPassword) {
-      setError("Passwords do not match");
-      return;
-    }
-
-    const formData = new FormData();
-    for (const key in form) {
-      formData.append(key, form[key]);
-    }
-
-    try {
-      const res = await fetch(`${SERVER_BASE_URL}/api/photographers/register`, {
-        method: "POST",
-        body: formData,
-        credentials: "include",
-      });
-
-      const data = await res.json();
-
-      if (!res.ok) throw new Error(data.error || "Failed to register");
-
-      navigate("/photographer-dashboard", { state: { registrationSubmitted: true } });
-    } catch (err) {
-      console.error(err);
-      setError(err.message || "Unable to submit photographer registration.");
-    }
-  };
-
-  return (
-    <div className="photo-page">
-
-      <div className="photo-box">
-
-        <h1>Photographer Registration</h1>
-        <p className="subtitle">Create your photographer profile</p>
-
-        {/* ERROR */}
-        {error && <p className="error">{error}</p>}
-
-        {/* PROFILE IMAGE */}
-        <div className="profile-upload">
-          {preview ? (
-            <img src={preview} alt="profile preview" />
-          ) : (
-            <span>Upload Profile Image (Required)</span>
-          )}
-          <input type="file" onChange={handleImage} />
-        </div>
-
-        <form onSubmit={handleSubmit}>
-
-          <input name="name" placeholder="Full Name" onChange={handleChange} />
-          <input name="email" placeholder="Email Address" onChange={handleChange} />
-          <input name="phone" placeholder="Phone Number" onChange={handleChange} />
-          <input name="location" placeholder="Location" onChange={handleChange} />
-
-          <input
-            name="portfolio"
-            placeholder="Website / Portfolio Link (Optional)"
-            onChange={handleChange}
-          />
-
-          <input type="password" name="password" placeholder="Password" onChange={handleChange} />
-          <input type="password" name="confirmPassword" placeholder="Confirm Password" onChange={handleChange} />
-
-          <button type="submit">CREATE ACCOUNT</button>
-
-        </form>
-
-      </div>
-    </div>
-  );
+  const navigate = useNavigate(); const inputRef = useRef(null); const previewRef = useRef("");
+  const [form, setForm] = useState({ name:"", username:"", email:"", phone:"", location:"", experienceYears:"", portfolio:"", password:"", confirmPassword:"", profileImage:null });
+  const [preview, setPreview] = useState(""); const [error, setError] = useState(""); const [submitting, setSubmitting] = useState(false);
+  useEffect(() => () => { if (previewRef.current) URL.revokeObjectURL(previewRef.current); }, []);
+  const update = (event) => setForm((current) => ({ ...current, [event.target.name]: event.target.value }));
+  const setImage = (file) => { if (!file) return; if (!imageTypes.includes(file.type)) return setError("Choose a JPEG, PNG, or WebP profile image."); if (file.size > maxImageSize) return setError("Profile image must be 5 MiB or smaller."); if (previewRef.current) URL.revokeObjectURL(previewRef.current); const url = URL.createObjectURL(file); previewRef.current = url; setPreview(url); setError(""); setForm((current) => ({ ...current, profileImage:file })); };
+  const removeImage = () => { if (previewRef.current) URL.revokeObjectURL(previewRef.current); previewRef.current=""; setPreview(""); setForm((current) => ({...current,profileImage:null})); if(inputRef.current) inputRef.current.value=""; };
+  const submit = async (event) => { event.preventDefault(); setError(""); const required=["name","username","email","phone","location","experienceYears","password","confirmPassword"]; if(required.some(key=>!String(form[key]).trim()) || !form.profileImage) return setError("Complete every required field, including your profile image."); if(!/^[a-zA-Z0-9._-]{3,40}$/.test(form.username)) return setError("Username must use 3–40 letters, numbers, dots, hyphens, or underscores."); if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) return setError("Enter a valid email address."); if(!/^[+()\-\s0-9]{7,25}$/.test(form.phone)) return setError("Enter a valid contact number."); if(!Number.isFinite(Number(form.experienceYears)) || Number(form.experienceYears)<0) return setError("Experience must be zero or more years."); if(form.password.length<8) return setError("Password must be at least 8 characters."); if(form.password!==form.confirmPassword) return setError("Passwords do not match."); const data=new FormData(); Object.entries(form).forEach(([key,value])=>data.append(key,value)); setSubmitting(true); try { const response=await fetch(`${SERVER_BASE_URL}/api/photographers/register`,{method:"POST",body:data,credentials:"include"}); const json=(response.headers.get("content-type")||"").includes("application/json")?await response.json():null; if(!response.ok) throw new Error(json?.error||"Registration is temporarily unavailable. Please try again."); navigate("/photographer-dashboard",{state:{registrationSubmitted:true},replace:true}); } catch(caught) { setError(caught.message||"Unable to submit photographer registration."); } finally { setSubmitting(false); } };
+  return <main className="photographer-registration-page"><header className="photographer-registration-header"><Link className="photographer-wordmark" to="/"><span>Model</span><span>Next</span></Link><nav aria-label="Registration navigation"><Link to="/">Back to Website</Link><Link to="/login">Sign In</Link></nav></header><section className="photographer-registration-shell"><aside className="photographer-registration-intro"><p className="photographer-kicker">MODELNEXT / CREATIVE NETWORK</p><h1>Frame what comes next.</h1><p>Build a professional profile, connect with creative talent, and collaborate on approved fashion projects.</p><div className="photographer-image-stage">{preview?<img src={preview} alt="Selected profile preview"/>:<span aria-hidden="true">◉</span>}</div><div className="photographer-image-actions"><label className="photographer-upload-button">{preview?"Replace portrait":"Choose portrait"}<input ref={inputRef} type="file" accept="image/jpeg,image/png,image/webp" onChange={event=>setImage(event.target.files?.[0])}/></label>{preview&&<button type="button" onClick={removeImage}>Remove</button>}</div><small>JPEG, PNG, or WebP · maximum 5 MiB · required</small></aside><section className="photographer-registration-card"><p className="photographer-kicker">PHOTOGRAPHER APPLICATION</p><h2>Create your account</h2><p className="photographer-registration-copy">Your registration is reviewed before public profile access is enabled.</p>{error&&<p className="photographer-form-error" role="alert">{error}</p>}<form onSubmit={submit} noValidate><div className="photographer-form-grid"><label>Full name<input name="name" value={form.name} onChange={update} required/></label><label>Username<input name="username" value={form.username} onChange={update} required/></label><label>Email address<input name="email" type="email" value={form.email} onChange={update} required/></label><label>Contact number<input name="phone" type="tel" value={form.phone} onChange={update} required/></label><label>Location<input name="location" value={form.location} onChange={update} required/></label><label>Experience (years)<input name="experienceYears" type="number" min="0" value={form.experienceYears} onChange={update} required/></label><label className="photographer-form-wide">Portfolio website <span>Optional</span><input name="portfolio" type="url" placeholder="https://" value={form.portfolio} onChange={update}/></label><label>Password<input name="password" type="password" value={form.password} onChange={update} required/></label><label>Confirm password<input name="confirmPassword" type="password" value={form.confirmPassword} onChange={update} required/></label></div><button className="photographer-submit" disabled={submitting}>{submitting?"Creating account…":"Create photographer account"}</button></form><p className="photographer-signin">Already registered? <Link to="/login">Sign in</Link></p></section></section></main>;
 }

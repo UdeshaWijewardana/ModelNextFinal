@@ -1,12 +1,12 @@
 const mongoose = require('mongoose');
-const Event = require('../models/Event');
+const Event = require('../../models/Event');
 const EventChat = require('../models/EventChat');
-const Notification = require('../models/Notification');
+const Notification = require('../../models/Notification');
 const accounts = new Map([
-  ['model', require('../models/ModelUser')],
-  ['photographer', require('../models/Photographer')],
-  ['agency', require('../models/Agency')],
-  ['client', require('../models/Client')],
+  ['model', require('../../models/ModelUser')],
+  ['photographer', require('../../models/Photographer')],
+  ['agency', require('../../models/Agency')],
+  ['client', require('../../models/Client')],
 ]);
 
 const fail = (status, message) => Object.assign(new Error(message), { chatStatus: status });

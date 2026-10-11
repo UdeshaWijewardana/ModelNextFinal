@@ -2,12 +2,12 @@ import React from 'react';
 import {act, fireEvent, render, screen, waitFor} from '@testing-library/react';
 import {MemoryRouter, Route, Routes} from 'react-router-dom';
 import {io} from 'socket.io-client';
-import EventChatRoom from '../pages/EventChatRoom';
-import EventChats from '../pages/EventChats';
+import EventChatRoom from './EventChatRoom';
+import EventChats from './EventChats';
 
-jest.mock('../components/Navbar',()=>()=>null);
+jest.mock('../../components/Navbar',()=>()=>null);
 let mockAuth;
-jest.mock('../context/AuthContext',()=>({useAuth:()=>mockAuth}));
+jest.mock('../../context/AuthContext',()=>({useAuth:()=>mockAuth}));
 jest.mock('socket.io-client',()=>({io:jest.fn()}));
 const createClient=()=>{
   const handlers={};

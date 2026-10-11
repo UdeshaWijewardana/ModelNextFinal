@@ -1,8 +1,8 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
+import { useAuth } from '../../context/AuthContext';
 import { chatApi, pagePath } from './api';
-import '../styles/EventChat.css';
+import './EventChat.css';
 
 export function ChatGate({children}) {
   const auth = useAuth();
