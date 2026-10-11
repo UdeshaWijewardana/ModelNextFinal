@@ -1,6 +1,6 @@
 import React, { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
-import { useAuth } from '../../context/AuthContext';
+import { accountRouteForRole, useAuth } from '../../context/AuthContext';
 import { ChatGate, ListState, Notice, useList } from './shared';
 import { messageKey, uploadImage } from './api';
 import useConversation from './useConversation';
@@ -8,9 +8,10 @@ import PrivateImage from './PrivateImage';
 import OwnerTools, { Members } from './OwnerTools';
 
 function ConversationRail({ chatId }) {
+  const { role } = useAuth();
   const chats = useList('/mine', 'chats');
   return <aside className="ec-rail ec-rail--room" aria-label="Event group chat navigation">
-    <Link className="ec-dashboard-link" to="/client-portal">← Back to Dashboard</Link>
+    <Link className="ec-dashboard-link" to={accountRouteForRole(role)}>← Back to Dashboard</Link>
     <Link className="ec-back-link" to="/event-chats">← All chats</Link>
     <p className="ec-eyebrow">EVENT GROUP CHATS</p>
     <div className="ec-rail-heading"><span>Conversations</span><button type="button" onClick={chats.refresh} disabled={chats.loading}>Refresh</button></div>
@@ -67,6 +68,6 @@ function Conversation({ chatId }) {
 
 export default function EventChatRoom() {
   const { chatId: routeChatId } = useParams();
-  const chatId = routeChatId.toLowerCase();
+  const chatId = (routeChatId || '').toLowerCase();
   return <main className="ec-page ec-page--room"><ChatGate>{/^[a-f0-9]{24}$/i.test(chatId) ? <Conversation key={chatId} chatId={chatId}/> : <Notice error="Invalid chat ID."/>}</ChatGate></main>;
 }

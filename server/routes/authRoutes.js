@@ -4,7 +4,7 @@ const Agency = require('../models/Agency');
 const Client = require('../models/Client');
 const ModelUser = require('../models/ModelUser');
 const Photographer = require('../models/Photographer');
-const { requireUser } = require('../middleware/requireUser');
+const { requireUser, requireRegisteredUser } = require('../middleware/requireUser');
 const { requireDatabase } = require('../middleware/requireDatabase');
 const { USER_SESSION_COOKIE, cookieOptions, clearCookie, issueUserSession } = require('../utils/sessionCookies');
 
@@ -15,7 +15,7 @@ const accountName = (role, account) => role === 'model' ? account.fullName : (ac
 
 const safeAccount = (role, account) => {
   const base = { id: account._id, role, name: accountName(role, account), email: account.email };
-  if (role === 'model') return { ...base, fullName: account.fullName, username: account.username, address: account.address, phone: account.phone, birthdate: account.birthdate, location: account.location, gender: account.gender, categories: account.categories, profileImage: account.profileImage, portfolioImages: account.portfolioImages, weight: account.weight, height: account.height, waist: account.waist, hip: account.hip, approvalStatus: account.approvalStatus, rejectionReason: account.rejectionReason, verificationStatus: account.verificationStatus };
+  if (role === 'model') return { ...base, fullName: account.fullName, username: account.username, address: account.address, phone: account.phone, birthdate: account.birthdate, location: account.location, gender: account.gender, categories: account.categories, skills: account.skills, idType: account.idType, profileImage: account.profileImage, portfolioImages: account.portfolioImages, weight: account.weight, height: account.height, waist: account.waist, hip: account.hip, approvalStatus: account.approvalStatus, rejectionReason: account.rejectionReason, verificationStatus: account.verificationStatus };
   if (role === 'photographer') return { ...base, username: account.username, phone: account.phone, location: account.location, portfolio: account.portfolio, experienceYears: account.experienceYears, profileImage: account.profileImage, approvalStatus: account.approvalStatus, rejectionReason: account.rejectionReason };
   if (role === 'agency') return { ...base, agencyName: account.agencyName, ownerName: account.ownerName, phone: account.phone, address: account.address, businessId: account.businessId, profileImage: account.profileImage, coverImage: account.coverImage, approvalStatus: account.approvalStatus, rejectionReason: account.rejectionReason };
   return { ...base, type: account.type, username: account.username, phone: account.phone, address: account.address };
@@ -43,10 +43,11 @@ router.post('/login', requireDatabase, async (req, res) => {
     for (const candidate of candidates) if (candidate.account && await canUsePassword(candidate.account, password)) matched.push(candidate);
     if (matched.length !== 1) return res.status(401).json({ error: 'Invalid email or password.' });
     const { role, account } = matched[0];
-    if (account.approvalStatus !== 'approved') {
+    const pendingModel = role === 'model' && account.approvalStatus === 'pending';
+    if (account.approvalStatus !== 'approved' && !pendingModel) {
       const error = account.approvalStatus === 'rejected'
         ? 'Your registration has been rejected. Contact support if you need assistance.'
-        : 'Your registration is pending administrator approval.';
+        : 'This account is not eligible to sign in.';
       return res.status(403).json({ error });
     }
     res.cookie(USER_SESSION_COOKIE, issueUserSession(account, role), cookieOptions());
@@ -57,7 +58,7 @@ router.post('/login', requireDatabase, async (req, res) => {
   }
 });
 
-router.get('/me', requireUser, requireDatabase, async (req, res) => {
+router.get('/me', requireRegisteredUser, requireDatabase, async (req, res) => {
   try {
     const account = await getAccount(req.user.role, req.user.id);
     if (!account) return res.status(401).json({ error: 'Authentication is invalid or expired.' });

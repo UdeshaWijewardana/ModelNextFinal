@@ -1,11 +1,20 @@
 import React, { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { SERVER_BASE_URL } from "../api";
 import WebcamTest from "../components/WebcamTest";
+import { useAuth } from "../context/AuthContext";
 import "../styles/modelForm.css";
+
+const verificationLabel = (label, status) => {
+  if (status === "match") return `✓ ${label}: Match`;
+  if (status === "mismatch") return `✕ ${label}: Mismatch`;
+  if (status === "partial_match") return `— ${label}: Partial Match (Manual Review)`;
+  return `— ${label}: Unable to Read`;
+};
 
 const ModelForm = () => {
   const navigate = useNavigate();
+  const { setAuthenticated } = useAuth();
   const [step, setStep] = useState(1);
 
   const [form, setForm] = useState({
@@ -20,6 +29,7 @@ const ModelForm = () => {
     waist: "",
     hip: "",
     idType: "nic",
+    identityDocumentNumber: "",
     skills: ""
   });
 
@@ -34,7 +44,7 @@ const ModelForm = () => {
   const [idBack, setIdBack] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isVerifying, setIsVerifying] = useState(false);
-  const [identityVerified, setIdentityVerified] = useState(false);
+  const [prototypeVerificationPassed, setPrototypeVerificationPassed] = useState(false);
   const [identityCheck, setIdentityCheck] = useState(null);
   const [identityError, setIdentityError] = useState("");
   const [idFrontPreview, setIdFrontPreview] = useState("");
@@ -59,8 +69,8 @@ const ModelForm = () => {
     setForm((previous) => ({ ...previous, [e.target.name]: e.target.value }));
     setValidationErrors((previous) => ({ ...previous, [e.target.name]: "" }));
     setSubmissionError("");
-    if (["fullName", "birthdate", "idType"].includes(e.target.name)) {
-      setIdentityVerified(false);
+    if (["fullName", "birthdate", "idType", "identityDocumentNumber"].includes(e.target.name)) {
+      setPrototypeVerificationPassed(false);
       setIdentityCheck(null);
       setIdentityError("");
       setLivenessSession(null);
@@ -100,7 +110,7 @@ const ModelForm = () => {
 
   const handleIdFrontChange = (file) => {
     setIdFront(file || null);
-    setIdentityVerified(false);
+    setPrototypeVerificationPassed(false);
     setIdentityCheck(null);
     setIdentityError("");
     setLivenessSession(null);
@@ -108,9 +118,16 @@ const ModelForm = () => {
     setLivenessError("");
   };
 
+  const handleIdBackChange = (file) => {
+    setIdBack(file || null);
+    setPrototypeVerificationPassed(false);
+    setIdentityCheck(null);
+    setIdentityError("");
+  };
+
   const beginLiveness = async () => {
-    if (!identityVerified) {
-      setIdentityError("Verify your identity document before continuing.");
+    if (!prototypeVerificationPassed) {
+      setIdentityError("Document Verification: Failed");
       return;
     }
     if (!idFront || (form.idType !== "passport" && !idBack)) {
@@ -190,13 +207,13 @@ const ModelForm = () => {
   };
 
   const handleVerifyDocument = async () => {
-    if (!form.fullName || !form.birthdate || !form.idType || !idFront) {
-      setIdentityError("Enter your name and date of birth, then upload the front of your identity document.");
+    if (!form.fullName || !form.birthdate || !form.idType || !form.identityDocumentNumber || !idFront || (form.idType !== "passport" && !idBack)) {
+      setIdentityError("Enter all identity fields and upload the required document image sides.");
       return;
     }
 
     setIsVerifying(true);
-    setIdentityVerified(false);
+    setPrototypeVerificationPassed(false);
     setIdentityCheck(null);
     setIdentityError("");
 
@@ -204,7 +221,9 @@ const ModelForm = () => {
     verificationData.append("fullName", form.fullName);
     verificationData.append("birthdate", form.birthdate);
     verificationData.append("idType", form.idType);
+    verificationData.append("identityDocumentNumber", form.identityDocumentNumber);
     verificationData.append("idFront", idFront);
+    if (idBack) verificationData.append("idBack", idBack);
 
     try {
       const response = await fetch(`${SERVER_BASE_URL}/api/models/verify-identity`, {
@@ -218,12 +237,11 @@ const ModelForm = () => {
       }
 
       setIdentityCheck(result);
-      setIdentityVerified(Boolean(
-        result.verified && result.checks?.nameMatch && result.checks?.dateOfBirthMatch
+      setPrototypeVerificationPassed(Boolean(
+        result.prototypePassed
+        && result.checks?.dateOfBirth?.status === "match"
+        && result.checks?.documentNumber?.status === "match"
       ));
-      if (!result.verified) {
-        setIdentityError(result.message || "Identity verification failed.");
-      }
     } catch (error) {
       setIdentityError(error.message || "Could not verify this document.");
     } finally {
@@ -252,8 +270,8 @@ const ModelForm = () => {
       setStep(4);
       return;
     }
-    if (!identityVerified) {
-      setIdentityError("Verify your identity document before submitting the application.");
+    if (!prototypeVerificationPassed) {
+      setIdentityError("Document Verification: Failed");
       setStep(4);
       return;
     }
@@ -277,6 +295,7 @@ const ModelForm = () => {
     formData.append("waist", form.waist);
     formData.append("hip", form.hip);
     formData.append("idType", form.idType);
+    formData.append("identityDocumentNumber", form.identityDocumentNumber.trim());
     formData.append("skills", form.skills);
     formData.append("livenessVerificationId", livenessSession.verificationId);
     formData.append("livenessAttemptId", livenessSession.attemptId);
@@ -305,7 +324,8 @@ const ModelForm = () => {
         throw error;
       }
 
-      navigate("/dashboard", { state: { registrationSubmitted: true } });
+      setAuthenticated({ account: { ...result.model, role: "model" } });
+      navigate("/model-account", { state: { registrationSubmitted: true }, replace: true });
     } catch (error) {
       console.error(error);
       if (error.payload?.code?.startsWith("LIVENESS_SESSION")) {
@@ -316,7 +336,7 @@ const ModelForm = () => {
         setLivenessError(message);
         setIdentityError(message);
       } else {
-        setIdentityVerified(false);
+        setPrototypeVerificationPassed(false);
         setIdentityCheck(error.payload || null);
         setIdentityError(error.message || "Registration failed. Please try again.");
       }
@@ -330,6 +350,7 @@ const ModelForm = () => {
     <div className={`main-container ${step >= 4 ? "registration-verification-flow" : ""} ${step === 5 ? "registration-liveness" : ""}`}>
       <div className="sidebar">
         <h2 className="logo" onClick={() => navigate("/")} style={{ cursor: "pointer" }}>ModelNext</h2>
+        <nav className="model-registration-links" aria-label="Registration navigation"><Link to="/">Back to Website</Link><Link to="/login">Sign In</Link></nav>
 
         <div className="step-item">
           <div className={`step-circle ${step === 1 ? "active" : ""}`}>1</div>
@@ -525,6 +546,16 @@ const ModelForm = () => {
                 <option value="passport">Passport</option>
               </select>
 
+              <label>Identity Document Number <span>*</span></label>
+              <input
+                name="identityDocumentNumber"
+                value={form.identityDocumentNumber}
+                onChange={handleChange}
+                autoComplete="off"
+                spellCheck="false"
+                placeholder={form.idType === "nic" ? "NIC number" : form.idType === "license" ? "Driving licence number" : "Passport number"}
+              />
+
               <div className="upload-card">
                 <label>ID Front <span>*</span></label>
                 <input type="file" accept="image/*" onChange={(e) => handleIdFrontChange(e.target.files[0])} />
@@ -537,7 +568,7 @@ const ModelForm = () => {
                   type="button"
                   className="next-btn"
                   onClick={handleVerifyDocument}
-                  disabled={isVerifying || isSubmitting || !idFront}
+                  disabled={isVerifying || isSubmitting || !idFront || (form.idType !== "passport" && !idBack)}
                 >
                   {isVerifying ? "Verifying document..." : "Verify Document"}
                 </button>
@@ -548,9 +579,10 @@ const ModelForm = () => {
                   )}
                   {identityCheck?.checks && (
                     <>
-                      <p>{identityCheck.checks.nameMatch ? "✓ Name matches" : "✗ Name does not match"}</p>
-                      <p>{identityCheck.checks.dateOfBirthMatch ? "✓ Date of birth matches" : "✗ Date of birth does not match"}</p>
-                      <strong>{identityVerified ? "Identity document verified" : "Identity verification failed"}</strong>
+                      <p>{verificationLabel("Name", identityCheck.checks.name?.status)}</p>
+                      <p>{verificationLabel("Date of birth", identityCheck.checks.dateOfBirth?.status)}</p>
+                      <p>{verificationLabel("Document number", identityCheck.checks.documentNumber?.status)}</p>
+                      <strong>{identityCheck.prototypePassed ? "Document Verification: Passed (Prototype)" : "Document Verification: Failed"}</strong>
                     </>
                   )}
                   {identityError && <p className="error-note">{identityError}</p>}
@@ -560,7 +592,7 @@ const ModelForm = () => {
               {form.idType !== "passport" && (
                 <div className="upload-card">
                   <label>ID Back <span>*</span></label>
-                  <input type="file" accept="image/*" onChange={(e) => setIdBack(e.target.files[0])} />
+                  <input type="file" accept="image/*" onChange={(e) => handleIdBackChange(e.target.files[0])} />
                 </div>
               )}
 
@@ -602,7 +634,7 @@ const ModelForm = () => {
                 <p>Measurements: {form.weight} kg · {form.height} cm · waist {form.waist} cm · hip {form.hip} cm</p>
                 <p>Skills: {form.skills.trim() || "No skills added"}</p>
                 <p>Portfolio: profile image and six portfolio images selected.</p>
-                <p>{identityVerified ? "✓ Identity document verified" : "Identity document verification incomplete"}</p>
+                <p>{!identityCheck ? "Document Verification: Incomplete" : prototypeVerificationPassed ? "Document Verification: Passed (Prototype)" : "Document Verification: Failed"}</p>
                 <p>{livenessCompleted ? "✓ Liveness verification complete" : "Liveness verification incomplete"}</p>
                 <p>Uploaded identity documents will be checked again by the server during registration.</p>
               </div>

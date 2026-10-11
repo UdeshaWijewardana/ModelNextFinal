@@ -9,7 +9,7 @@ No separate authentication or client-submitted sender identity is used.
 
 | Method | Path | Authorization / input |
 | --- | --- | --- |
-| POST | `/events/:eventId` | Existing event-owner creation endpoint; approved event |
+| POST | `/events/:eventId` | Approved event owner creates a chat (201) or reuses the existing chat (200), including concurrent retries |
 | POST | `/:chatId/invitations` | Existing owner-only endpoint; `{ invitedUserId, invitedUserRole }` |
 | PATCH | `/invitations/:invitationId/respond` | Actual recipient ID + role; `{ action: 'accept' or 'decline' }` |
 | GET | `/invitations/mine` | Only this account's received invitations |

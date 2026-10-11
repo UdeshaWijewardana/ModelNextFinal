@@ -1,8 +1,10 @@
 import React, { useCallback, useEffect, useState } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { apiFetch, getCurrentUser, readJson } from "../api";
 import { useAuth } from "../context/AuthContext";
 import Navbar from "./Navbar";
+import MyEvents from "./MyEvents";
+import BrowseTalentLinks from "./BrowseTalentLinks";
 
 const fieldsByRole = {
   model: ["fullName", "username", "address", "phone", "birthdate", "location", "gender", "weight", "height", "waist", "hip"],
@@ -12,6 +14,7 @@ const fieldsByRole = {
 
 const statusCopy = {
   pending: { title: "PENDING ADMIN APPROVAL", message: "Your registration has been submitted and is being reviewed by the ModelNext administration team. Profile editing will be enabled after approval." },
+  modelPending: { title: "PENDING ADMIN APPROVAL", message: "Your registration has been submitted successfully and is currently pending administrator approval. You can view your submitted profile information, but editing will become available after approval." },
   approved: { title: "ACCOUNT APPROVED", message: "Your ModelNext account has been approved. You can now update your profile information." },
   rejected: { title: "REGISTRATION NOT APPROVED", message: "This registration was not approved. Profile editing is unavailable for this account." },
 };
@@ -25,11 +28,16 @@ export default function AccountDashboard({ role, title, children }) {
   const [notifications, setNotifications] = useState([]);
   const [error, setError] = useState("");
   const [saving, setSaving] = useState(false);
+  const section = new URLSearchParams(location.search).get('section') || 'profile';
+  useEffect(() => {
+    if (user) document.getElementById(section)?.scrollIntoView?.({ behavior: 'smooth', block: 'start' });
+  }, [section, user]);
 
   const load = useCallback(async () => {
     try {
-      const [{ user: current }, { notifications: items }] = await Promise.all([getCurrentUser(), readJson(await apiFetch("/notifications"))]);
+      const { user: current } = await getCurrentUser();
       if (current.role !== role) throw new Error("This account cannot access this dashboard.");
+      const items = current.approvalStatus === 'approved' ? (await readJson(await apiFetch("/notifications"))).notifications : [];
       setUser(current); setForm(current); setNotifications(items);
     } catch (err) { setError(err.message); }
   }, [role]);
@@ -49,21 +57,33 @@ export default function AccountDashboard({ role, title, children }) {
   const signOut = async () => { await logout(); navigate("/"); };
   if (!user) return <><Navbar /><main className="account-dashboard">{error || "Loading account..."}</main></>;
   const approvalStatus = user.approvalStatus || "pending";
-  const status = statusCopy[approvalStatus] || statusCopy.pending;
+  const status = role === "model" && approvalStatus === "pending"
+    ? statusCopy.modelPending
+    : statusCopy[approvalStatus] || statusCopy.pending;
   const editable = approvalStatus === "approved";
   return <><Navbar /><main className="account-dashboard">
     <h1>{title}</h1><p>{user.name} · {user.email}</p>
     {location.state?.registrationSubmitted && <section className="account-status-banner approved" role="status"><strong>REGISTRATION SUBMITTED SUCCESSFULLY</strong><p>Thank you for registering with ModelNext. Your account is pending administrator approval. You can review your account information while it is being reviewed.</p></section>}
     <section className={`account-status-banner ${approvalStatus}`} role="status"><strong>{status.title}</strong><p>{status.message}</p>{approvalStatus === "rejected" && user.rejectionReason && <p><strong>Reason:</strong> {user.rejectionReason}</p>}</section>
     {error && <p className="account-error" role="alert">{error}</p>}
-    {editable && <button type="button" onClick={() => navigate("/event-chats")}>Event group chats &amp; invitations</button>}
-    <form className={`account-profile-form ${editable ? "is-editable" : "is-locked"}`} onSubmit={save}>
+    <nav className="account-section-nav" aria-label="Account navigation">
+      <Link to="?section=profile" aria-current={section === 'profile' ? 'page' : undefined}>My Profile</Link>
+      {['photographer', 'agency'].includes(role) && editable && <Link to="?section=my-events" aria-current={section === 'my-events' ? 'page' : undefined}>My Events</Link>}
+      {editable && <Link to="/event-chats">Event Group Chats</Link>}
+      {editable && <Link to="/my-bookings">My Bookings</Link>}
+      {editable && <Link to="/my-bookings">Messages</Link>}
+      <Link to="?section=notifications" aria-current={section === 'notifications' ? 'page' : undefined}>Notifications</Link>
+      <Link to="/">Back to Website</Link>
+    </nav>
+    {['photographer', 'agency'].includes(role) && <BrowseTalentLinks />}
+    <form id="profile" className={`account-profile-form ${editable ? "is-editable" : "is-locked"}`} onSubmit={save}>
       {!editable && <p className="account-lock-note">Your submitted account details are view-only until approval.</p>}
       {fieldsByRole[role].map((field) => <label key={field}>{field}<input disabled={!editable} value={form[field] || ""} onChange={(e) => setForm({ ...form, [field]: e.target.value })} /></label>)}
       {editable && <button disabled={saving} type="submit">{saving ? "Saving..." : "Save profile"}</button>}
     </form>
     {editable && children}
-    <h2>Notifications</h2>{notifications.length === 0 ? <p>No notifications.</p> : notifications.map((item) => <p key={item._id}><button disabled={item.read} onClick={() => markRead(item._id)}>{item.read ? "Read" : "Mark read"}</button> {item.message}</p>)}
+    {editable && ['photographer', 'agency'].includes(role) && <MyEvents />}
+    <h2 id="notifications">Notifications</h2>{notifications.length === 0 ? <p>No notifications.</p> : notifications.map((item) => <p key={item._id}><button disabled={item.read} onClick={() => markRead(item._id)}>{item.read ? "Read" : "Mark read"}</button> {item.message}</p>)}
     <button onClick={signOut}>Logout</button>
   </main></>;
 }

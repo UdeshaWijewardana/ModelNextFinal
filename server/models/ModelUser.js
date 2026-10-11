@@ -33,6 +33,7 @@ const modelSchema = new mongoose.Schema({
     rightImage: { type: String },
   },
   verificationStatus: { type: String, default: 'pending_ai_review' },
+  nameVerificationStatus: { type: String, enum: ['pending', 'verified', 'rejected'], default: 'pending' },
   verificationSummary: { type: String },
   aiConfidence: { type: Number },
   aiChecks: { type: Object },

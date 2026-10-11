@@ -1,0 +1,47 @@
+.model-account-shell { align-items: flex-start; }
+.model-account-avatar { object-fit: cover; }
+.model-account-status-chip { flex: 0 0 auto; padding: 9px 13px; border: 1px solid var(--mn-border); border-radius: 999px; font-size: 12px; font-weight: 750; }
+.model-account-status-chip.is-approved { color: var(--mn-success); border-color: var(--mn-success); background: rgba(121, 200, 140, .1); }
+.model-account-status-chip.is-pending { color: #f59e0b; border-color: #8a641e; background: rgba(245, 158, 11, .1); }
+.model-account-status-chip.is-rejected { color: var(--mn-error); border-color: var(--mn-error); background: rgba(229, 115, 115, .1); }
+.model-account-approval-banner { margin: 0 0 20px; padding: 16px 18px; border: 1px solid #8a641e; border-radius: 10px; background: rgba(245, 158, 11, .1); color: var(--mn-text-primary); }
+.model-account-approval-banner strong { color: #fbbf24; }
+.model-account-approval-banner p { margin: 7px 0 0; color: var(--mn-text-secondary); line-height: 1.6; }
+.model-account-panel { margin-top: 18px; scroll-margin-top: 18px; }
+.model-account-profile-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 11px; }
+.model-account-detail-card { min-width: 0; display: grid; gap: 7px; padding: 14px; border: 1px solid var(--mn-border); border-radius: 9px; background: var(--mn-surface-raised); }
+.model-account-detail-card span, .model-account-settings-row span { color: var(--mn-text-secondary); font-size: 11px; }
+.model-account-detail-card strong { overflow-wrap: anywhere; font-size: 13px; }
+.model-account-readonly-note, .model-account-empty { margin: 16px 0 0; color: var(--mn-text-secondary); font-size: 13px; line-height: 1.6; }
+.model-account-profile-form { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+.model-account-profile-form label { display: grid; gap: 7px; color: var(--mn-text-secondary); font-size: 12px; }
+.model-account-profile-form input { width: 100%; min-height: 40px; padding: 9px 11px; border: 1px solid var(--mn-border); border-radius: 7px; background: var(--mn-surface-raised); color: var(--mn-text-primary); }
+.model-account-form-actions { display: flex; grid-column: 1 / -1; gap: 9px; }
+.model-account-form-actions button, .model-account-settings-row ~ button { min-height: 38px; }
+.model-account-portfolio-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+.model-account-portfolio-grid .client-talent-image { height: 220px; }
+.model-account-booking-list { display: grid; gap: 9px; }
+.model-account-booking-list article, .model-account-notification, .model-account-settings-row { display: flex; justify-content: space-between; align-items: center; gap: 16px; padding: 13px 0; border-bottom: 1px solid var(--mn-border); }
+.model-account-booking-list article > div, .model-account-notification > div { display: grid; gap: 5px; }
+.model-account-booking-list span, .model-account-notification time { color: var(--mn-text-secondary); font-size: 11px; }
+.model-account-booking-list a, .model-account-text-link, .model-account-footer a { color: var(--mn-burgundy); font-size: 12px; font-weight: 750; text-decoration: none; }
+.model-account-booking-list a:hover, .model-account-text-link:hover, .model-account-footer a:hover { color: var(--mn-burgundy-hover); }
+.model-account-text-link { display: inline-block; margin-top: 16px; }
+.model-account-notification p { margin: 0; color: var(--mn-text-secondary); font-size: 12px; line-height: 1.5; }
+.model-account-notification .client-text-button { flex: 0 0 auto; }
+.model-account-settings-row strong { font-size: 13px; }
+.model-account-footer { display: flex; justify-content: space-between; gap: 14px; padding: 26px 2px 0; }
+.model-account-footer button { border: 0; background: transparent; color: var(--mn-text-secondary); cursor: pointer; font: inherit; font-size: 12px; }
+.model-account-footer button:hover { color: var(--mn-burgundy); }
+.model-account-shell .client-nav-item:disabled { opacity: .45; cursor: not-allowed; }
+
+@media (max-width: 768px) {
+  .model-account-profile-grid, .model-account-portfolio-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .model-account-status-chip { align-self: start; }
+}
+
+@media (max-width: 520px) {
+  .model-account-profile-grid, .model-account-portfolio-grid, .model-account-profile-form { grid-template-columns: 1fr; }
+  .model-account-booking-list article, .model-account-notification, .model-account-settings-row { align-items: flex-start; flex-direction: column; }
+  .model-account-form-actions { flex-direction: column; }
+}

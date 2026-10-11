@@ -9,7 +9,7 @@ const Client = require('../models/Client');
 const regularRoles = new Set(['model', 'photographer', 'agency', 'client']);
 const accountModels = { model: ModelUser, photographer: Photographer, agency: Agency, client: Client };
 
-const requireUser = async (req, res, next) => {
+const authenticateUser = (requireApproval) => async (req, res, next) => {
   const token = readCookie(req, USER_SESSION_COOKIE);
   if (!token) return res.status(401).json({ error: 'Authentication is required.' });
   if (!process.env.JWT_SECRET) return res.status(503).json({ error: 'User authentication is not configured.' });
@@ -24,7 +24,7 @@ const requireUser = async (req, res, next) => {
     }
     const account = await accountModels[payload.role].findById(payload.sub).select('approvalStatus');
     if (!account) return res.status(401).json({ error: 'Authentication is invalid or expired.' });
-    if (account.approvalStatus !== 'approved') {
+    if (requireApproval && account.approvalStatus !== 'approved') {
       const error = account.approvalStatus === 'rejected'
         ? 'Your registration has been rejected. Contact support if you need assistance.'
         : 'Your registration is pending administrator approval.';
@@ -37,4 +37,7 @@ const requireUser = async (req, res, next) => {
   }
 };
 
-module.exports = { requireUser, regularRoles };
+const requireUser = authenticateUser(true);
+const requireRegisteredUser = authenticateUser(false);
+
+module.exports = { requireUser, requireRegisteredUser, regularRoles };

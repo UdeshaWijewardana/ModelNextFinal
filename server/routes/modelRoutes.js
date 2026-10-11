@@ -8,7 +8,9 @@ const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
 const ModelUser = require('../models/ModelUser');
 const EventRequest = require('../models/EventRequest');
+const { directBookedDatesForMonth } = require('../direct-booking/availability');
 const { extractDateOfBirth } = require('../utils/dateExtractor');
+const { isValidDocumentNumber } = require('../utils/documentNumberExtractor');
 const { verifyIdentityDocument } = require('../services/identityVerificationService');
 const { livenessVerificationSessionService } = require('../services/livenessVerificationSessionService');
 const { requireDatabase, databaseUnavailable } = require('../middleware/requireDatabase');
@@ -28,7 +30,11 @@ const storage = multer.diskStorage({
   }
 });
 
-const upload = multer({ storage });
+const upload = multer({
+  storage,
+  limits: { fileSize: 10 * 1024 * 1024, files: 10 },
+  fileFilter: (_req, file, cb) => cb(null, file.mimetype?.startsWith('image/') === true),
+});
 
 const evidenceDirectory = path.join(__dirname, '..', 'verification-evidence');
 const evidenceMimeTypes = new Map([
@@ -82,14 +88,17 @@ const fileDigest = async (filePath) => new Promise((resolve, reject) => {
 });
 
 const validateIdentityFields = (data) => {
-  if (!data.fullName?.trim() || !data.birthdate || !data.idType) {
-    return 'Full name, date of birth, and document type are required.';
+  if (!data.fullName?.trim() || !data.birthdate || !data.idType || !data.identityDocumentNumber?.trim()) {
+    return 'Full name, date of birth, document type, and document number are required.';
   }
   if (!allowedIdTypes.has(data.idType)) {
     return 'Document type must be nic, license, or passport.';
   }
   if (!extractDateOfBirth(data.birthdate)) {
     return 'A valid date of birth is required.';
+  }
+  if (!isValidDocumentNumber(data.idType, data.identityDocumentNumber)) {
+    return 'Enter a valid document number for the selected document type.';
   }
   return null;
 };
@@ -218,6 +227,7 @@ const bookedDatesForMonth = async (modelId, bounds) => {
     dateKeysInRange(eventStart, eventEnd, bounds).forEach((date) => bookedDates.add(date));
   });
 
+  (await directBookedDatesForMonth(modelId, 'model', bounds)).forEach((date) => bookedDates.add(date));
   return [...bookedDates].sort();
 };
 
@@ -395,32 +405,40 @@ router.post('/verify-identity', handleVerificationUpload, async (req, res) => {
     if (!isUploadedImage(idFront)) {
       return res.status(400).json({ success: false, error: 'Upload a non-empty image for the ID front.' });
     }
+    const idBack = files.idBack?.[0];
+    if (req.body.idType !== 'passport' && !isUploadedImage(idBack)) {
+      return res.status(400).json({ success: false, error: 'Upload non-empty front and back images for this document.' });
+    }
 
     const result = await getIdentityVerifier(req)({
-      filePath: idFront.path,
+      filePaths: [idFront, idBack].filter(Boolean).map(file => file.path),
       fullName: req.body.fullName,
-      birthdate: req.body.birthdate
+      birthdate: req.body.birthdate,
+      idType: req.body.idType,
+      identityDocumentNumber: req.body.identityDocumentNumber
     });
 
     return res.status(200).json({
       success: true,
-      ...result,
-      message: result.verified
-        ? 'Identity document name and date of birth match.'
-        : 'Name and date of birth could not both be verified from this document.'
+      verified: result.verified,
+      prototypePassed: result.prototypePassed,
+      overallStatus: result.overallStatus,
+      checks: result.checks,
+      message: result.prototypePassed
+        ? 'Document Verification: Passed (Prototype)'
+        : 'Document Verification: Failed'
     });
   } catch (error) {
-    if (error.code === 'OCR_UNREADABLE_IMAGE') {
-      console.warn('Identity OCR rejected an unreadable document:', error.message);
-    } else {
-      console.error('Identity OCR verification failed:', error.cause || error);
-    }
-    return res.status(error.code === 'OCR_UNREADABLE_IMAGE' ? 400 : 500).json({
+    const clientError = ['IDENTITY_IMAGE_INVALID', 'OCR_INVALID_REQUEST'].includes(error.code);
+    console.warn(clientError ? 'Identity verification rejected an invalid document.' : 'Identity extraction service unavailable.');
+    return res.status(clientError ? 400 : 503).json({
       success: false,
       verified: false,
-      error: error.code === 'OCR_UNREADABLE_IMAGE'
-        ? 'OCR could not process this document. Please try a clearer image.'
-        : 'Identity verification failed because of a server error.'
+      prototypePassed: false,
+      overallStatus: 'unable_to_verify',
+      error: clientError
+        ? 'The document image could not be processed. Please upload a valid, clear image.'
+        : 'Identity verification is temporarily unavailable. Please try again later.'
     });
   } finally {
     await removeUploadedFiles(files);
@@ -526,7 +544,8 @@ router.post('/register', upload.fields([
       await removeUploadedFiles(files);
       return res.status(400).json({ success: false, error: 'Upload a non-empty image for the ID front.' });
     }
-    if (data.idType !== 'passport' && !files.idBack?.length) {
+    const idBack = files.idBack?.[0];
+    if (data.idType !== 'passport' && !isUploadedImage(idBack)) {
       await removeUploadedFiles(files);
       return res.status(400).json({ success: false, error: 'Both sides of the ID are required for national ID and driving license registrations.' });
     }
@@ -540,19 +559,22 @@ router.post('/register', upload.fields([
 
     // Registration always reruns OCR on the uploaded document; client verification flags are not trusted.
     const verificationResult = await getIdentityVerifier(req)({
-      filePath: idFront.path,
+      filePaths: [idFront, idBack].filter(Boolean).map(file => file.path),
       fullName: data.fullName,
-      birthdate: data.birthdate
+      birthdate: data.birthdate,
+      idType: data.idType,
+      identityDocumentNumber: data.identityDocumentNumber
     });
 
-    if (!verificationResult.verified) {
+    if (!verificationResult.prototypePassed) {
       await removeUploadedFiles(files);
       return res.status(400).json({
         success: false,
         verified: false,
+        prototypePassed: false,
         checks: verificationResult.checks,
-        extracted: verificationResult.extracted,
-        error: 'Identity document name and date of birth must both match before registration.'
+        overallStatus: verificationResult.overallStatus,
+        error: 'Document Verification: Failed'
       });
     }
 
@@ -580,7 +602,8 @@ router.post('/register', upload.fields([
     }
 
     const registrationData = { ...data };
-    for (const field of ['verification', 'verified', 'verificationStatus', 'verificationSummary', 'aiConfidence', 'aiChecks', 'approvalStatus', 'approvedAt', 'approvedBy', 'rejectionReason', 'livenessVerificationId', 'livenessAttemptId']) {
+    delete registrationData.identityDocumentNumber;
+    for (const field of ['verification', 'verified', 'verificationStatus', 'nameVerificationStatus', 'verificationSummary', 'aiConfidence', 'aiChecks', 'approvalStatus', 'approvedAt', 'approvedBy', 'rejectionReason', 'livenessVerificationId', 'livenessAttemptId']) {
       delete registrationData[field];
     }
 
@@ -592,12 +615,17 @@ router.post('/register', upload.fields([
       portfolioImages: files.portfolio ? files.portfolio.map((file) => file.path) : [],
       idFrontImage: idFront.path,
       idBackImage: files.idBack ? files.idBack[0].path : null,
-      verificationStatus: 'identity_verified',
-      verificationSummary: 'Identity document name and date of birth matched.',
+      verificationStatus: 'prototype_passed',
+      nameVerificationStatus: 'pending',
+      verificationSummary: 'Document Verification: Passed (Prototype). Name verification is pending.',
       aiChecks: {
-        ocrReadable: true,
-        nameMatched: verificationResult.checks.nameMatch,
-        dateOfBirthMatched: verificationResult.checks.dateOfBirthMatch
+        ocrReadable: Boolean(
+          verificationResult.checks.dateOfBirthMatch
+          && verificationResult.checks.documentNumberMatch
+        ),
+        nameOcrStatus: verificationResult.checks.name?.status || 'unable_to_read',
+        dateOfBirthMatched: verificationResult.checks.dateOfBirthMatch,
+        documentNumberMatched: verificationResult.checks.documentNumberMatch
       },
       livenessVerificationStatus: 'completed',
       livenessEvidence: {
@@ -627,20 +655,20 @@ router.post('/register', upload.fields([
         console.error('Liveness session release failed:', releaseError.message);
       }
     }
-    if (error.code === 'OCR_UNREADABLE_IMAGE') {
-      console.warn('Model registration rejected an unreadable identity document:', error.message);
-    } else if (!error.status) {
-      console.error(error);
-    }
+    const identityError = typeof error.code === 'string'
+      && (error.code.startsWith('OCR_') || error.code.startsWith('OPENAI_') || error.code === 'IDENTITY_IMAGE_INVALID');
+    if (identityError) console.warn('Model registration identity extraction was unavailable or invalid.');
+    else if (!error.status) console.error('Model registration failed.');
     if (error.code === 11000) return res.status(400).json({ error: 'Email already exists' });
-    res.status(error.status || (error.code === 'OCR_UNREADABLE_IMAGE' ? 400 : 500)).json({
+    const identityStatus = ['IDENTITY_IMAGE_INVALID', 'OCR_INVALID_REQUEST'].includes(error.code) ? 400 : 503;
+    res.status(error.status || (identityError ? identityStatus : 500)).json({
       success: false,
       verified: false,
       ...(error.status ? { code: error.code } : {}),
       error: error.status
         ? error.message
-        : error.code === 'OCR_UNREADABLE_IMAGE'
-        ? 'OCR could not process this document. Registration was not saved.'
+        : identityError
+        ? 'Identity verification could not be completed. Registration was not saved.'
         : 'Server error during registration.'
     });
   }

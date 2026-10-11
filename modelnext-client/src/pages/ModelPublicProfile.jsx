@@ -1,7 +1,8 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import Navbar from "../components/Navbar";
 import { apiFetch, readJson, SERVER_BASE_URL } from "../api";
+import BookingForm from "./direct-booking/BookingForm";
 import "../styles/ModelPublicProfile.css";
 
 const hasValue = (value) => value !== undefined && value !== null && String(value).trim() !== "";
@@ -26,6 +27,7 @@ const dayKey = (year, month, day) => `${year}-${String(month + 1).padStart(2, "0
 
 export default function ModelPublicProfile() {
   const { modelId } = useParams();
+  const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const [model, setModel] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -37,6 +39,13 @@ export default function ModelPublicProfile() {
   const [availability, setAvailability] = useState({ bookedDates: [], manualDates: [], availabilityManaged: false });
   const [availabilityLoading, setAvailabilityLoading] = useState(false);
   const [availabilityError, setAvailabilityError] = useState("");
+  const eventId = searchParams.get("eventId") || "";
+  const eventContext = eventId ? {
+    eventId,
+    eventTitle: searchParams.get("eventTitle") || "Selected event",
+    eventType: searchParams.get("eventType") || "Event",
+    eventLocation: searchParams.get("eventLocation") || "",
+  } : null;
 
   useEffect(() => {
     let active = true;
@@ -171,6 +180,10 @@ export default function ModelPublicProfile() {
                 {hasValue(model.location) && (
                   <p className="public-model-location">{model.location}</p>
                 )}
+
+                {eventContext && <aside className="public-model-event-context" aria-label="AI recommendation event context"><p>AI recommendation for</p><strong>{eventContext.eventTitle}</strong><span>{eventContext.eventType}{eventContext.eventLocation ? ` · ${eventContext.eventLocation}` : ""}</span><small>The event will be verified against your account before booking.</small></aside>}
+
+                <BookingForm talentId={modelId} talentRole="model" talentName={model.fullName} eventContext={eventContext} />
 
                 {measurements.length > 0 && (
                   <dl className="public-model-measurements">

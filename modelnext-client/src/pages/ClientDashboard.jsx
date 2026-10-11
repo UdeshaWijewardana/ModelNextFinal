@@ -1,10 +1,12 @@
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { apiFetch, getCurrentUser, readJson } from "../api";
 import { useAuth } from "../context/AuthContext";
 import ClientSidebar from "../components/client-dashboard/ClientSidebar";
 import DashboardStatCard from "../components/client-dashboard/DashboardStatCard";
 import SectionHeader from "../components/client-dashboard/SectionHeader";
+import MyEvents from '../components/MyEvents';
+import BrowseTalentLinks from '../components/BrowseTalentLinks';
 import "../styles/ClientDashboard.css";
 
 const initialProject = {
@@ -94,6 +96,8 @@ const dashboardSectionIds = {
   bookings: "bookings",
   messages: "messages",
   notifications: "notifications",
+  'my-events': 'my-events',
+  recommendations: 'recommendations',
 };
 
 export default function ClientDashboard() {
@@ -102,6 +106,7 @@ export default function ClientDashboard() {
   const { logout } = useAuth();
 
   const [user, setUser] = useState(null);
+  const projectInFlight = useRef(false);
   const [events, setEvents] = useState([]);
   const [publicEvents, setPublicEvents] = useState([]);
   const [requests, setRequests] = useState([]);
@@ -265,12 +270,13 @@ export default function ClientDashboard() {
 
     setActiveNav(section);
 
-    requestAnimationFrame(() => {
+    const frame = requestAnimationFrame(() => {
       document
         .getElementById(dashboardSectionIds[section])
-        ?.scrollIntoView({ behavior: "smooth", block: "start" });
+        ?.scrollIntoView?.({ behavior: "smooth", block: "start" });
     });
-  }, [location.search]);
+    return () => cancelAnimationFrame(frame);
+  }, [location.search, loading]);
 
   /*
    * Load AI matches whenever the user changes the selected event.
@@ -291,6 +297,8 @@ export default function ClientDashboard() {
    */
   const saveProject = async (event) => {
     event.preventDefault();
+    if (projectInFlight.current) return;
+    projectInFlight.current = true;
 
     setSavingProject(true);
     setError("");
@@ -298,6 +306,8 @@ export default function ClientDashboard() {
     try {
       const payload = {
         ...projectForm,
+        startDate: new Date(projectForm.startDate).toISOString(),
+        endDate: projectForm.endDate ? new Date(projectForm.endDate).toISOString() : '',
 
         requiredGender:
           projectForm.requiredGender || undefined,
@@ -337,7 +347,7 @@ export default function ClientDashboard() {
 
       const method = editingEvent ? "PATCH" : "POST";
 
-      await readJson(
+      const { event: savedEvent } = await readJson(
         await apiFetch(endpoint, {
           method,
           body: JSON.stringify(payload),
@@ -355,6 +365,7 @@ export default function ClientDashboard() {
       );
 
       await load();
+      if (!editingEvent) navigate(`/account/events/${savedEvent.id}`);
     } catch (err) {
       setError(
         err.message ||
@@ -363,6 +374,7 @@ export default function ClientDashboard() {
           } this project.`
       );
     } finally {
+      projectInFlight.current = false;
       setSavingProject(false);
     }
   };
@@ -431,6 +443,10 @@ export default function ClientDashboard() {
    * Sidebar navigation.
    */
   const goTo = (target) => {
+    if (target === "direct-bookings" || target === "private-messages") {
+      navigate("/my-bookings");
+      return;
+    }
     setSidebarOpen(false);
 
     if (target === "discover") {
@@ -787,7 +803,7 @@ const bookingCounts = {
             label="Active Events"
             value={activeProjects}
             detail="Your current active events"
-            onClick={() => navigate("/events")}
+            onClick={() => goTo("my-events")}
           />
 
           <DashboardStatCard
@@ -985,7 +1001,7 @@ const bookingCounts = {
                               className="client-text-button"
                               onClick={() =>
                                 navigate(
-                                  `/profile?${new URLSearchParams(
+                                  `/models/${model.id}?${new URLSearchParams(
                                     {
                                       name:
                                         model.fullName ||
@@ -1001,6 +1017,12 @@ const bookingCounts = {
                                       location:
                                         model.location ||
                                         "",
+                                      ...(selectedAIEventId ? {
+                                        eventId: selectedAIEventId,
+                                        eventTitle: recommendationEvent?.title || "Selected Event",
+                                        eventType: recommendationEvent?.eventType || "Event",
+                                        eventLocation: recommendationEvent?.location || "",
+                                      } : {}),
                                     }
                                   )}`
                                 )
@@ -1112,6 +1134,8 @@ const bookingCounts = {
             </section>
           </aside>
         </div>
+
+        <MyEvents events={events} onCreate={openCreateProject} />
 
         {/* ALL BOOKINGS */}
         <section
@@ -1328,24 +1352,7 @@ const bookingCounts = {
               available in the current application.
             </p>
 
-            <button
-              type="button"
-              className="client-text-button"
-              onClick={() => navigate("/models")}
-            >
-              Discover models <span>→</span>
-            </button>
-
-            <button
-              type="button"
-              className="client-text-button"
-              onClick={() =>
-                navigate("/photographers")
-              }
-            >
-              Discover photographers{" "}
-              <span>→</span>
-            </button>
+            <BrowseTalentLinks />
           </section>
         </div>
 

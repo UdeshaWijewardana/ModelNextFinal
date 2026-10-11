@@ -180,9 +180,10 @@ router.get('/registrations/model/:id/identity-review', requireAdmin, requireData
         ocr: {
           status: registration.verificationStatus || 'Not provided',
           summary: registration.verificationSummary || 'Not provided',
+          nameVerificationStatus: registration.nameVerificationStatus || 'pending',
           checks: registration.aiChecks ? {
             readable: Boolean(registration.aiChecks.ocrReadable),
-            nameMatched: Boolean(registration.aiChecks.nameMatched),
+            nameOcrStatus: registration.aiChecks.nameOcrStatus || 'not_recorded',
             dateOfBirthMatched: Boolean(registration.aiChecks.dateOfBirthMatched),
           } : null,
         },
