@@ -1,6 +1,6 @@
 import {useCallback, useEffect, useRef, useState} from 'react';
 import {io} from 'socket.io-client';
-import {SERVER_BASE_URL} from '../api';
+import {SERVER_BASE_URL} from '../../api';
 import {acknowledge, chatApi, mergeMessages, pagePath, recoverHistory} from './api';
 
 export default function useConversation(routeChatId) {

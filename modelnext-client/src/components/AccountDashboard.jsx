@@ -6,7 +6,7 @@ import Navbar from "./Navbar";
 
 const fieldsByRole = {
   model: ["fullName", "username", "address", "phone", "birthdate", "location", "gender", "weight", "height", "waist", "hip"],
-  photographer: ["name", "phone", "location", "portfolio"],
+  photographer: ["name", "username", "phone", "location", "experienceYears", "portfolio"],
   agency: ["agencyName", "ownerName", "phone", "address", "businessId"],
 };
 
@@ -16,7 +16,7 @@ const statusCopy = {
   rejected: { title: "REGISTRATION NOT APPROVED", message: "This registration was not approved. Profile editing is unavailable for this account." },
 };
 
-export default function AccountDashboard({ role, title }) {
+export default function AccountDashboard({ role, title, children }) {
   const navigate = useNavigate();
   const location = useLocation();
   const { logout } = useAuth();
@@ -62,6 +62,7 @@ export default function AccountDashboard({ role, title }) {
       {fieldsByRole[role].map((field) => <label key={field}>{field}<input disabled={!editable} value={form[field] || ""} onChange={(e) => setForm({ ...form, [field]: e.target.value })} /></label>)}
       {editable && <button disabled={saving} type="submit">{saving ? "Saving..." : "Save profile"}</button>}
     </form>
+    {editable && children}
     <h2>Notifications</h2>{notifications.length === 0 ? <p>No notifications.</p> : notifications.map((item) => <p key={item._id}><button disabled={item.read} onClick={() => markRead(item._id)}>{item.read ? "Read" : "Mark read"}</button> {item.message}</p>)}
     <button onClick={signOut}>Logout</button>
   </main></>;

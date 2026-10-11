@@ -16,7 +16,7 @@ const accountName = (role, account) => role === 'model' ? account.fullName : (ac
 const safeAccount = (role, account) => {
   const base = { id: account._id, role, name: accountName(role, account), email: account.email };
   if (role === 'model') return { ...base, fullName: account.fullName, username: account.username, address: account.address, phone: account.phone, birthdate: account.birthdate, location: account.location, gender: account.gender, categories: account.categories, profileImage: account.profileImage, portfolioImages: account.portfolioImages, weight: account.weight, height: account.height, waist: account.waist, hip: account.hip, approvalStatus: account.approvalStatus, rejectionReason: account.rejectionReason, verificationStatus: account.verificationStatus };
-  if (role === 'photographer') return { ...base, phone: account.phone, location: account.location, portfolio: account.portfolio, profileImage: account.profileImage, approvalStatus: account.approvalStatus, rejectionReason: account.rejectionReason };
+  if (role === 'photographer') return { ...base, username: account.username, phone: account.phone, location: account.location, portfolio: account.portfolio, experienceYears: account.experienceYears, profileImage: account.profileImage, approvalStatus: account.approvalStatus, rejectionReason: account.rejectionReason };
   if (role === 'agency') return { ...base, agencyName: account.agencyName, ownerName: account.ownerName, phone: account.phone, address: account.address, businessId: account.businessId, profileImage: account.profileImage, coverImage: account.coverImage, approvalStatus: account.approvalStatus, rejectionReason: account.rejectionReason };
   return { ...base, type: account.type, username: account.username, phone: account.phone, address: account.address };
 };
@@ -75,7 +75,7 @@ router.post('/logout', (req, res) => {
 
 const editableFields = {
   model: ['fullName', 'username', 'address', 'phone', 'birthdate', 'location', 'gender', 'categories', 'profileImage', 'portfolioImages', 'weight', 'height', 'waist', 'hip'],
-  photographer: ['name', 'phone', 'location', 'portfolio', 'profileImage'],
+  photographer: ['name', 'phone', 'location', 'portfolio', 'experienceYears', 'profileImage'],
   agency: ['agencyName', 'ownerName', 'phone', 'address', 'businessId', 'profileImage', 'coverImage'],
   client: ['name', 'username', 'phone', 'address'],
 };

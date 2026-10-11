@@ -13,11 +13,6 @@ export default function Navbar() {
   };
 
   const closeAndNavigate = (path) => { navigate(path); setIsOpen(false); };
-  const goBack = () => {
-    const hasInternalHistory = window.history.state?.idx > 0 || document.referrer.startsWith(window.location.origin);
-    navigate(hasInternalHistory ? -1 : '/');
-    setIsOpen(false);
-  };
   const signOut = async () => {
     await logout();
     closeAndNavigate('/');
@@ -31,7 +26,6 @@ export default function Navbar() {
       <button className="nav-btn-register" onClick={() => closeAndNavigate('/register')}>REGISTER</button>
     </>;
     return <>
-      <button className="nav-btn-subtle" onClick={goBack}>BACK</button>
       <button className="nav-btn-login" onClick={() => closeAndNavigate(accountRoute)}>MY ACCOUNT</button>
       {!mobile && <span className="nav-user-label" title={accountName}>{accountName}</span>}
       <button className="nav-btn-register nav-btn-logout" onClick={signOut}>LOGOUT</button>
@@ -47,11 +41,11 @@ export default function Navbar() {
         </div>
 
         {/* MOBILE MENU TOGGLE */}
-        <div className={`menu-toggle ${isOpen ? 'open' : ''}`} onClick={toggleMenu}>
+        <button type="button" className={`menu-toggle ${isOpen ? 'open' : ''}`} onClick={toggleMenu} aria-label="Toggle navigation" aria-expanded={isOpen}>
           <span className="bar"></span>
           <span className="bar"></span>
           <span className="bar"></span>
-        </div>
+        </button>
 
         {/* NAV LINKS */}
         <div className={`nav-menu ${isOpen ? 'active' : ''}`}>

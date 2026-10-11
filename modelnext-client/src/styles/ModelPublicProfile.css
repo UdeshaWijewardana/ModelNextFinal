@@ -1,0 +1,153 @@
+.public-model-page {
+  min-height: 100vh;
+  background: var(--mn-bg);
+  color: var(--mn-ivory);
+}
+
+.public-model-shell {
+  width: min(1180px, calc(100% - 64px));
+  margin: 0 auto;
+  padding: 124px 0 84px;
+}
+
+.public-model-back {
+  min-height: auto;
+  padding: 0 0 12px;
+  border: 0;
+  border-bottom: 1px solid var(--mn-border);
+  border-radius: 0;
+  background: transparent;
+  color: var(--mn-silver);
+  cursor: pointer;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.public-model-back:hover { color: var(--mn-ivory); border-color: var(--mn-burgundy); }
+
+.public-model-hero {
+  display: grid;
+  grid-template-columns: minmax(300px, 0.9fr) minmax(0, 1.1fr);
+  gap: clamp(36px, 7vw, 108px);
+  align-items: center;
+  padding: 44px 0 74px;
+  border-bottom: 1px solid var(--mn-border);
+}
+
+.public-model-portrait {
+  aspect-ratio: 3 / 4;
+  min-height: 440px;
+  overflow: hidden;
+  background: var(--mn-surface-raised);
+  display: grid;
+  place-items: center;
+}
+
+.public-model-portrait img { width: 100%; height: 100%; object-fit: cover; object-position: center; display: block; }
+
+.public-model-monogram {
+  color: var(--mn-burgundy);
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: clamp(4rem, 10vw, 7.5rem);
+  letter-spacing: 0.08em;
+}
+
+.public-model-kicker,
+.public-model-section-heading > p {
+  margin: 0 0 12px;
+  color: var(--mn-burgundy);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.public-model-information h1,
+.public-model-section-heading h2 {
+  margin: 0;
+  color: var(--mn-ivory);
+  font-family: Georgia, "Times New Roman", serif;
+  font-weight: 400;
+  letter-spacing: -0.03em;
+}
+
+.public-model-information h1 { font-size: clamp(3rem, 6vw, 5.6rem); line-height: 0.96; }
+.public-model-section-heading h2 { font-size: clamp(2.4rem, 4vw, 4.1rem); }
+
+.public-model-categories { margin: 24px 0 6px; color: var(--mn-silver); font-size: 1rem; line-height: 1.6; }
+.public-model-location { margin: 0; color: var(--mn-muted); font-size: 0.92rem; }
+
+.public-model-measurements {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  margin: 34px 0 0;
+  border-top: 1px solid var(--mn-border);
+}
+
+.public-model-measurements div { padding: 15px 0; border-bottom: 1px solid var(--mn-border); }
+.public-model-measurements div:nth-child(odd) { padding-right: 22px; }
+.public-model-measurements div:nth-child(even) { padding-left: 22px; border-left: 1px solid var(--mn-border); }
+.public-model-measurements dt { color: var(--mn-muted); font-size: 0.68rem; font-weight: 700; letter-spacing: 0.13em; text-transform: uppercase; }
+.public-model-measurements dd { margin: 6px 0 0; color: var(--mn-ivory); font-size: 1rem; }
+
+.public-model-specialties { margin-top: 30px; }
+.public-model-specialties > p { margin: 0 0 12px; color: var(--mn-muted); font-size: 0.68rem; font-weight: 700; letter-spacing: 0.13em; text-transform: uppercase; }
+.public-model-specialties ul { display: flex; flex-wrap: wrap; gap: 8px; padding: 0; margin: 0; list-style: none; }
+.public-model-specialties li { padding: 7px 10px; border: 1px solid var(--mn-border-strong); color: var(--mn-silver); font-size: 0.78rem; }
+
+.public-model-availability { margin-top: 34px; }
+.public-model-availability-toggle { width: 100%; border: 1px solid var(--mn-burgundy); background: var(--mn-burgundy); color: var(--mn-ivory); cursor: pointer; font-size: 0.72rem; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; }
+.public-model-availability-toggle:hover { background: var(--mn-burgundy-hover); border-color: var(--mn-burgundy-hover); }
+.public-model-availability-legend { display: flex; flex-wrap: wrap; gap: 10px 16px; margin-top: 13px; color: var(--mn-muted); font-size: 0.68rem; }
+.public-model-availability-legend span { display: inline-flex; align-items: center; gap: 6px; }
+.availability-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; }
+.availability-dot--available { background: var(--mn-success); }
+.availability-dot--booked { background: var(--mn-error); }
+.availability-dot--unavailable { background: var(--mn-border-strong); border: 1px solid var(--mn-muted); }
+.availability-dot--unknown { background: var(--mn-muted); }
+
+.public-model-calendar { margin-top: 20px; padding-top: 20px; border-top: 1px solid var(--mn-border); }
+.public-model-calendar-header { display: grid; grid-template-columns: 38px 1fr 38px; align-items: center; gap: 8px; }
+.public-model-calendar-header h2 { margin: 0; color: var(--mn-ivory); font-family: Georgia, "Times New Roman", serif; font-size: 1.5rem; font-weight: 400; text-align: center; }
+.public-model-calendar-header button { min-height: 36px; border: 1px solid var(--mn-border-strong); background: transparent; color: var(--mn-ivory); cursor: pointer; font-size: 1.1rem; }
+.public-model-calendar-header button:hover { border-color: var(--mn-burgundy); color: var(--mn-burgundy); }
+.public-model-weekdays, .public-model-calendar-grid { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 5px; }
+.public-model-weekdays { margin-top: 20px; color: var(--mn-muted); font-size: 0.62rem; font-weight: 700; letter-spacing: 0.05em; text-align: center; text-transform: uppercase; }
+.public-model-calendar-grid { margin-top: 7px; }
+.public-model-calendar-day, .public-model-calendar-empty { min-height: 37px; display: grid; place-items: center; border: 1px solid var(--mn-border); color: var(--mn-silver); font-size: 0.78rem; }
+.public-model-calendar-empty { border-color: transparent; }
+.public-model-calendar-day.is-booked { border-color: var(--mn-error); background: rgba(229, 115, 115, .14); color: var(--mn-error); }
+.public-model-calendar-day.is-available { border-color: var(--mn-success); background: rgba(121, 200, 140, .12); color: var(--mn-success); }
+.public-model-calendar-day.is-unavailable { border-color: var(--mn-border-strong); background: rgba(145, 138, 134, .12); color: var(--mn-silver); }
+.public-model-calendar-day.is-past:not(.is-booked) { color: #625d60; border-color: #242225; background: #121113; }
+.public-model-calendar-message, .public-model-calendar-note { margin: 18px 0 0; color: var(--mn-muted); font-size: 0.78rem; line-height: 1.55; }
+.public-model-calendar-message--error { color: var(--mn-error); }
+
+.public-model-portfolio { padding-top: 66px; }
+.public-model-section-heading { margin-bottom: 28px; }
+.public-model-gallery { columns: 3 230px; column-gap: 16px; }
+.public-model-gallery figure { break-inside: avoid; margin: 0 0 16px; background: var(--mn-surface-raised); }
+.public-model-gallery img { display: block; width: 100%; height: auto; max-height: 680px; object-fit: contain; }
+.public-model-empty-portfolio { margin: 34px 0 0; padding: 30px 0; border-top: 1px solid var(--mn-border); color: var(--mn-muted); }
+
+.public-model-state { margin-top: 48px; padding: 56px 0; border-top: 1px solid var(--mn-border); color: var(--mn-silver); }
+.public-model-state h1 { margin: 0 0 12px; font-family: Georgia, "Times New Roman", serif; font-size: 2.5rem; font-weight: 400; }
+.public-model-state p { margin: 0 0 22px; }
+.public-model-state button { border: 1px solid var(--mn-border-strong); background: transparent; color: var(--mn-ivory); cursor: pointer; padding: 0 16px; }
+.public-model-state--error { color: var(--mn-error); }
+
+@media (max-width: 760px) {
+  .public-model-shell { width: min(100% - 36px, 560px); padding-top: 102px; }
+  .public-model-hero { grid-template-columns: 1fr; gap: 34px; padding-top: 30px; }
+  .public-model-portrait { min-height: 0; max-height: 620px; }
+  .public-model-information h1 { font-size: clamp(3rem, 15vw, 4.6rem); }
+  .public-model-gallery { columns: 1; }
+  .public-model-availability-legend { gap: 8px 12px; }
+}
+
+@media (max-width: 420px) {
+  .public-model-measurements { grid-template-columns: 1fr; }
+  .public-model-measurements div:nth-child(odd), .public-model-measurements div:nth-child(even) { padding-left: 0; padding-right: 0; border-left: 0; }
+}

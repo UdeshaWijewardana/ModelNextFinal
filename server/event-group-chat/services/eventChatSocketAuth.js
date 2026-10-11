@@ -1,4 +1,4 @@
-const { requireUser } = require('../middleware/requireUser');
+const { requireUser } = require('../../middleware/requireUser');
 const { fail } = require('./eventChatService');
 
 // Adapt IncomingMessage to the existing Express middleware. Cookie parsing,

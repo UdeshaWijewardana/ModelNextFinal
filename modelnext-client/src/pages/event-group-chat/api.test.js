@@ -1,5 +1,5 @@
 import {acknowledge, chatApi, mergeMessages, pagePath, privateImage, recoverHistory, uploadImage} from './api';
-import {API_BASE_URL} from '../api';
+import {API_BASE_URL} from '../../api';
 
 const message = (id, time = '2026-01-01T00:00:00.000Z') => ({id, createdAt:time});
 const response = data => ({ok:true,status:200,json:async () => data});

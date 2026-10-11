@@ -136,7 +136,7 @@ still apply. Existing dependency audit findings remain outside this change.
 From the project root:
 
 ```powershell
-node --test server/test/testEventChatBackend.js
+node server/event-group-chat/tests/testEventChatBackend.js
 ```
 
 The suite uses real Socket.IO server/client WebSocket and polling transports,

@@ -5,7 +5,7 @@ const sharp = require('sharp');
 const { fail } = require('./eventChatService');
 
 const MAX_IMAGE_BYTES = 5 * 1024 * 1024;
-const privateRoot = path.resolve(__dirname, '../private/event-chat-images');
+const privateRoot = path.resolve(__dirname, '../../private/event-chat-images');
 const imagePath = (key) => {
   if (typeof key !== 'string' || !/^[0-9a-f-]{36}\.webp$/.test(key)) throw fail(404, 'Chat image not found.');
   return path.join(privateRoot, key);

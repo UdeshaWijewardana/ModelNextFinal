@@ -1,8 +1,8 @@
 import React, {useEffect, useState} from 'react';
 import {Link, useNavigate} from 'react-router-dom';
-import {useAuth} from '../context/AuthContext';
+import {useAuth} from '../../context/AuthContext';
 import {chatApi, mutate} from './api';
-import '../styles/EventChat.css';
+import './EventChat.css';
 
 export default function EventChatAction({eventId}) {
   const auth = useAuth();

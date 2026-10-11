@@ -1,2 +1,56 @@
+import React, { useEffect, useMemo, useState } from "react";
 import AccountDashboard from "../components/AccountDashboard";
-export default function ModelDashboard() { return <AccountDashboard role="model" title="Model Account" />; }
+import { apiFetch, readJson } from "../api";
+import "../styles/ModelAvailability.css";
+
+const monthKey = (date) => `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`;
+const dayKey = (year, month, day) => `${year}-${String(month + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+
+function ModelAvailabilityManager() {
+  const [month, setMonth] = useState(() => new Date(new Date().getFullYear(), new Date().getMonth(), 1));
+  const [calendar, setCalendar] = useState({ bookedDates: [], manualDates: [] });
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+
+  const load = async () => {
+    setLoading(true); setError("");
+    try { setCalendar(await readJson(await apiFetch(`/models/me/availability?month=${monthKey(month)}`))); }
+    catch (requestError) { setError(requestError.message || "Unable to load availability."); }
+    finally { setLoading(false); }
+  };
+
+  useEffect(() => { load(); }, [month]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const dates = useMemo(() => {
+    const year = month.getFullYear(); const monthIndex = month.getMonth();
+    const today = dayKey(new Date().getFullYear(), new Date().getMonth(), new Date().getDate());
+    const booked = new Set(calendar.bookedDates || []);
+    const manual = new Map((calendar.manualDates || []).map((entry) => [entry.date, entry.status]));
+    return [
+      ...Array.from({ length: new Date(year, monthIndex, 1).getDay() }, (_, index) => ({ empty: true, key: `empty-${index}` })),
+      ...Array.from({ length: new Date(year, monthIndex + 1, 0).getDate() }, (_, index) => {
+        const date = dayKey(year, monthIndex, index + 1);
+        return { date, day: index + 1, booked: booked.has(date), status: manual.get(date), past: date < today };
+      }),
+    ];
+  }, [calendar, month]);
+
+  const update = async (date, status) => {
+    if (date < dayKey(new Date().getFullYear(), new Date().getMonth(), new Date().getDate())) return;
+    setError("");
+    try {
+      if (status === "clear") await readJson(await apiFetch(`/models/me/availability/${date}`, { method: "DELETE" }));
+      else await readJson(await apiFetch(`/models/me/availability/${date}`, { method: "PUT", body: JSON.stringify({ status }) }));
+      await load();
+    } catch (requestError) { setError(requestError.message || "Unable to save availability."); }
+  };
+
+  return <section className="model-availability-manager" aria-labelledby="manage-availability-title">
+    <div className="model-availability-heading"><div><p>Schedule preferences</p><h2 id="manage-availability-title">Manage Availability</h2></div><div className="model-availability-legend"><span><i className="model-availability-dot is-available" />Available</span><span><i className="model-availability-dot is-unavailable" />Unavailable</span><span><i className="model-availability-dot is-booked" />Booked</span></div></div>
+    {error && <p className="model-availability-error" role="alert">{error}</p>}
+    <div className="model-availability-controls"><button type="button" onClick={() => setMonth((date) => new Date(date.getFullYear(), date.getMonth() - 1, 1))}>←</button><strong>{month.toLocaleDateString(undefined, { month: "long", year: "numeric" })}</strong><button type="button" onClick={() => setMonth((date) => new Date(date.getFullYear(), date.getMonth() + 1, 1))}>→</button></div>
+    {loading ? <p>Loading calendar…</p> : <><div className="model-availability-weekdays">{["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((day) => <span key={day}>{day}</span>)}</div><div className="model-availability-grid">{dates.map((entry) => entry.empty ? <span key={entry.key} /> : <div className={`model-availability-day${entry.booked ? " is-booked" : ""}${entry.status ? ` is-${entry.status}` : ""}${entry.past ? " is-past" : ""}`} key={entry.date}><span>{entry.day}</span>{!entry.booked && !entry.past && <div className="model-availability-actions"><button type="button" onClick={() => update(entry.date, "available")}>Available</button><button type="button" onClick={() => update(entry.date, "unavailable")}>Unavailable</button>{entry.status && <button type="button" onClick={() => update(entry.date, "clear")}>Clear</button>}</div>}</div>)}</div><p className="model-availability-note">Confirmed bookings are locked and always take priority over your preferences. Past dates cannot be edited.</p></>}
+  </section>;
+}
+
+export default function ModelDashboard() { return <AccountDashboard role="model" title="Model Account"><ModelAvailabilityManager /></AccountDashboard>; }

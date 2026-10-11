@@ -215,7 +215,7 @@ test.before(async () => {
     return work;
   };
   app.set('eventChatRealtime', realtime);
-  app.use('/api/auth', load('routes/authRoutes.js').router);
+  app.use('/api/auth', load('../routes/authRoutes.js').router);
   server.listen(0, '127.0.0.1');
   await new Promise((resolve) => server.once('listening', resolve));
   origin = `http://127.0.0.1:${server.address().port}`;
@@ -695,7 +695,7 @@ test('socket sender fields are rejected and do not change message ownership', as
   assert.equal(db.ChatMessage.length, 0);
 });
 test('regular-user sessions have unique IDs even for immediate consecutive logins', async () => {
-  const { issueUserSession } = load('utils/sessionCookies.js');
+  const { issueUserSession } = load('../utils/sessionCookies.js');
   const first = issueUserSession({ _id: ids.owner }, 'client');
   const second = issueUserSession({ _id: ids.owner }, 'client');
   assert.notEqual(first, second);

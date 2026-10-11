@@ -7,10 +7,12 @@ const crypto = require('crypto');
 const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
 const ModelUser = require('../models/ModelUser');
+const EventRequest = require('../models/EventRequest');
 const { extractDateOfBirth } = require('../utils/dateExtractor');
 const { verifyIdentityDocument } = require('../services/identityVerificationService');
 const { livenessVerificationSessionService } = require('../services/livenessVerificationSessionService');
-const { databaseUnavailable } = require('../middleware/requireDatabase');
+const { requireDatabase, databaseUnavailable } = require('../middleware/requireDatabase');
+const { requireUser } = require('../middleware/requireUser');
 const { USER_SESSION_COOKIE, cookieOptions, issueUserSession } = require('../utils/sessionCookies');
 
 const allowedIdTypes = new Set(['nic', 'license', 'passport']);
@@ -142,6 +144,240 @@ router.get('/', async (_req, res) => {
   if (mongoose.connection.readyState !== 1) return databaseUnavailable(res);
   const models = await ModelUser.find({ approvalStatus: 'approved' }).select('fullName categories height waist hip profileImage location').sort({ createdAt: -1 });
   return res.json({ models });
+});
+
+const monthBounds = (month) => {
+  if (typeof month !== 'string' || !/^\d{4}-(0[1-9]|1[0-2])$/.test(month)) return null;
+
+  const [year, monthNumber] = month.split('-').map(Number);
+  return {
+    start: new Date(Date.UTC(year, monthNumber - 1, 1)),
+    end: new Date(Date.UTC(year, monthNumber, 1)),
+  };
+};
+
+const dateKey = (value) => value.toISOString().slice(0, 10);
+const isDateKey = (value) => {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(value || '')) return false;
+  const [year, month, day] = value.split('-').map(Number);
+  const parsed = new Date(Date.UTC(year, month - 1, day));
+  return parsed.getUTCFullYear() === year && parsed.getUTCMonth() === month - 1 && parsed.getUTCDate() === day;
+};
+
+const dateKeysInRange = (startValue, endValue, bounds) => {
+  const start = new Date(Date.UTC(
+    startValue.getUTCFullYear(),
+    startValue.getUTCMonth(),
+    startValue.getUTCDate()
+  ));
+  const end = new Date(Date.UTC(
+    endValue.getUTCFullYear(),
+    endValue.getUTCMonth(),
+    endValue.getUTCDate()
+  ));
+  const dates = [];
+
+  for (let current = start; current <= end; current.setUTCDate(current.getUTCDate() + 1)) {
+    if (current >= bounds.start && current < bounds.end) dates.push(dateKey(current));
+  }
+
+  return dates;
+};
+
+const bookedDatesForMonth = async (modelId, bounds) => {
+  const requests = await EventRequest.find({
+    requesterId: modelId,
+    requesterRole: 'model',
+    requestType: 'booking',
+    status: 'confirmed',
+  })
+    .select('eventId')
+    .populate({
+      path: 'eventId',
+      select: 'startDate endDate status',
+      match: {
+        status: 'approved',
+        startDate: { $lt: bounds.end },
+        $or: [
+          { endDate: { $gte: bounds.start } },
+          { endDate: null, startDate: { $gte: bounds.start } },
+        ],
+      },
+    })
+    .lean();
+
+  const bookedDates = new Set();
+
+  requests.forEach(({ eventId }) => {
+    if (!eventId || eventId.status !== 'approved' || !eventId.startDate) return;
+
+    const eventStart = new Date(eventId.startDate);
+    const eventEnd = new Date(eventId.endDate || eventId.startDate);
+    if (Number.isNaN(eventStart.getTime()) || Number.isNaN(eventEnd.getTime())) return;
+
+    dateKeysInRange(eventStart, eventEnd, bounds).forEach((date) => bookedDates.add(date));
+  });
+
+  return [...bookedDates].sort();
+};
+
+const availabilityForMonth = async (model, bounds) => {
+  const bookedDates = await bookedDatesForMonth(model._id, bounds);
+  const prefix = `${dateKey(bounds.start).slice(0, 7)}-`;
+  const manualDates = (model.manualAvailability || [])
+    .filter((entry) => entry?.date?.startsWith(prefix))
+    .map((entry) => ({ date: entry.date, status: entry.status }))
+    .filter((entry) => isDateKey(entry.date) && ['available', 'unavailable'].includes(entry.status));
+
+  return { bookedDates, manualDates };
+};
+
+const modelAvailabilityGuard = (req, res) => {
+  if (req.user.role !== 'model') {
+    res.status(403).json({ error: 'Only models can manage availability.' });
+    return false;
+  }
+  return true;
+};
+
+router.get('/me/availability', requireUser, requireDatabase, async (req, res) => {
+  if (!modelAvailabilityGuard(req, res)) return;
+
+  const bounds = monthBounds(req.query.month);
+  if (!bounds) return res.status(400).json({ error: 'A valid month is required.' });
+
+  try {
+    const model = await ModelUser.findOne({ _id: req.user.id, approvalStatus: 'approved' })
+      .select('manualAvailability');
+    if (!model) return res.status(404).json({ error: 'Model account was not found.' });
+
+    return res.json({
+      month: req.query.month,
+      ...(await availabilityForMonth(model, bounds)),
+    });
+  } catch (error) {
+    console.error('Model availability dashboard error:', error.message);
+    return res.status(500).json({ error: 'Unable to load availability.' });
+  }
+});
+
+router.put('/me/availability/:date', requireUser, requireDatabase, async (req, res) => {
+  if (!modelAvailabilityGuard(req, res)) return;
+
+  const { date } = req.params;
+  const { status } = req.body || {};
+  const bounds = monthBounds(date?.slice(0, 7));
+
+  if (!isDateKey(date) || !bounds || !['available', 'unavailable'].includes(status)) {
+    return res.status(400).json({ error: 'A valid future date and availability status are required.' });
+  }
+  if (date < dateKey(new Date())) {
+    return res.status(400).json({ error: 'Past dates cannot be edited.' });
+  }
+
+  try {
+    const model = await ModelUser.findOne({ _id: req.user.id, approvalStatus: 'approved' })
+      .select('manualAvailability');
+    if (!model) return res.status(404).json({ error: 'Model account was not found.' });
+
+    const bookedDates = await bookedDatesForMonth(model._id, bounds);
+    if (bookedDates.includes(date)) {
+      return res.status(409).json({ error: 'Confirmed bookings cannot be overridden.' });
+    }
+
+    const existing = model.manualAvailability.find((entry) => entry.date === date);
+    if (existing) existing.status = status;
+    else model.manualAvailability.push({ date, status });
+    await model.save();
+
+    return res.json({ date, status });
+  } catch (error) {
+    console.error('Save model availability error:', error.message);
+    return res.status(500).json({ error: 'Unable to save availability.' });
+  }
+});
+
+router.delete('/me/availability/:date', requireUser, requireDatabase, async (req, res) => {
+  if (!modelAvailabilityGuard(req, res)) return;
+
+  const { date } = req.params;
+  if (!isDateKey(date)) return res.status(400).json({ error: 'A valid date is required.' });
+  if (date < dateKey(new Date())) return res.status(400).json({ error: 'Past dates cannot be edited.' });
+
+  try {
+    const model = await ModelUser.findOne({ _id: req.user.id, approvalStatus: 'approved' })
+      .select('manualAvailability');
+    if (!model) return res.status(404).json({ error: 'Model account was not found.' });
+
+    model.manualAvailability = model.manualAvailability.filter((entry) => entry.date !== date);
+    await model.save();
+    return res.status(204).end();
+  } catch (error) {
+    console.error('Clear model availability error:', error.message);
+    return res.status(500).json({ error: 'Unable to clear availability.' });
+  }
+});
+
+// This is intentionally read-only and returns no event title, client, or
+// request information.
+router.get('/:modelId/availability', async (req, res) => {
+  if (mongoose.connection.readyState !== 1) return databaseUnavailable(res);
+
+  const bounds = monthBounds(req.query.month);
+  if (!bounds || !mongoose.Types.ObjectId.isValid(req.params.modelId)) {
+    return res.status(400).json({ error: 'A valid model ID and month are required.' });
+  }
+
+  try {
+    const model = await ModelUser.findOne({
+      _id: req.params.modelId,
+      approvalStatus: 'approved',
+    }).select('manualAvailability');
+
+    if (!model) {
+      return res.status(404).json({ error: 'Model profile was not found.' });
+    }
+
+    const calendar = await availabilityForMonth(model, bounds);
+
+    return res.json({
+      month: req.query.month,
+      availabilityManaged: calendar.manualDates.length > 0,
+      ...calendar,
+    });
+  } catch (error) {
+    console.error('Public model availability error:', error.message);
+    return res.status(500).json({ error: 'Unable to load model availability.' });
+  }
+});
+
+// Public profile data is deliberately limited to approved models and fields
+// that are appropriate for the fashion directory. Keep contact, identity,
+// verification, approval, and session-related fields private.
+router.get('/:modelId', async (req, res) => {
+  if (mongoose.connection.readyState !== 1) return databaseUnavailable(res);
+
+  if (!mongoose.Types.ObjectId.isValid(req.params.modelId)) {
+    return res.status(404).json({ error: 'Model profile was not found.' });
+  }
+
+  try {
+    const model = await ModelUser.findOne({
+      _id: req.params.modelId,
+      approvalStatus: 'approved',
+    }).select(
+      'fullName categories skills location gender profileImage portfolioImages weight height waist hip'
+    );
+
+    if (!model) {
+      return res.status(404).json({ error: 'Model profile was not found.' });
+    }
+
+    return res.json({ model });
+  } catch (error) {
+    console.error('Public model profile error:', error.message);
+    return res.status(500).json({ error: 'Unable to load the model profile.' });
+  }
 });
 
 router.post('/verify-identity', handleVerificationUpload, async (req, res) => {
