@@ -1,9 +1,20 @@
 node_modules/
 **/node_modules/
+**/.venv/
+**/__pycache__/
 .DS_Store
 
 # Keep example env file tracked, but do not commit real secrets
-server/.env
+**/.env
+**/.env.*
+!**/.env.example
+
+# Keep private registration media and generated verification captures local
+server/uploads/
+server/verification-evidence/
+server/sample-front.png
+server/sample-back.png
+thesis-screenshots/
 
 # Allow the server data directory to be shared if needed
 !server/data/

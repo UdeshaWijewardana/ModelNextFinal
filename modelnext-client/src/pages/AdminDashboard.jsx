@@ -1382,9 +1382,14 @@ export default function AdminDashboard() {
                         .identityReview
                         .ocr
                         .status ===
-                      "identity_verified"
-                        ? "✓ Passed"
+                      "prototype_passed"
+                        ? "✓ Passed (Prototype)"
                         : identityReview
+                            .identityReview
+                            .ocr
+                            .status === "identity_verified"
+                          ? "✓ Passed"
+                          : identityReview
                             .identityReview
                             .ocr
                             .status
@@ -1406,14 +1411,17 @@ export default function AdminDashboard() {
                     .ocr
                     .checks && (
                     <small>
-                      Name:{" "}
+                      Name OCR:{" "}
                       {identityReview
                         .identityReview
                         .ocr
                         .checks
-                        .nameMatched
-                        ? "matched"
-                        : "not matched"}{" "}
+                        .nameOcrStatus}{" "}
+                      · Name verification:{" "}
+                      {identityReview
+                        .identityReview
+                        .ocr
+                        .nameVerificationStatus}{" "}
                       · Date of birth:{" "}
                       {identityReview
                         .identityReview

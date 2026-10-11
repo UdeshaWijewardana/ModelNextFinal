@@ -24,6 +24,7 @@
   font-size: 24px;
   font-weight: 700;
 }
+.model-registration-links { display: flex; flex-wrap: wrap; gap: 8px 14px; margin: -34px 0 38px; }.model-registration-links a { color: #bbb2ad; font-size: .7rem; text-decoration: none; }.model-registration-links a:last-child { color: #e7a8b8; }.model-registration-links a:focus-visible { outline: 2px solid #c8778d; outline-offset: 3px; }
 
 .step-item {
   display: flex;

@@ -7,7 +7,7 @@ import EventChats from './EventChats';
 
 jest.mock('../../components/Navbar',()=>()=>null);
 let mockAuth;
-jest.mock('../../context/AuthContext',()=>({useAuth:()=>mockAuth}));
+jest.mock('../../context/AuthContext',()=>({...jest.requireActual('../../context/AuthContext'),useAuth:()=>mockAuth}));
 jest.mock('socket.io-client',()=>({io:jest.fn()}));
 const createClient=()=>{
   const handlers={};

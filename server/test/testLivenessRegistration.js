@@ -34,6 +34,7 @@ function createRegistrationForm({
   form.append('fullName', fullName);
   form.append('birthdate', birthdate);
   form.append('idType', 'nic');
+  form.append('identityDocumentNumber', '200012345678');
   form.append('email', email);
   form.append('password', 'test-only-password');
   form.append('location', 'Test location');
@@ -114,7 +115,7 @@ async function testLivenessRegistration() {
   app.locals.livenessVerificationSessionService = sessionService;
   app.locals.readLocalModels = () => savedModels;
   app.locals.writeLocalModels = (models) => savedModels.splice(0, savedModels.length, ...models);
-  app.locals.verifyIdentityDocument = async ({ fullName, birthdate }) => {
+  app.locals.verifyIdentityDocument = async ({ fullName, birthdate, identityDocumentNumber }) => {
     if (fullName === 'Unreadable Document') {
       const error = new Error('test unreadable image');
       error.code = 'OCR_UNREADABLE_IMAGE';
@@ -123,11 +124,13 @@ async function testLivenessRegistration() {
     const checks = {
       nameMatch: fullName === 'Jane Doe',
       dateOfBirthMatch: birthdate === '2000-01-01',
+      documentNumberMatch: identityDocumentNumber === '200012345678',
     };
     return {
-      verified: checks.nameMatch && checks.dateOfBirthMatch,
+      verified: checks.nameMatch && checks.dateOfBirthMatch && checks.documentNumberMatch,
+      overallStatus: checks.nameMatch && checks.dateOfBirthMatch && checks.documentNumberMatch ? 'verified' : 'mismatch',
       checks,
-      extracted: { fullName: 'Jane Doe', dateOfBirth: '2000-01-01' },
+      extracted: { fullName: 'Jane Doe', dateOfBirth: '2000-01-01', documentNumber: '200012345678' },
     };
   };
 

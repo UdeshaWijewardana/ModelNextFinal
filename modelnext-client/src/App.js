@@ -1,14 +1,14 @@
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 
 import Login from './pages/Login';
 import Home from './pages/Home';
 import About from './pages/About'; // ✅ ADDED
 import EventCreate from './pages/EventCreate'; // ✅ ADDED
+import OwnedEventDetails from './pages/OwnedEventDetails';
 
-import ModelDashboard from './pages/ModelDashboard';
+import ModelMyAccount from './pages/ModelMyAccount';
 import ClientDashboard from './pages/ClientDashboard';
-import ProfileDetails from './pages/ProfileDetails';
 import ModelPublicProfile from './pages/ModelPublicProfile';
 import RoleSelection from './pages/RoleSelection';
 import AgencyDashboard from './pages/AgencyDashboard';
@@ -35,6 +35,9 @@ import { AuthProvider } from "./context/AuthContext";
 
 import EventChats from './pages/event-group-chat/EventChats';
 import EventChatRoom from './pages/event-group-chat/EventChatRoom';
+import MyBookings from './pages/direct-booking/MyBookings';
+import BookingDetails from './pages/direct-booking/BookingDetails';
+import PrivateBookingChat from './pages/direct-booking/PrivateBookingChat';
 import './App.css';
 
 function App() {
@@ -50,6 +53,8 @@ function App() {
         <Route path="/register" element={<RoleSelection />} />
         <Route path="/about" element={<About />} /> {/* ✅ ADDED */}
         <Route path="/event/create" element={<EventCreate />} /> {/* ✅ ADDED */}
+        <Route path="/account/events/:eventId" element={<OwnedEventDetails />} />
+        <Route path="/account/events/:eventId/edit" element={<EventCreate />} />
 
         {/* NAVIGATION PAGES */}
         <Route path="/agencies" element={<Agencies />} />
@@ -69,7 +74,8 @@ function App() {
         <Route path="/register/client" element={<ClientForm />} />
 
         {/* DASHBOARDS */}
-        <Route path="/dashboard" element={<ModelDashboard />} />
+        <Route path="/dashboard" element={<Navigate to="/model-account" replace />} />
+        <Route path="/model-account" element={<ModelMyAccount />} />
         <Route path="/client-portal" element={<ClientDashboard />} />
         <Route path="/agency-dashboard" element={<AgencyDashboard />} />
         <Route path="/photographer-dashboard" element={<PhotographerDashboard />} />
@@ -77,9 +83,11 @@ function App() {
 
         <Route path="/event-chats" element={<EventChats />} />
         <Route path="/event-chats/:chatId" element={<EventChatRoom />} />
+        <Route path="/my-bookings" element={<MyBookings />} />
+        <Route path="/my-bookings/:bookingId" element={<BookingDetails />} />
+        <Route path="/private-messages/:bookingId" element={<PrivateBookingChat />} />
 
         {/* PROFILE */}
-        <Route path="/profile" element={<ProfileDetails />} />
         <Route path="/webcam-test" element={<WebcamTest />} />
 
       </Routes>

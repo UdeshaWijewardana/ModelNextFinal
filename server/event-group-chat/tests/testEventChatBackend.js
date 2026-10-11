@@ -127,6 +127,7 @@ const models = Object.fromEntries(['Event', 'EventChat', 'ChatInvitation', 'Chat
     return { matchedCount: 1 };
   },
   create: async (input, options) => {
+    if (name === 'EventChat' && db.EventChat.some(chat => equal(chat.eventId, input.eventId))) throw Object.assign(new Error('Duplicate event chat'), { code: 11000 });
     if (name === 'Notification' && notificationsFail) throw new Error('Simulated notification failure');
     if (options?.session) sessionWrites.push([name, options.session]);
     const records = (Array.isArray(input) ? input : [input]).map((record) => ({ _id: oid(sequence++), createdAt: new Date(), isDeleted: false, ...clone(record) }));
@@ -396,7 +397,7 @@ test('actual message schema validates empty text and defines scoped retry index'
   assert.ok(indexes.some(([keys, options]) => keys.clientMessageId === 1 && options.unique && options.partialFilterExpression));
 });
 test('original create and invite endpoints preserve owner and duplicate protections', async () => {
-  assert.equal((await request(`/events/${ids.event}`, { method: 'POST', body: {} })).status, 409);
+  assert.equal((await request(`/events/${ids.event}`, { method: 'POST', body: {} })).status, 200);
   assert.equal((await request(`/events/${ids.event}`, { user: 'member', method: 'POST', body: {} })).status, 403);
   db.ChatInvitation = [];
   const body = { invitedUserId: String(ids.other), invitedUserRole: 'model' };
@@ -709,4 +710,40 @@ test('previously issued user cookies without a jti remain compatible', async () 
   const token = jwt.sign({ role: 'client' }, process.env.JWT_SECRET, { subject: String(ids.owner), expiresIn: '1h' });
   const client = await connectClient({ cookie: `modelnext_user_session=${token}` });
   assert.equal((await join(client)).ok, true);
+});
+
+
+test('event chat schema defines a unique event index', () => {
+  const EventChat = require('../models/EventChat');
+  assert.ok(EventChat.schema.indexes().some(([keys, options]) => keys.eventId === 1 && options.unique));
+});
+
+test('concurrent creation returns one chat and subsequent creation reuses it', async () => {
+  db.EventChat = [];
+  const responses = await Promise.all(Array.from({ length: 8 }, () => request(`/events/${ids.event}`, { method: 'POST', body: {} })));
+  assert.equal(db.EventChat.length, 1);
+  assert.ok(responses.every(result => [200, 201].includes(result.status)));
+  assert.equal(new Set(responses.map(result => result.data.chat.id)).size, 1);
+  const again = await request(`/events/${ids.event}`, { method: 'POST', body: {} });
+  assert.equal(again.status, 200);
+  assert.equal(again.data.chat.id, responses[0].data.chat.id);
+});
+
+test('only the approved event owner can create or reuse a chat for all creator roles', async () => {
+  for (const [role, model] of [['client', 'Client'], ['photographer', 'Photographer'], ['agency', 'Agency']]) {
+    db.EventChat = [];
+    db.Event[0].ownerRole = role;
+    if (role !== 'client') db[model] = [{ _id: ids.owner, name: 'Approved owner', approvalStatus: 'approved' }];
+    assert.equal((await request(`/events/${ids.event}`, { role, method: 'POST', body: {} })).status, 201);
+    assert.equal((await request(`/events/${ids.event}`, { role, method: 'POST', body: {} })).status, 200);
+    assert.equal((await request(`/events/${ids.event}`, { user: 'other', role: 'model', method: 'POST', body: {} })).status, 403);
+    db.Event[0].status = 'pending';
+    assert.equal((await request(`/events/${ids.event}`, { role, method: 'POST', body: {} })).status, 404);
+    db.Event[0].status = 'rejected';
+    assert.equal((await request(`/events/${ids.event}`, { role, method: 'POST', body: {} })).status, 404);
+    db.Event[0].status = 'approved';
+    db[model][0].approvalStatus = 'rejected';
+    assert.equal((await request(`/events/${ids.event}`, { role, method: 'POST', body: {} })).status, 403);
+    db[model][0].approvalStatus = 'approved';
+  }
 });

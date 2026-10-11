@@ -1,17 +1,17 @@
 import React from "react";
+import BrowseTalentLinks from '../BrowseTalentLinks';
 
 const primaryItems = [
   ["Dashboard", "⌂", "dashboard"],
   ["My Profile", "◉", "profile"],
-  ["My Bookings", "▤", "bookings"],
-  ["Messages", "◌", "messages"],
+  ["My Events", "◷", "my-events"],
+  ["My Bookings", "▤", "direct-bookings"],
+  ["Messages", "◌", "private-messages"],
   ["Event Group Chats", "◷", "event-chats"],
 ];
 
 const workspaceItems = [
-  ["Discover Talent", "◇", "discover"],
   ["AI Recommendations", "✦", "recommendations"],
-  ["Events", "◷", "events"],
 ];
 
 export default function ClientSidebar({
@@ -28,7 +28,7 @@ export default function ClientSidebar({
       <p className="client-sidebar-label">HIRING FOR PROJECTS</p>
       <nav className="client-nav-list">
         {primaryItems.map(([label, icon, key]) => (
-          <button key={key} type="button" className={`client-nav-item ${active === key ? "is-active" : ""}`} onClick={() => onNavigate(key)}>
+          <button key={key} type="button" aria-current={active === key ? 'page' : undefined} className={`client-nav-item ${active === key ? "is-active" : ""}`} onClick={() => onNavigate(key)}>
             <span aria-hidden="true">{icon}</span><span>{label}</span>
           </button>
         ))}
@@ -39,6 +39,7 @@ export default function ClientSidebar({
           </button>
         ))}
       </nav>
+      <BrowseTalentLinks className="client-nav-item" />
       <div className="client-sidebar-bottom">
         <button type="button" className="client-nav-item" onClick={() => onNavigate("notifications")}><span aria-hidden="true">◔</span><span>Notifications</span>{unreadCount > 0 && <strong className="client-unread-count">{unreadCount}</strong>}</button>
         <button type="button" className="client-nav-item" onClick={onBackToWebsite}><span aria-hidden="true">←</span><span>Back to Website</span></button>

@@ -381,25 +381,13 @@ export default function AIModelRecommendations() {
                     type="button"
                     style={styles.profileButton}
                     onClick={() => {
-                        const imageUrl = getImageUrl(
-                        match.profileImage
-                        );
-
                         const params = new URLSearchParams({
-  modelId: match.id || "",
-  name: match.fullName || "Model",
-  role: "Fashion Model",
-  img: imageUrl,
-  location: match.location || "Sri Lanka",
-
-  // Keep the AI event attached to the profile.
   eventId: event?.id || eventId,
   eventTitle: event?.title || "Selected Event",
   eventType: event?.eventType || "Event",
   eventLocation: event?.location || "",
 });
-
-                        navigate(`/profile?${params.toString()}`);
+                        navigate(`/models/${match.id}?${params.toString()}`);
                     }}
                     >
                     <span>

@@ -27,7 +27,7 @@ export default function Navbar() {
     </>;
     return <>
       <button className="nav-btn-login" onClick={() => closeAndNavigate(accountRoute)}>MY ACCOUNT</button>
-      {!mobile && <span className="nav-user-label" title={accountName}>{accountName}</span>}
+      <span className="nav-user-label" title={accountName}>{accountName}</span>
       <button className="nav-btn-register nav-btn-logout" onClick={signOut}>LOGOUT</button>
     </>;
   };
@@ -41,14 +41,14 @@ export default function Navbar() {
         </div>
 
         {/* MOBILE MENU TOGGLE */}
-        <button type="button" className={`menu-toggle ${isOpen ? 'open' : ''}`} onClick={toggleMenu} aria-label="Toggle navigation" aria-expanded={isOpen}>
+        <button type="button" className={`menu-toggle ${isOpen ? 'open' : ''}`} onClick={toggleMenu} aria-label="Toggle navigation" aria-expanded={isOpen} aria-controls="public-navigation">
           <span className="bar"></span>
           <span className="bar"></span>
           <span className="bar"></span>
         </button>
 
         {/* NAV LINKS */}
-        <div className={`nav-menu ${isOpen ? 'active' : ''}`}>
+        <div id="public-navigation" className={`nav-menu ${isOpen ? 'active' : ''}`}>
           <NavLink 
             to="/" 
             className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}

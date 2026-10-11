@@ -6,7 +6,7 @@ const AuthContext = createContext(null);
 export const accountRouteForRole = (role) => ({
   admin: "/admin",
   client: "/client-portal",
-  model: "/dashboard",
+  model: "/model-account",
   photographer: "/photographer-dashboard",
   agency: "/agency-dashboard",
 }[role] || "/");

@@ -6,6 +6,7 @@ const fs = require('fs');
 const mongoose = require('mongoose');
 const Photographer = require('../models/Photographer');
 const EventRequest = require('../models/EventRequest');
+const { directBookedDatesForMonth } = require('../direct-booking/availability');
 const bcrypt = require('bcryptjs');
 const { requireDatabase, databaseUnavailable } = require('../middleware/requireDatabase');
 const { requireUser } = require('../middleware/requireUser');
@@ -67,6 +68,7 @@ const bookedDatesForMonth = async (photographerId, bounds) => {
       if (current >= bounds.start && current < bounds.end) dates.add(dateKey(current));
     }
   });
+  (await directBookedDatesForMonth(photographerId, 'photographer', bounds)).forEach((date) => dates.add(date));
   return [...dates].sort();
 };
 const availabilityForMonth = async (photographer, bounds) => {

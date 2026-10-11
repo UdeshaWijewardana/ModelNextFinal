@@ -72,9 +72,8 @@ router.post(
       });
 
       if (existingChat) {
-        return res.status(409).json({
-          error: 'A group chat already exists for this event.',
-        });
+        const { chat } = await chatAccess(existingChat._id, req.user, 'owner');
+        return res.status(200).json({ chat: { id: chat._id, eventId: chat.eventId } });
       }
 
       // Create the chat and add the owner as first member.
@@ -104,10 +103,19 @@ router.post(
     } catch (error) {
       // Unique eventId index also prevents concurrent duplicates.
       if (error.code === 11000) {
-        return res.status(409).json({
-          error: 'A group chat already exists for this event.',
-        });
+        try {
+          const existing = await EventChat.findOne({ eventId: req.params.eventId });
+          if (existing) {
+            const { chat } = await chatAccess(existing._id, req.user, 'owner');
+            return res.status(200).json({ chat: { id: chat._id, eventId: chat.eventId } });
+          }
+        } catch (lookupError) {
+          return res.status(lookupError.chatStatus || 503).json({ error: 'Unable to access the existing event group chat.' });
+        }
+        return res.status(503).json({ error: 'Unable to confirm chat creation. Please retry.' });
       }
+
+      if (error.chatStatus) return res.status(error.chatStatus).json({ error: error.message });
 
       console.error('Create event chat error:', error);
 

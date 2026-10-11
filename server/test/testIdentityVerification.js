@@ -15,6 +15,7 @@ function createForm({ fullName, birthdate, idType = "nic", image = imageBytes, i
   form.append("fullName", fullName);
   form.append("birthdate", birthdate);
   form.append("idType", idType);
+  form.append("identityDocumentNumber", "200112345678");
   form.append("verified", "true");
   form.append("verification", JSON.stringify({ verified: true, nameMatch: true, dateOfBirthMatch: true }));
   if (livenessSession) {
@@ -22,9 +23,9 @@ function createForm({ fullName, birthdate, idType = "nic", image = imageBytes, i
     form.append("livenessAttemptId", livenessSession.attemptId);
   }
   form.append("idFront", new Blob([image], { type: "image/png" }), "identity-front.png");
+  if (idType !== "passport") form.append("idBack", new Blob([image], { type: "image/png" }), "identity-back.png");
 
   if (includeRegistrationFiles) {
-    form.append("idBack", new Blob([image], { type: "image/png" }), "identity-back.png");
     form.append("selfieMedia", new Blob([image], { type: "image/png" }), "selfie.png");
     form.append("email", `ocr-test-${Date.now()}@example.test`);
     form.append("password", "test-only-password");
@@ -83,6 +84,22 @@ async function testIdentityVerification() {
   app.locals.writeLocalModels = (models) => {
     savedModels.splice(0, savedModels.length, ...models);
   };
+  app.locals.verifyIdentityDocument = async ({ filePaths, fullName, birthdate, identityDocumentNumber }) => {
+    const signature = await fs.promises.readFile(filePaths[0]);
+    if (!(signature[0] === 0x89 && signature[1] === 0x50 && signature[2] === 0x4e && signature[3] === 0x47)) {
+      throw Object.assign(new Error("invalid synthetic image"), { code: "IDENTITY_IMAGE_INVALID" });
+    }
+    const checks = {
+      nameMatch: fullName === "John Perera",
+      dateOfBirthMatch: birthdate === "2001-05-12",
+      documentNumberMatch: identityDocumentNumber === "200112345678",
+    };
+    checks.name = { status: checks.nameMatch ? "match" : "mismatch" };
+    checks.dateOfBirth = { status: checks.dateOfBirthMatch ? "match" : "mismatch" };
+    checks.documentNumber = { status: checks.documentNumberMatch ? "match" : "mismatch" };
+    const verified = checks.nameMatch && checks.dateOfBirthMatch && checks.documentNumberMatch;
+    return { verified, overallStatus: verified ? "verified" : "mismatch", checks };
+  };
 
   const listener = await new Promise((resolve) => {
     const httpServer = app.listen(0, "127.0.0.1", () => resolve(httpServer));
@@ -97,28 +114,28 @@ async function testIdentityVerification() {
     }));
     assert.equal(correct.response.status, 200);
     assert.equal(correct.body.verified, true);
-    assert.deepEqual(correct.body.checks, { nameMatch: true, dateOfBirthMatch: true });
+    assert.deepEqual([correct.body.checks.nameMatch, correct.body.checks.dateOfBirthMatch, correct.body.checks.documentNumberMatch], [true, true, true]);
 
     const wrongName = await post(baseUrl, "verify-identity", createForm({
       fullName: "Jane Silva",
       birthdate: "2001-05-12",
     }));
     assert.equal(wrongName.body.verified, false);
-    assert.deepEqual(wrongName.body.checks, { nameMatch: false, dateOfBirthMatch: true });
+    assert.deepEqual([wrongName.body.checks.nameMatch, wrongName.body.checks.dateOfBirthMatch, wrongName.body.checks.documentNumberMatch], [false, true, true]);
 
     const wrongDate = await post(baseUrl, "verify-identity", createForm({
       fullName: "John Perera",
       birthdate: "2002-05-12",
     }));
     assert.equal(wrongDate.body.verified, false);
-    assert.deepEqual(wrongDate.body.checks, { nameMatch: true, dateOfBirthMatch: false });
+    assert.deepEqual([wrongDate.body.checks.nameMatch, wrongDate.body.checks.dateOfBirthMatch, wrongDate.body.checks.documentNumberMatch], [true, false, true]);
 
     const bothWrong = await post(baseUrl, "verify-identity", createForm({
       fullName: "Jane Silva",
       birthdate: "2002-05-12",
     }));
     assert.equal(bothWrong.body.verified, false);
-    assert.deepEqual(bothWrong.body.checks, { nameMatch: false, dateOfBirthMatch: false });
+    assert.deepEqual([bothWrong.body.checks.nameMatch, bothWrong.body.checks.dateOfBirthMatch, bothWrong.body.checks.documentNumberMatch], [false, false, true]);
 
     const unreadable = await post(baseUrl, "verify-identity", createForm({
       fullName: "John Perera",

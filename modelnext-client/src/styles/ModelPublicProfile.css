@@ -98,6 +98,7 @@
 .public-model-specialties li { padding: 7px 10px; border: 1px solid var(--mn-border-strong); color: var(--mn-silver); font-size: 0.78rem; }
 
 .public-model-availability { margin-top: 34px; }
+.public-model-event-context { max-width: 520px; margin: 20px 0 4px; padding: 15px 17px; border-left: 2px solid var(--mn-burgundy); border-radius: 4px; background: rgba(128,0,32,.08); }.public-model-event-context p { margin: 0 0 6px; color: #bd7b8d; font-size: .62rem; font-weight: 800; letter-spacing: .13em; text-transform: uppercase; }.public-model-event-context strong,.public-model-event-context span,.public-model-event-context small { display: block; }.public-model-event-context strong { color: var(--mn-ivory); font-family: Georgia,serif; font-size: 1.05rem; font-weight: 400; }.public-model-event-context span { margin-top: 4px; color: var(--mn-silver); font-size: .76rem; }.public-model-event-context small { margin-top: 8px; color: var(--mn-muted); font-size: .67rem; }
 .public-model-availability-toggle { width: 100%; border: 1px solid var(--mn-burgundy); background: var(--mn-burgundy); color: var(--mn-ivory); cursor: pointer; font-size: 0.72rem; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; }
 .public-model-availability-toggle:hover { background: var(--mn-burgundy-hover); border-color: var(--mn-burgundy-hover); }
 .public-model-availability-legend { display: flex; flex-wrap: wrap; gap: 10px 16px; margin-top: 13px; color: var(--mn-muted); font-size: 0.68rem; }

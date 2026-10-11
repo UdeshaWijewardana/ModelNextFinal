@@ -1,4 +1,5 @@
 const express = require('express');
+const mongoose = require('mongoose');
 
 const Event = require('../models/Event');
 const EventRequest = require('../models/EventRequest');
@@ -10,6 +11,27 @@ const { requireUser } = require('../middleware/requireUser');
 const { requireDatabase } = require('../middleware/requireDatabase');
 
 const router = express.Router();
+
+router.use((_req, res, next) => {
+  res.set('Cache-Control', 'private, no-store');
+  next();
+});
+
+// Private details include pending/rejected events, but only for their owner.
+router.get('/mine/:id', requireUser, requireDatabase, async (req, res) => {
+  if (!mongoose.isObjectIdOrHexString(req.params.id)) {
+    return res.status(400).json({ error: 'Invalid event ID.' });
+  }
+  try {
+    const event = await Event.findOne({
+      _id: req.params.id, ownerId: req.user.id, ownerRole: req.user.role,
+    });
+    if (!event) return res.status(404).json({ error: 'Event was not found.' });
+    return res.json({ event: { ...safeEvent(event), rejectionReason: event.rejectionReason } });
+  } catch (_error) {
+    return res.status(500).json({ error: 'Unable to load your event.' });
+  }
+});
 
 
 // =====================================================
@@ -26,6 +48,17 @@ const participantRoles = new Set([
   'model',
   'photographer',
 ]);
+
+const validEventDates = (startDate, endDate) => {
+  const start = new Date(startDate);
+  const end = endDate ? new Date(endDate) : start;
+  return Number.isFinite(start.getTime()) && Number.isFinite(end.getTime()) && end >= start;
+};
+
+router.param('id', (req, res, next, id) => {
+  if (!mongoose.isObjectIdOrHexString(id)) return res.status(400).json({ error: 'Invalid event ID.' });
+  next();
+});
 
 
 // =====================================================
@@ -459,6 +492,10 @@ router.post(
         });
       }
 
+      if (!validEventDates(startDate, endDate)) {
+        return res.status(400).json({ error: 'Provide valid event dates with the end on or after the start.' });
+      }
+
       const numericRequirement = (
         value,
         field
@@ -702,6 +739,10 @@ router.patch(
           error:
             'Title, type, start date, location, and description are required.',
         });
+      }
+
+      if (!validEventDates(startDate, endDate)) {
+        return res.status(400).json({ error: 'Provide valid event dates with the end on or after the start.' });
       }
 
       const numberValue = (

@@ -17,6 +17,8 @@ const { router: eventRoutes } = require('./routes/eventRoutes');
 const notificationRoutes = require('./routes/notificationRoutes');
 const matchingRoutes = require('./routes/matchingRoutes');
 const eventChatRoutes = require('./event-group-chat/routes/eventChatRoutes');
+const directBookingRoutes = require('./direct-booking/directBookingRoutes');
+const { createDirectBookingRealtime } = require('./direct-booking/directBookingRealtime');
 
 const app = express();
 const httpServer = http.createServer(app);
@@ -51,6 +53,7 @@ const isAllowedCorsOrigin = (origin) => {
 // REST and Socket.IO share one listener and the same origin policy.
 const eventChatRealtime = createEventChatRealtime(httpServer, { isAllowedOrigin: isAllowedCorsOrigin });
 app.set('eventChatRealtime', eventChatRealtime);
+app.set('directBookingRealtime', createDirectBookingRealtime(eventChatRealtime.io));
 
 app.use(cors({
   origin: (origin, callback) => callback(null, isAllowedCorsOrigin(origin)),
@@ -95,6 +98,7 @@ app.use('/api/events', eventRoutes);
 app.use('/api/notifications', notificationRoutes);
 app.use('/api/matching', matchingRoutes);
 app.use('/api/event-chats', eventChatRoutes);
+app.use('/api/direct-bookings', directBookingRoutes);
 
 
 // ✅ Start server

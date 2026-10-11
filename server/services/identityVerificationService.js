@@ -1,69 +1,159 @@
-const fs = require("fs");
-const { extractTextFromImage } = require("./ocrService");
-const { processOCRText } = require("./identityOCRService");
-const { matchIdentityData } = require("../utils/identityMatcher");
+const { extractDateOfBirth } = require("../utils/dateExtractor");
+const { isValidDocumentNumber, normalizeDocumentNumber } = require("../utils/documentNumberExtractor");
+const { normalizeOCRText } = require("../utils/ocrTextNormalizer");
+const { matchIdentityData, normalizeNameForComparison } = require("../utils/identityMatcher");
+const { createOpenAIIdentityExtractor } = require("../openai/openaiIdentityService");
 
-async function hasSupportedImageSignature(filePath) {
-  const file = await fs.promises.open(filePath, "r");
-  const header = Buffer.alloc(12);
-
-  try {
-    const { bytesRead } = await file.read(header, 0, header.length, 0);
-    if (bytesRead < 3) return false;
-
-    const isPng = header.subarray(0, 8).equals(Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]));
-    const isJpeg = header[0] === 0xff && header[1] === 0xd8 && header[2] === 0xff;
-    const isWebp = header.toString("ascii", 0, 4) === "RIFF" && header.toString("ascii", 8, 12) === "WEBP";
-    const isBmp = header.toString("ascii", 0, 2) === "BM";
-    const isTiff = header.subarray(0, 4).equals(Buffer.from([0x49, 0x49, 0x2a, 0x00]))
-      || header.subarray(0, 4).equals(Buffer.from([0x4d, 0x4d, 0x00, 0x2a]));
-
-    return isPng || isJpeg || isWebp || isBmp || isTiff;
-  } finally {
-    await file.close();
-  }
+function nameScript(value) {
+  const normalized = normalizeNameForComparison(value) || "";
+  return /\p{Script=Latin}/u.test(normalized) ? "latin" : null;
 }
 
-async function verifyIdentityDocument({ filePath, fullName, birthdate }) {
-  if (!await hasSupportedImageSignature(filePath)) {
-    const error = new Error("The uploaded file is not a supported image.");
-    error.code = "OCR_UNREADABLE_IMAGE";
-    throw error;
+function nameTokens(value) {
+  const normalized = normalizeNameForComparison(value);
+  return normalized ? normalized.split(" ").filter(Boolean) : [];
+}
+
+function editDistanceAtMostOne(first, second) {
+  if (first === second) return true;
+  if (Math.abs(first.length - second.length) > 1 || Math.min(first.length, second.length) < 4) return false;
+  if (first.length === second.length) {
+    const differences = [];
+    for (let index = 0; index < first.length; index += 1) {
+      if (first[index] !== second[index]) differences.push(index);
+    }
+    if (
+      differences.length === 2
+      && differences[1] === differences[0] + 1
+      && first[differences[0]] === second[differences[1]]
+      && first[differences[1]] === second[differences[0]]
+    ) return true;
+  }
+  let left = 0;
+  let right = 0;
+  let edits = 0;
+  while (left < first.length && right < second.length) {
+    if (first[left] === second[right]) {
+      left += 1;
+      right += 1;
+      continue;
+    }
+    edits += 1;
+    if (edits > 1) return false;
+    if (first.length > second.length) left += 1;
+    else if (second.length > first.length) right += 1;
+    else {
+      left += 1;
+      right += 1;
+    }
+  }
+  if (left < first.length || right < second.length) edits += 1;
+  return edits <= 1;
+}
+
+function nameTokensMatch(first, second) {
+  if (first === second) return true;
+  if (first.length === 1 || second.length === 1) {
+    return first[0] === second[0];
+  }
+  return editDistanceAtMostOne(first, second);
+}
+
+function compareNames(registeredName, extractedName) {
+  const registered = nameTokens(registeredName);
+  const extracted = nameTokens(extractedName);
+  if (!registered.length || !extracted.length) return "unable_to_read";
+
+  const unmatchedRegistered = new Set(registered.map((_, index) => index));
+  const unmatchedExtracted = new Set(extracted.map((_, index) => index));
+  const pairs = [];
+
+  for (const exactPass of [true, false]) {
+    for (const extractedIndex of [...unmatchedExtracted]) {
+      const token = extracted[extractedIndex];
+      const registeredIndex = [...unmatchedRegistered].find(index => (
+        exactPass
+          ? registered[index] === token
+          : nameTokensMatch(registered[index], token)
+      ));
+      if (registeredIndex === undefined) continue;
+      pairs.push([registeredIndex, extractedIndex]);
+      unmatchedRegistered.delete(registeredIndex);
+      unmatchedExtracted.delete(extractedIndex);
+    }
   }
 
-  let ocrResult;
+  if (!pairs.length) return "mismatch";
+  if (unmatchedExtracted.size > 0) return "mismatch";
+  const matchedFullTokens = pairs.filter(([registeredIndex, extractedIndex]) =>
+    registered[registeredIndex].length > 1 && extracted[extractedIndex].length > 1
+  ).length;
+  const registeredCoverage = pairs.length / registered.length;
+  const completeWithInitials = unmatchedRegistered.size === 0;
+  const enoughIndependentTokens = (
+    matchedFullTokens >= 2 && registeredCoverage >= 2 / 3
+  ) || (
+    completeWithInitials && matchedFullTokens >= 1
+  );
+  if (enoughIndependentTokens) return "match";
+  return "partial_match";
+}
 
-  try {
-    ocrResult = await extractTextFromImage(filePath);
-  } catch (cause) {
-    const error = new Error("OCR processing failed.");
-    error.code = /image|pixread|format/i.test(cause.message || "")
-      ? "OCR_UNREADABLE_IMAGE"
-      : "OCR_PROCESSING_FAILED";
-    error.cause = cause;
-    throw error;
-  }
-
-  const processed = processOCRText(ocrResult.text);
+function evaluateIdentityExtraction({ extraction, fullName, birthdate, idType, identityDocumentNumber }) {
+  const nameComparable = nameScript(fullName) === "latin" && nameScript(extraction.fullName) === "latin";
+  const nameStatus = nameComparable
+    ? compareNames(fullName, extraction.fullName)
+    : extraction.fieldStatus?.fullName === "extracted" ? "mismatch" : "unable_to_read";
   const identityMatch = matchIdentityData({
-    registeredName: fullName,
+    registeredName: nameComparable ? fullName : null,
     registeredDateOfBirth: birthdate,
-    extractedName: processed.extracted.fullName,
-    extractedDateOfBirth: processed.extracted.dateOfBirth,
+    registeredDocumentNumber: identityDocumentNumber,
+    extractedName: nameComparable ? extraction.fullName : null,
+    extractedDateOfBirth: extraction.dateOfBirth,
+    extractedDocumentNumber: extraction.documentNumber,
+    idType,
   });
-
+  const status = (field, matched) => extraction.fieldStatus?.[field] === "extracted"
+    ? (matched ? "match" : "mismatch")
+    : "unable_to_read";
   const checks = {
-    nameMatch: identityMatch.nameMatch,
+    nameMatch: nameStatus === "match",
     dateOfBirthMatch: identityMatch.dateOfBirthMatch,
+    documentNumberMatch: identityMatch.documentNumberMatch,
+    name: { status: nameStatus },
+    dateOfBirth: { status: status("dateOfBirth", identityMatch.dateOfBirthMatch) },
+    documentNumber: { status: status("documentNumber", identityMatch.documentNumberMatch) },
   };
-
+  const fieldChecks = [checks.name, checks.dateOfBirth, checks.documentNumber];
+  const overallStatus = fieldChecks.some(check => check.status === "unable_to_read")
+    ? "unable_to_verify"
+    : fieldChecks.some(check => check.status === "mismatch")
+      ? "mismatch"
+      : fieldChecks.some(check => check.status === "partial_match")
+        ? "partial_match"
+        : "verified";
+  const prototypePassed = (
+    checks.dateOfBirth.status === "match"
+    && checks.documentNumber.status === "match"
+  );
   return {
-    verified: checks.nameMatch && checks.dateOfBirthMatch,
+    verified: overallStatus === "verified",
+    prototypePassed,
+    overallStatus,
     checks,
-    extracted: processed.extracted,
   };
+}
+
+const extractIdentityDocuments = createOpenAIIdentityExtractor();
+
+async function verifyIdentityDocument({ filePaths, fullName, birthdate, idType, identityDocumentNumber, extractor = extractIdentityDocuments }) {
+  const extraction = await extractor({ filePaths, idType });
+  return evaluateIdentityExtraction({ extraction, fullName, birthdate, idType, identityDocumentNumber });
 }
 
 module.exports = {
+  compareNames,
+  evaluateIdentityExtraction,
+  extractIdentityDocuments,
   verifyIdentityDocument,
 };

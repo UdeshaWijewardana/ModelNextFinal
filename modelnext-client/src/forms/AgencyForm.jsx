@@ -1,171 +1,54 @@
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useEffect, useRef, useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import { SERVER_BASE_URL } from "../api";
+import RegistrationHeader from "../components/RegistrationHeader";
 import "../styles/agencyForm.css";
 
+const imageTypes = ["image/jpeg", "image/png", "image/webp"];
+const maxImageSize = 5 * 1024 * 1024;
+const initialForm = { agencyName: "", ownerName: "", phone: "", email: "", address: "", businessId: "", password: "", confirmPassword: "", profileImage: null, coverImage: null };
+
 export default function AgencyForm() {
-  const navigate = useNavigate();
-
-  const [form, setForm] = useState({
-    agencyName: "",
-    ownerName: "",
-    phone: "",
-    email: "",
-    address: "",
-    businessId: "",
-    password: "",
-    confirmPassword: "",
-    profileImage: null,
-    coverImage: null
-  });
-
-  const [preview, setPreview] = useState({
-    profile: null,
-    cover: null
-  });
-
-  const [error, setError] = useState("");
-
-  // 🔹 Handle text input
-  const handleChange = (e) => {
-    setForm({
-      ...form,
-      [e.target.name]: e.target.value
-    });
-  };
-
-  // 🔹 Handle image upload
-  const handleImage = (e) => {
-    const { name, files } = e.target;
-    const file = files[0];
+  const navigate = useNavigate(); const inFlight = useRef(false);
+  const profileInput = useRef(null); const coverInput = useRef(null); const previewUrls = useRef({ profile: "", cover: "" });
+  const [form, setForm] = useState(initialForm); const [preview, setPreview] = useState({ profile: "", cover: "" });
+  const [error, setError] = useState(""); const [submitting, setSubmitting] = useState(false);
+  useEffect(() => () => Object.values(previewUrls.current).forEach(url => { if (url) URL.revokeObjectURL(url); }), []);
+  const update = event => setForm(current => ({ ...current, [event.target.name]: event.target.value }));
+  const setImage = (field, file) => {
     if (!file) return;
-
-    setForm({
-      ...form,
-      [name]: file
-    });
-
-    const url = URL.createObjectURL(file);
-
-    if (name === "profileImage") {
-      setPreview({ ...preview, profile: url });
-    } else {
-      setPreview({ ...preview, cover: url });
-    }
+    if (!imageTypes.includes(file.type)) return setError("Choose JPEG, PNG, or WebP images.");
+    if (file.size > maxImageSize) return setError("Each image must be 5 MiB or smaller.");
+    const key = field === "profileImage" ? "profile" : "cover";
+    if (previewUrls.current[key]) URL.revokeObjectURL(previewUrls.current[key]);
+    const url = URL.createObjectURL(file); previewUrls.current[key] = url;
+    setPreview(current => ({ ...current, [key]: url })); setForm(current => ({ ...current, [field]: file })); setError("");
   };
-
-  // 🔹 Submit form
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-
-    // clear previous error
-    setError("");
-
-    // required fields check
-    if (
-      !form.agencyName ||
-      !form.ownerName ||
-      !form.phone ||
-      !form.email ||
-      !form.address ||
-      !form.password ||
-      !form.confirmPassword
-    ) {
-      setError("Please fill all required fields");
-      return;
-    }
-
-    // profile image required
-    if (!form.profileImage) {
-      setError("Profile image is required");
-      return;
-    }
-
-    // password match
-    if (form.password !== form.confirmPassword) {
-      setError("Passwords do not match");
-      return;
-    }
-
-    const formData = new FormData();
-    formData.append("agencyName", form.agencyName);
-    formData.append("ownerName", form.ownerName);
-    formData.append("phone", form.phone);
-    formData.append("email", form.email);
-    formData.append("address", form.address);
-    if (form.businessId) formData.append("businessId", form.businessId);
-    formData.append("password", form.password);
-    formData.append("profileImage", form.profileImage);
-    if (form.coverImage) formData.append("coverImage", form.coverImage);
-
+  const removeImage = field => {
+    const key = field === "profileImage" ? "profile" : "cover"; if (previewUrls.current[key]) URL.revokeObjectURL(previewUrls.current[key]); previewUrls.current[key] = "";
+    setPreview(current => ({ ...current, [key]: "" })); setForm(current => ({ ...current, [field]: null }));
+    const input = field === "profileImage" ? profileInput.current : coverInput.current; if (input) input.value = "";
+  };
+  const submit = async event => {
+    event.preventDefault(); setError("");
+    const required = ["agencyName", "ownerName", "phone", "email", "address", "password", "confirmPassword"];
+    if (required.some(key => !String(form[key]).trim()) || !form.profileImage) return setError("Complete every required field, including the agency logo.");
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) return setError("Enter a valid email address.");
+    if (!/^[+()\-\s0-9]{7,25}$/.test(form.phone)) return setError("Enter a valid contact number.");
+    if (form.password.length < 8) return setError("Password must be at least 8 characters.");
+    if (form.password !== form.confirmPassword) return setError("Passwords do not match.");
+    if (inFlight.current) return; inFlight.current = true; setSubmitting(true);
+    const data = new FormData(); ["agencyName", "ownerName", "phone", "email", "address", "businessId", "password"].forEach(key => { if (form[key]) data.append(key, form[key]); }); data.append("profileImage", form.profileImage); if (form.coverImage) data.append("coverImage", form.coverImage);
     try {
-      const res = await fetch(`${SERVER_BASE_URL}/api/agencies/register`, {
-        method: "POST",
-        body: formData,
-        credentials: "include",
-      });
-
-      const data = await res.json();
-
-      if (!res.ok) {
-        throw new Error(data.error || "Failed to register agency");
-      }
-
-      navigate("/agency-dashboard", { state: { registrationSubmitted: true } });
-    } catch (err) {
-      console.error(err);
-      setError(err.message || "Unable to submit agency registration.");
-    }
+      const response = await fetch(`${SERVER_BASE_URL}/api/agencies/register`, { method: "POST", body: data, credentials: "include" });
+      const json = (response.headers.get("content-type") || "").includes("application/json") ? await response.json() : null;
+      if (!response.ok) throw new Error(json?.error || "Unable to submit agency registration.");
+      navigate("/agency-dashboard", { state: { registrationSubmitted: true }, replace: true });
+    } catch (caught) { setError(caught.message || "Unable to submit agency registration."); }
+    finally { inFlight.current = false; setSubmitting(false); }
   };
-
-  return (
-    <div className="agency-page">
-
-      <div className="agency-box">
-
-        <h1>Agency Registration</h1>
-        <p className="subtitle">Create your agency profile</p>
-
-        {/* 🔴 ERROR MESSAGE */}
-        {error && <p className="error">{error}</p>}
-
-        {/* 🔥 COVER IMAGE (OPTIONAL) */}
-        <div className="cover-upload">
-          {preview.cover ? (
-            <img src={preview.cover} alt="cover preview" />
-          ) : (
-            <span>Upload Cover Image (Optional)</span>
-          )}
-          <input type="file" name="coverImage" onChange={handleImage} />
-        </div>
-
-        {/* 🔥 PROFILE IMAGE (REQUIRED) */}
-        <div className="profile-upload">
-          {preview.profile ? (
-            <img src={preview.profile} alt="profile preview" />
-          ) : (
-            <span>Upload Logo (Required)</span>
-          )}
-          <input type="file" name="profileImage" onChange={handleImage} />
-        </div>
-
-        <form onSubmit={handleSubmit}>
-
-          <input name="agencyName" placeholder="Agency Name" onChange={handleChange} />
-          <input name="ownerName" placeholder="Owner Name" onChange={handleChange} />
-          <input name="phone" placeholder="Contact Number" onChange={handleChange} />
-          <input name="email" placeholder="Email Address" onChange={handleChange} />
-          <input name="address" placeholder="Office Address" onChange={handleChange} />
-          <input name="businessId" placeholder="Business ID (Optional)" onChange={handleChange} />
-
-          <input type="password" name="password" placeholder="Password" onChange={handleChange} />
-          <input type="password" name="confirmPassword" placeholder="Confirm Password" onChange={handleChange} />
-
-          <button type="submit">CREATE ACCOUNT</button>
-
-        </form>
-
-      </div>
-    </div>
-  );
+  const upload = (field, title, optional, inputRef) => { const key = field === "profileImage" ? "profile" : "cover"; return <section className={`agency-media-block agency-media-block--${key}`}><div className="agency-media-heading"><div><strong>{title}</strong><span>{optional ? "Optional" : "Required"}</span></div>{preview[key] && <button type="button" onClick={() => removeImage(field)}>Remove</button>}</div><div className="agency-media-preview">{preview[key] ? <img src={preview[key]} alt={`Selected ${title.toLowerCase()} preview`} /> : <span aria-hidden="true">{key === "profile" ? "A" : "◇"}</span>}</div><label className="agency-upload-button">{preview[key] ? `Replace ${title.toLowerCase()}` : `Choose ${title.toLowerCase()}`}<input ref={inputRef} type="file" accept="image/jpeg,image/png,image/webp" onChange={event => setImage(field, event.target.files?.[0])} /></label><small>JPEG, PNG, or WebP · maximum 5 MiB</small></section>; };
+  return <main className="agency-registration-page"><RegistrationHeader /><section className="agency-registration-shell"><aside className="agency-registration-media"><p className="agency-registration-kicker">MODELNEXT / AGENCY NETWORK</p><h1>Shape the industry’s next chapter.</h1><p>Present your agency with a polished identity before administrator review.</p>{upload("coverImage", "Cover image", true, coverInput)}{upload("profileImage", "Agency logo", false, profileInput)}</aside>
+    <section className="agency-registration-card"><p className="agency-registration-kicker">AGENCY APPLICATION</p><h2>Create your agency account</h2><p className="agency-registration-copy">Business and contact details remain private unless explicitly shown on your public profile.</p>{error && <p className="agency-form-error" role="alert">{error}</p>}<form onSubmit={submit} noValidate><fieldset><legend>Agency identity</legend><div className="agency-form-grid"><label>Agency name<input name="agencyName" value={form.agencyName} onChange={update} required /></label><label>Owner name<input name="ownerName" autoComplete="name" value={form.ownerName} onChange={update} required /></label><label className="agency-form-wide">Business ID <span>Optional</span><input name="businessId" value={form.businessId} onChange={update} /></label></div></fieldset><fieldset><legend>Contact information</legend><div className="agency-form-grid"><label>Contact number<input name="phone" type="tel" autoComplete="tel" value={form.phone} onChange={update} required /></label><label>Email address<input name="email" type="email" autoComplete="email" value={form.email} onChange={update} required /></label><label className="agency-form-wide">Office address<input name="address" autoComplete="street-address" value={form.address} onChange={update} required /></label></div></fieldset><fieldset><legend>Account credentials</legend><div className="agency-form-grid"><label>Password<input name="password" type="password" autoComplete="new-password" value={form.password} onChange={update} required /></label><label>Confirm password<input name="confirmPassword" type="password" autoComplete="new-password" value={form.confirmPassword} onChange={update} required /></label></div></fieldset><button className="agency-registration-submit" disabled={submitting}>{submitting ? "Creating account…" : "Create agency account"}</button></form><p className="agency-registration-signin">Already registered? <Link to="/login">Sign in</Link></p></section>
+  </section></main>;
 }

@@ -2,10 +2,12 @@ import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { ChatGate, ListState, Notice, useList } from './shared';
 import { mutate } from './api';
+import { accountRouteForRole, useAuth } from '../../context/AuthContext';
 
 function ChatRail({ chats }) {
+  const { role } = useAuth();
   return <aside className="ec-rail" aria-label="Event group chat navigation">
-    <Link className="ec-dashboard-link" to="/client-portal">← Back to Dashboard</Link>
+    <Link className="ec-dashboard-link" to={accountRouteForRole(role)}>← Back to Dashboard</Link>
     <p className="ec-eyebrow">MODELNEXT COLLABORATION</p>
     <h1>Event Group Chats</h1>
     <div className="ec-rail-heading"><span>Authorized conversations</span><button type="button" onClick={chats.refresh} disabled={chats.loading}>Refresh</button></div>
