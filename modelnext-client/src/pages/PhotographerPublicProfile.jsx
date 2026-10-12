@@ -1,16 +1,54 @@
+
 import React, { useEffect, useMemo, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import {
+  useNavigate,
+  useParams,
+  useSearchParams,
+} from "react-router-dom";
+
 import Navbar from "../components/Navbar";
 import { apiFetch, readJson, SERVER_BASE_URL } from "../api";
 import BookingForm from "./direct-booking/BookingForm";
 import Reviews from "../components/reviews/Reviews";
 import "../styles/ModelPublicProfile.css";
 
-const monthKey = date => `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`;
-const dayKey = (year, month, day) => `${year}-${String(month + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
-const imageUrl = value => !value ? "" : /^https?:\/\//i.test(value) ? value : `${SERVER_BASE_URL}/${String(value).replace(/^[/\\]+/, "")}`;
-const initials = value => String(value || "Photographer").split(/\s+/).slice(0, 2).map(part => part[0]).join("").toUpperCase();
-const portfolioWebsite = value => { try { const url = new URL(value); return /^https?:$/.test(url.protocol) && !/(^|\.)example(\.|$)/i.test(url.hostname) ? url.toString() : ""; } catch { return ""; } };
+const monthKey = (date) =>
+  `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`;
+
+const dayKey = (year, month, day) =>
+  `${year}-${String(month + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+
+const imageUrl = (value) => {
+  if (!value) return "";
+
+  if (/^https?:\/\//i.test(value)) {
+    return value;
+  }
+
+  return `${SERVER_BASE_URL}/${String(value).replace(/^[/\\]+/, "")}`;
+};
+
+const initials = (value) =>
+  String(value || "Photographer")
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((part) => part[0])
+    .join("")
+    .toUpperCase();
+
+const portfolioWebsite = (value) => {
+  try {
+    const url = new URL(value);
+
+    return /^https?:$/.test(url.protocol) &&
+      !/(^|\.)example(\.|$)/i.test(url.hostname)
+      ? url.toString()
+      : "";
+  } catch {
+    return "";
+  }
+};
 
 export default function PhotographerPublicProfile() {
   const { photographerId } = useParams(); const navigate = useNavigate();

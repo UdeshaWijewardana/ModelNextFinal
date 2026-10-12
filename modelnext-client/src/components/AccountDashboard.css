@@ -1,0 +1,55 @@
+
+.account-booking-requests {
+  margin-top: 24px;
+}
+
+.account-booking-requests h2 {
+  margin-bottom: 16px;
+}
+
+.account-booking-card {
+  padding: 18px;
+  margin-bottom: 14px;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  background: #ffffff;
+}
+
+.account-booking-card h3 {
+  margin: 0 0 10px;
+  color: #1e293b;
+}
+
+.account-booking-card p {
+  margin: 6px 0;
+  color: #475569;
+}
+
+.account-booking-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 14px;
+}
+
+.account-booking-actions button {
+  padding: 9px 16px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.account-booking-actions button:first-child {
+  background: #16a34a;
+  color: white;
+}
+
+.account-booking-actions button:last-child {
+  background: #dc2626;
+  color: white;
+}
+
+.account-booking-actions button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
