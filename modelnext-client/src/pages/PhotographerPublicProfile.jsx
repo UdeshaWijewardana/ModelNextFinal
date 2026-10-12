@@ -3,6 +3,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import Navbar from "../components/Navbar";
 import { apiFetch, readJson, SERVER_BASE_URL } from "../api";
 import BookingForm from "./direct-booking/BookingForm";
+import Reviews from "../components/reviews/Reviews";
 import "../styles/ModelPublicProfile.css";
 
 const monthKey = date => `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`;
@@ -35,6 +36,6 @@ export default function PhotographerPublicProfile() {
             {availabilityLoading ? <p className="public-model-calendar-message">Loading calendar…</p> : availabilityError ? <p className="public-model-calendar-message public-model-calendar-message--error" role="alert">{availabilityError}</p> : <><div className="public-model-weekdays">{["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map(day => <span key={day}>{day}</span>)}</div><div className="public-model-calendar-grid">{days.map(entry => entry.empty ? <span className="public-model-calendar-empty" key={entry.key} /> : <span className={`public-model-calendar-day${entry.booked ? " is-booked" : ""}${entry.status ? ` is-${entry.status}` : ""}`} key={entry.key}>{entry.day}</span>)}</div><p className="public-model-calendar-note">Confirmed bookings take priority. {availability.availabilityManaged ? "Availability preferences are shown where this photographer has set them." : "Other dates are not confirmed."}</p></>}</section>}
         </div>
       </div>
-    </section><section className="public-model-portfolio"><div className="public-model-section-heading"><p>Selected work</p><h2>Portfolio</h2></div><p className="public-model-empty-portfolio">No portfolio images added yet.</p></section></>}
+    </section><Reviews recipientRole="photographer" recipientId={photographerId} /><section className="public-model-portfolio"><div className="public-model-section-heading"><p>Selected work</p><h2>Portfolio</h2></div><p className="public-model-empty-portfolio">No portfolio images added yet.</p></section></>}
   </main></div>;
 }

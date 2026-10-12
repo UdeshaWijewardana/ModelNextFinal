@@ -18,7 +18,10 @@ const notificationRoutes = require('./routes/notificationRoutes');
 const matchingRoutes = require('./routes/matchingRoutes');
 const eventChatRoutes = require('./event-group-chat/routes/eventChatRoutes');
 const directBookingRoutes = require('./direct-booking/directBookingRoutes');
+const { router: reviewRoutes } = require('./routes/reviewRoutes');
+const { router: disputeRoutes } = require('./routes/disputeRoutes');
 const { createDirectBookingRealtime } = require('./direct-booking/directBookingRealtime');
+const ModelUser = require('./models/ModelUser');
 
 const app = express();
 const httpServer = http.createServer(app);
@@ -60,9 +63,33 @@ app.use(cors({
   credentials: true,
 }));
 app.use(express.json());
-app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
-
-// ✅ Static folder (for uploaded images)
+app.use('/uploads', async (req, res, next) => {
+  if (mongoose.connection.readyState !== 1) {
+    return res.status(503).send('Uploads are unavailable while private-file access checks cannot run.');
+  }
+  let requestedPath;
+  try {
+    requestedPath = decodeURIComponent(req.path).replace(/^\/+/, '');
+  } catch (_error) {
+    return res.sendStatus(400);
+  }
+  const storedPaths = [
+    `uploads/${requestedPath}`,
+    `uploads\\${requestedPath}`,
+  ];
+  try {
+    const isPrivateIdentityImage = await ModelUser.exists({
+      $or: [
+        { idFrontImage: { $in: storedPaths } },
+        { idBackImage: { $in: storedPaths } },
+      ],
+    });
+    if (isPrivateIdentityImage) return res.sendStatus(404);
+    return next();
+  } catch (error) {
+    return next(error);
+  }
+});
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // ✅ MongoDB is required for persistent application operations.
@@ -99,6 +126,8 @@ app.use('/api/notifications', notificationRoutes);
 app.use('/api/matching', matchingRoutes);
 app.use('/api/event-chats', eventChatRoutes);
 app.use('/api/direct-bookings', directBookingRoutes);
+app.use('/api/reviews', reviewRoutes);
+app.use('/api/disputes', disputeRoutes);
 
 
 // ✅ Start server

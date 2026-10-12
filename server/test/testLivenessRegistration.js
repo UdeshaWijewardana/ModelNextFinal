@@ -8,7 +8,7 @@ const modelRoutes = require('../routes/modelRoutes');
 const {
   createLivenessVerificationSessionService,
   SESSION_TTL_MS,
-} = require('../services/livenessVerificationSessionService');
+} = require('../liveness-check/livenessVerificationSessionService');
 
 const serverRoot = path.resolve(__dirname, '..');
 const uploadBytes = Buffer.from('prototype-registration-upload');

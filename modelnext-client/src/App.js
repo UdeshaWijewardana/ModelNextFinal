@@ -30,7 +30,7 @@ import ModelForm from "./forms/ModelForm";
 import PhotographerForm from "./forms/PhotographerForm";
 import AgencyForm from "./forms/AgencyForm";
 import ClientForm from "./forms/ClientForm";
-import WebcamTest from "./components/WebcamTest";
+import WebcamTest from "./liveness-check/WebcamTest";
 import { AuthProvider } from "./context/AuthContext";
 
 import EventChats from './pages/event-group-chat/EventChats';

@@ -11,8 +11,9 @@ const directBookingSchema = new mongoose.Schema({
   bookingDate: { type: String, required: true, match: /^\d{4}-\d{2}-\d{2}$/ },
   location: { type: String, required: true, trim: true, maxlength: 180 },
   description: { type: String, required: true, trim: true, maxlength: 1500 },
-  status: { type: String, enum: ['pending', 'confirmed', 'declined'], default: 'pending', index: true },
+  status: { type: String, enum: ['pending', 'confirmed', 'declined', 'completed'], default: 'pending', index: true },
   respondedAt: Date,
+  completedAt: Date,
 }, { timestamps: true });
 
 directBookingSchema.index({ talentId: 1, talentRole: 1, bookingDate: 1, status: 1 });

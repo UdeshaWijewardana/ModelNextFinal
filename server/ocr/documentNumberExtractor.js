@@ -1,4 +1,4 @@
-const { normalizeOCRText } = require('./ocrTextNormalizer');
+const { normalizeOCRText } = require("./ocrTextNormalizer");
 
 const rules = {
   nic: {

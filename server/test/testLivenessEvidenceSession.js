@@ -1,6 +1,6 @@
 const assert = require('node:assert/strict');
 const express = require('express');
-const { createLivenessVerificationSessionService } = require('../services/livenessVerificationSessionService');
+const { createLivenessVerificationSessionService } = require('../liveness-check/livenessVerificationSessionService');
 const adminRoutes = require('../routes/adminRoutes');
 
 const sessions = [];

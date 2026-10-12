@@ -1,5 +1,5 @@
 const assert = require("node:assert/strict");
-const { compareNames, evaluateIdentityExtraction } = require("../services/identityVerificationService");
+const { compareNames, evaluateIdentityExtraction } = require("../ocr/identityVerificationService");
 
 const extraction = fullName => ({
   fullName,

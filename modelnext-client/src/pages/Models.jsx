@@ -6,20 +6,23 @@ import {
   readJson,
   SERVER_BASE_URL,
 } from "../api";
+import { loadReviewSummaries, RatingSummary } from "../components/reviews/Reviews";
 import "../styles/Models.css";
 
 export default function Models() {
   const navigate = useNavigate();
 
   const [models, setModels] = useState([]);
+  const [reviewSummaries, setReviewSummaries] = useState({});
   const [error, setError] = useState("");
 
   useEffect(() => {
     apiFetch("/models")
       .then(readJson)
-      .then(({ models: items }) =>
-        setModels(items)
-      )
+      .then(async ({ models: items }) => {
+        setModels(items);
+        setReviewSummaries(await loadReviewSummaries("model", items.map(item => item._id)));
+      })
       .catch((err) =>
         setError(err.message)
       );
@@ -76,6 +79,8 @@ export default function Models() {
                       ", "
                     ) || "Fashion model"}
                   </p>
+
+                  {reviewSummaries[model._id] && <RatingSummary summary={reviewSummaries[model._id]} />}
 
                   <p className="stat-row">
                     <span className="stat-label">

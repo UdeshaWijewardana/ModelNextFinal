@@ -4,7 +4,7 @@ const os = require("node:os");
 const path = require("node:path");
 const sharp = require("sharp");
 const { createOpenAIIdentityExtractor } = require("./openaiIdentityService");
-const { evaluateIdentityExtraction } = require("../services/identityVerificationService");
+const { evaluateIdentityExtraction } = require("./identityVerificationService");
 
 const validResult = {
   fullName: "Jane Doe",
