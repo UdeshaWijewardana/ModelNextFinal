@@ -155,3 +155,21 @@
     grid-template-columns: 1fr;
   }
 }
+
+.photographer-required-indicator {
+  color: #f07186 !important;
+  font-size: inherit !important;
+  font-weight: 800;
+}
+
+.photographer-required-label {
+  margin: 0 0 8px;
+  color: #e8e0e2;
+  font-size: 12px;
+  font-weight: 650;
+}
+
+.photographer-form-grid label > .mn-password-input {
+  color: var(--mn-ivory, #f5f1ea);
+  font-size: .77rem;
+}

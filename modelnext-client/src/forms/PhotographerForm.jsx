@@ -2,6 +2,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { SERVER_BASE_URL } from "../api";
+import PasswordInput from "../components/PasswordInput";
 import "../styles/photographerForm.css";
 
 const imageTypes = ["image/jpeg", "image/png", "image/webp"];
@@ -295,6 +296,7 @@ export default function PhotographerForm() {
             )}
           </div>
 
+          <p className="photographer-required-label">Profile image <span className="photographer-required-indicator" aria-hidden="true">*</span></p>
           <small>
             JPEG, PNG, or WebP · maximum 5 MiB · required
           </small>
@@ -321,7 +323,7 @@ export default function PhotographerForm() {
           <form onSubmit={submit} noValidate>
             <div className="photographer-form-grid">
               <label>
-                Full name
+                <span>Full name <span className="photographer-required-indicator" aria-hidden="true">*</span></span>
                 <input
                   name="name"
                   value={form.name}
@@ -331,7 +333,7 @@ export default function PhotographerForm() {
               </label>
 
               <label>
-                Username
+                <span>Username <span className="photographer-required-indicator" aria-hidden="true">*</span></span>
                 <input
                   name="username"
                   value={form.username}
@@ -341,7 +343,7 @@ export default function PhotographerForm() {
               </label>
 
               <label>
-                Email address
+                <span>Email address <span className="photographer-required-indicator" aria-hidden="true">*</span></span>
                 <input
                   name="email"
                   type="email"
@@ -352,7 +354,7 @@ export default function PhotographerForm() {
               </label>
 
               <label>
-                Contact number
+                <span>Contact number <span className="photographer-required-indicator" aria-hidden="true">*</span></span>
                 <input
                   name="phone"
                   type="tel"
@@ -363,7 +365,7 @@ export default function PhotographerForm() {
               </label>
 
               <label>
-                Location
+                <span>Location <span className="photographer-required-indicator" aria-hidden="true">*</span></span>
                 <input
                   name="location"
                   value={form.location}
@@ -373,7 +375,7 @@ export default function PhotographerForm() {
               </label>
 
               <label>
-                Experience (years)
+                <span>Experience (years) <span className="photographer-required-indicator" aria-hidden="true">*</span></span>
                 <input
                   name="experienceYears"
                   type="number"
@@ -560,10 +562,9 @@ export default function PhotographerForm() {
               </label>
 
               <label>
-                Password
-                <input
+                <span>Password <span className="photographer-required-indicator" aria-hidden="true">*</span></span>
+                <PasswordInput
                   name="password"
-                  type="password"
                   value={form.password}
                   onChange={update}
                   required
@@ -571,10 +572,9 @@ export default function PhotographerForm() {
               </label>
 
               <label>
-                Confirm password
-                <input
+                <span>Confirm password <span className="photographer-required-indicator" aria-hidden="true">*</span></span>
+                <PasswordInput
                   name="confirmPassword"
-                  type="password"
                   value={form.confirmPassword}
                   onChange={update}
                   required

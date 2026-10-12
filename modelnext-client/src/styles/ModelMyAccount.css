@@ -1,4 +1,5 @@
 .model-account-shell { align-items: flex-start; }
+.model-account-shell [hidden] { display: none !important; }
 .model-account-avatar { object-fit: cover; }
 .model-account-status-chip { flex: 0 0 auto; padding: 9px 13px; border: 1px solid var(--mn-border); border-radius: 999px; font-size: 12px; font-weight: 750; }
 .model-account-status-chip.is-approved { color: var(--mn-success); border-color: var(--mn-success); background: rgba(121, 200, 140, .1); }
@@ -21,11 +22,18 @@
 .model-account-portfolio-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
 .model-account-portfolio-grid .client-talent-image { height: 220px; }
 .model-account-booking-list { display: grid; gap: 9px; }
+.model-account-subsection { margin-top: 24px; }
+.model-account-subsection h3 { margin: 0 0 10px; font-size: 15px; }
 .model-account-booking-list article, .model-account-notification, .model-account-settings-row { display: flex; justify-content: space-between; align-items: center; gap: 16px; padding: 13px 0; border-bottom: 1px solid var(--mn-border); }
 .model-account-booking-list article > div, .model-account-notification > div { display: grid; gap: 5px; }
 .model-account-booking-list span, .model-account-notification time { color: var(--mn-text-secondary); font-size: 11px; }
 .model-account-booking-list a, .model-account-text-link, .model-account-footer a { color: var(--mn-burgundy); font-size: 12px; font-weight: 750; text-decoration: none; }
 .model-account-booking-list a:hover, .model-account-text-link:hover, .model-account-footer a:hover { color: var(--mn-burgundy-hover); }
+.model-account-booking-list article .model-account-action-buttons, .model-account-notification .model-account-action-buttons { display: flex; flex-wrap: wrap; align-items: center; gap: 7px; }
+.model-account-action-buttons button { padding: 7px 10px; border: 1px solid var(--mn-burgundy); border-radius: 5px; background: var(--mn-burgundy); color: var(--mn-text-primary); cursor: pointer; font: inherit; font-size: 11px; font-weight: 700; }
+.model-account-action-buttons button.is-danger { border-color: var(--mn-border); background: transparent; color: var(--mn-error); }
+.model-account-action-buttons button:disabled { opacity: .55; cursor: wait; }
+.model-account-action-buttons a { color: var(--mn-burgundy); font-size: 11px; font-weight: 750; text-decoration: none; }
 .model-account-text-link { display: inline-block; margin-top: 16px; }
 .model-account-notification p { margin: 0; color: var(--mn-text-secondary); font-size: 12px; line-height: 1.5; }
 .model-account-notification .client-text-button { flex: 0 0 auto; }

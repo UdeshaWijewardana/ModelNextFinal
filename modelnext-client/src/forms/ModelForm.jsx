@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { SERVER_BASE_URL } from "../api";
+import PasswordInput from "../components/PasswordInput";
 import WebcamTest from "../liveness-check/WebcamTest";
 import { useAuth } from "../context/AuthContext";
 import "../styles/modelForm.css";
@@ -437,7 +438,7 @@ const ModelForm = () => {
               {validationErrors.email && <p className="error-note" role="alert">{validationErrors.email}</p>}
 
               <label>Password <span>*</span></label>
-              <input type="password" name="password" value={form.password} placeholder="Create a strong password" onChange={handleChange} required aria-invalid={Boolean(validationErrors.password)} />
+              <PasswordInput name="password" value={form.password} placeholder="Create a strong password" onChange={handleChange} required aria-invalid={Boolean(validationErrors.password)} />
               {validationErrors.password && <p className="error-note" role="alert">{validationErrors.password}</p>}
 
               <label>Location <span>*</span></label>

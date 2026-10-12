@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { apiFetch, readJson } from "../api";
+import PasswordInput from "../components/PasswordInput";
 import "../styles/AdminRegister.css";
 
 export default function AdminRegister() {
@@ -9,10 +10,8 @@ export default function AdminRegister() {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [visibleFields, setVisibleFields] = useState({ password: false, confirmPassword: false });
 
   const handleInputChange = (event) => setFormData({ ...formData, [event.target.name]: event.target.value });
-  const toggleVisibility = (field) => setVisibleFields((current) => ({ ...current, [field]: !current[field] }));
 
   const handleSubmit = async (event) => {
     event.preventDefault();
@@ -49,25 +48,15 @@ export default function AdminRegister() {
   const passwordField = (name, label) => (
     <label className="admin-register-field" htmlFor={`admin-${name}`}>
       <span>{label}</span>
-      <div className="admin-register-password-wrap">
-        <input
-          id={`admin-${name}`}
-          name={name}
-          type={visibleFields[name] ? "text" : "password"}
-          value={formData[name]}
-          onChange={handleInputChange}
-          required
-          autoComplete="new-password"
-        />
-        <button
-          type="button"
-          className="admin-register-visibility"
-          onClick={() => toggleVisibility(name)}
-          aria-label={`${visibleFields[name] ? "Hide" : "Show"} ${label.toLowerCase()}`}
-        >
-          {visibleFields[name] ? "Hide" : "Show"}
-        </button>
-      </div>
+      <PasswordInput
+        className="admin-register-password-wrap"
+        id={`admin-${name}`}
+        name={name}
+        value={formData[name]}
+        onChange={handleInputChange}
+        required
+        autoComplete="new-password"
+      />
     </label>
   );
 

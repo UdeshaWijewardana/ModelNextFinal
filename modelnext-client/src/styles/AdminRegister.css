@@ -75,12 +75,8 @@
 
 .admin-register-password-row { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
 .admin-register-password-wrap { position: relative; }
-.admin-register-password-wrap input { padding-right: 68px; }
-.admin-register-visibility {
-  position: absolute; top: 0; right: 10px; bottom: 0; display: inline-flex; align-items: center; min-height: 0; height: 28px; margin: auto; padding: 0 4px; color: var(--mn-burgundy);
-  font-size: 11px; font-weight: 700; line-height: 1; transform: none;
-}
-.admin-register-visibility:hover { color: var(--mn-text-primary); }
+.admin-register-password-wrap input { padding-right: 44px; }
+.admin-register-password-wrap .mn-password-toggle { color: var(--mn-burgundy); }
 
 .admin-register-submit {
   width: 100%; min-height: 50px; margin-top: 4px; border: 1px solid var(--mn-burgundy); border-radius: 6px;
