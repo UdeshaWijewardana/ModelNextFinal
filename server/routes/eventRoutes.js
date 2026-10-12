@@ -9,6 +9,7 @@ const Notification = require('../models/Notification');
 const { accountModels } = require('./authRoutes');
 const { requireUser } = require('../middleware/requireUser');
 const { requireDatabase } = require('../middleware/requireDatabase');
+const Photographer = require('../models/Photographer');
 
 const router = express.Router();
 
@@ -355,55 +356,42 @@ router.get(
 // GET /api/events/requests/mine
 // =====================================================
 
+
 router.get(
   '/requests/mine',
   requireUser,
   requireDatabase,
   async (req, res) => {
     try {
-      const requests =
-        await EventRequest.find({
-          requesterId: req.user.id,
-          requesterRole: req.user.role,
-        }).populate(
-          'eventId',
-          'title'
-        );
+      const requests = await EventRequest.find({
+        requesterId: req.user.id,
+        requesterRole: req.user.role,
+      })
+        .populate('eventId', 'title eventType location')
+        .sort({ createdAt: -1 });
 
       return res.json({
-        requests:
-          requests.map(
-            (request) => ({
-              id: request._id,
-
-              eventId:
-                request.eventId?._id,
-
-              eventTitle:
-                request.eventId?.title,
-
-              requestType:
-                request.requestType ||
-                'participation',
-
-              status:
-                request.status,
-            })
-          ),
+        requests: requests.map((request) => ({
+          id: request._id,
+          eventId: request.eventId?._id || null,
+          eventTitle: request.eventId?.title || 'Untitled event',
+          eventType: request.eventId?.eventType || '',
+          eventLocation: request.eventId?.location || '',
+          requesterRole: request.requesterRole,
+          requestType: request.requestType || 'participation',
+          status: request.status,
+        })),
       });
     } catch (error) {
-      console.error(
-        'Get my requests error:',
-        error
-      );
+      console.error('Get my requests error:', error);
 
       return res.status(500).json({
-        error:
-          'Unable to load your requests.',
+        error: 'Unable to load your requests.',
       });
     }
   }
 );
+
 
 
 // =====================================================
@@ -928,194 +916,138 @@ router.patch(
 // The client does NOT approve its own booking.
 // =====================================================
 
+
 router.post(
   '/:id/bookings',
   requireUser,
   requireDatabase,
   async (req, res) => {
     try {
-      // Only clients can book models.
-      if (
-        req.user.role !== 'client'
-      ) {
+      if (req.user.role !== 'client') {
         return res.status(403).json({
-          error:
-            'Only clients can book models.',
+          error: 'Only clients can create booking requests.',
         });
       }
 
-      const {
-        modelId,
-      } = req.body || {};
+      const { talentId, talentRole, modelId } = req.body || {};
 
-      if (!modelId) {
+      // Backward compatibility with existing model bookings.
+      const selectedTalentId = talentId || modelId;
+      const selectedTalentRole = talentRole || 'model';
+
+      if (!selectedTalentId) {
         return res.status(400).json({
-          error:
-            'Model ID is required.',
+          error: 'Talent ID is required.',
         });
       }
 
-      // The event must belong to
-      // the logged-in client.
-      const event =
-        await Event.findOne({
-          _id: req.params.id,
-          ownerId: req.user.id,
-          ownerRole: 'client',
+      if (!['model', 'photographer'].includes(selectedTalentRole)) {
+        return res.status(400).json({
+          error: 'Talent role must be model or photographer.',
         });
+      }
+
+      const event = await Event.findOne({
+        _id: req.params.id,
+        ownerId: req.user.id,
+        ownerRole: 'client',
+      });
 
       if (!event) {
         return res.status(404).json({
-          error:
-            'Event was not found.',
+          error: 'Event was not found.',
         });
       }
 
-      // Models can only be booked for
-      // approved events.
-      if (
-        event.status !==
-        'approved'
-      ) {
+      if (event.status !== 'approved') {
         return res.status(400).json({
-          error:
-            'This event must be approved before you can book a model.',
+          error: 'This event must be approved before you can book talent.',
         });
       }
 
-      // Make sure the model exists
-      // and is approved.
-      const model =
-        await ModelUser.findOne({
-          _id: modelId,
-          approvalStatus:
-            'approved',
-        }).select(
-          'fullName'
-        );
+      const TalentModel =
+        selectedTalentRole === 'photographer'
+          ? Photographer
+          : ModelUser;
 
-      if (!model) {
+      const talent = await TalentModel.findOne({
+        _id: selectedTalentId,
+        approvalStatus: 'approved',
+      });
+
+      if (!talent) {
         return res.status(404).json({
-          error:
-            'Approved model was not found.',
+          error: `Approved ${selectedTalentRole} was not found.`,
         });
       }
 
-      // IMPORTANT:
-      // This lookup is ONLY for booking requests.
-      //
-      // A participation request and a booking request
-      // are separate records.
-      let request =
-        await EventRequest.findOne({
-          eventId: event._id,
-          requesterId: model._id,
-          requesterRole: 'model',
-          requestType: 'booking',
+      const talentName =
+        selectedTalentRole === 'model'
+          ? talent.fullName
+          : talent.name;
+
+      let request = await EventRequest.findOne({
+        eventId: event._id,
+        requesterId: talent._id,
+        requesterRole: selectedTalentRole,
+        requestType: 'booking',
+      });
+
+      if (request && request.status === 'confirmed') {
+        return res.status(409).json({
+          error: 'This talent is already booked for this event.',
         });
+      }
+
+      if (request && request.status === 'pending') {
+        return res.status(409).json({
+          error: 'A booking request for this talent is already pending.',
+        });
+      }
 
       if (request) {
-        if (
-          request.status ===
-          'confirmed'
-        ) {
-          return res.status(409).json({
-            error:
-              'This model is already booked for this event.',
-          });
-        }
-
-        if (
-          request.status ===
-          'pending'
-        ) {
-          return res.status(409).json({
-            error:
-              'A booking request for this model is already pending.',
-          });
-        }
-
-        // Previously declined:
-        // allow the client to request again.
-        request.status =
-          'pending';
-
+        request.status = 'pending';
         await request.save();
       } else {
-        request =
-          await EventRequest.create({
-            eventId:
-              event._id,
-
-            requesterId:
-              model._id,
-
-            requesterRole:
-              'model',
-
-            requestType:
-              'booking',
-
-            status:
-              'pending',
-          });
+        request = await EventRequest.create({
+          eventId: event._id,
+          requesterId: talent._id,
+          requesterRole: selectedTalentRole,
+          requestType: 'booking',
+          status: 'pending',
+        });
       }
 
-      // Notify the model.
       await Notification.create({
-        recipientId:
-          model._id,
-
-        recipientRole:
-          'model',
-
-        type:
-          'event_request',
-
-        message:
-          `You have received a booking request for ${event.title}.`,
+        recipientId: talent._id,
+        recipientRole: selectedTalentRole,
+        type: 'event_request',
+        message: `You have received a booking request for ${event.title}.`,
       });
 
       return res.status(201).json({
-        message:
-          'Booking request sent successfully.',
-
+        message: 'Booking request sent successfully.',
         request: {
-          id:
-            request._id,
-
-          eventId:
-            request.eventId,
-
-          eventTitle:
-            event.title,
-
-          modelId:
-            model._id,
-
-          modelName:
-            model.fullName,
-
-          requestType:
-            'booking',
-
-          status:
-            request.status,
+          id: request._id,
+          eventId: event._id,
+          eventTitle: event.title,
+          talentId: talent._id,
+          talentName,
+          talentRole: selectedTalentRole,
+          requestType: 'booking',
+          status: request.status,
         },
       });
     } catch (error) {
-      console.error(
-        'Model booking error:',
-        error
-      );
+      console.error('Talent booking error:', error);
 
       return res.status(500).json({
-        error:
-          'Unable to send the booking request.',
+        error: 'Unable to send the booking request.',
       });
     }
   }
 );
+
 
 
 // =====================================================
@@ -1361,124 +1293,79 @@ router.patch(
 // CAN RESPOND.
 // =====================================================
 
+
 router.patch(
   '/bookings/:id/respond',
   requireUser,
   requireDatabase,
   async (req, res) => {
     try {
-      // Only models can respond to booking requests.
-      if (
-        req.user.role !== 'model'
-      ) {
+      // Both models and photographers can respond.
+      if (!['model', 'photographer'].includes(req.user.role)) {
         return res.status(403).json({
-          error:
-            'Only models can respond to booking requests.',
+          error: 'Only models and photographers can respond to booking requests.',
         });
       }
 
-      const status =
-        req.body?.status;
+      const status = req.body?.status;
 
-      if (
-        ![
-          'confirmed',
-          'declined',
-        ].includes(status)
-      ) {
+      if (!['confirmed', 'declined'].includes(status)) {
         return res.status(400).json({
-          error:
-            'Status must be confirmed or declined.',
+          error: 'Status must be confirmed or declined.',
         });
       }
 
-      // Find the booking that belongs to this model.
-      //
-      // requesterId represents the model being booked
-      // in a booking request.
-      const request =
-        await EventRequest.findOne({
-          _id: req.params.id,
-          requesterId: req.user.id,
-          requesterRole: 'model',
-          requestType: 'booking',
-        }).populate(
-          'eventId'
-        );
+      // Only allow the logged-in talent to respond to their own booking.
+      const request = await EventRequest.findOne({
+        _id: req.params.id,
+        requesterId: req.user.id,
+        requesterRole: req.user.role,
+        requestType: 'booking',
+      }).populate('eventId');
 
-      if (
-        !request ||
-        !request.eventId
-      ) {
+      if (!request || !request.eventId) {
         return res.status(404).json({
-          error:
-            'Booking request was not found.',
+          error: 'Booking request was not found.',
         });
       }
 
-      // Prevent changing a request that has already
-      // been accepted or declined.
-      if (
-        request.status !==
-        'pending'
-      ) {
+      if (request.status !== 'pending') {
         return res.status(409).json({
-          error:
-            `This booking request has already been ${request.status}.`,
+          error: `This booking request has already been ${request.status}.`,
         });
       }
 
-      request.status =
-        status;
-
+      request.status = status;
       await request.save();
 
-      // Notify the client who created the booking.
       await Notification.create({
-        recipientId:
-          request.eventId.ownerId,
-
-        recipientRole:
-          request.eventId.ownerRole,
-
-        type:
-          'booking_request_reviewed',
-
-        message:
-          `Your booking request for ${request.eventId.title} was ${status} by the model.`,
+        recipientId: request.eventId.ownerId,
+        recipientRole: request.eventId.ownerRole,
+        type: 'booking_request_reviewed',
+        message: `Your booking request for ${request.eventId.title} was ${status} by the ${req.user.role}.`,
       });
 
       return res.json({
+        message: `Booking request ${status} successfully.`,
         request: {
-          id:
-            request._id,
-
-          eventId:
-            request.eventId._id,
-
-          eventTitle:
-            request.eventId.title,
-
-          status:
-            request.status,
-
-          requestType:
-            'booking',
+          id: request._id,
+          eventId: request.eventId._id,
+          eventTitle: request.eventId.title,
+          status: request.status,
+          requestType: 'booking',
+          talentRole: req.user.role,
         },
       });
     } catch (error) {
-      console.error(
-        'Booking response error:',
-        error
-      );
+      console.error('Booking response error:', error);
 
       return res.status(500).json({
-        error:
-          'Unable to respond to the booking request.',
+        error: 'Unable to respond to the booking request.',
       });
     }
   }
 );
+
 
 
 // =====================================================

@@ -1288,11 +1288,15 @@ const bookingCounts = {
                           </button>
                         )}
 
-                        {status === "Pending" && (
+                        
+{status === "Pending" && (
   <span className="client-booking-waiting">
-    Waiting for model response
+    {booking.requesterRole === "photographer"
+      ? "Waiting for photographer response"
+      : "Waiting for model response"}
   </span>
 )}
+
 
 {status === "Confirmed" && (
   <span className="client-booking-confirmed">

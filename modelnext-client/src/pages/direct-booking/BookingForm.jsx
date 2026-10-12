@@ -30,7 +30,17 @@ export default function BookingForm({ talentId, talentRole, talentName, eventCon
   const [eventLoading, setEventLoading] = useState(false);
   const [success, setSuccess] = useState('');
   const eventBooking = Boolean(eventContext?.eventId);
-  const permitted = auth.status === 'authenticated' && auth.kind === 'user' && (eventBooking ? auth.role === 'client' && talentRole === 'model' : auth.role === 'client' || auth.role === 'agency' || (auth.role === 'photographer' && talentRole === 'model'));
+  const permitted =
+  auth.status === 'authenticated' &&
+  auth.kind === 'user' &&
+  (
+    eventBooking
+      ? auth.role === 'client' &&
+        ['model', 'photographer'].includes(talentRole)
+      : auth.role === 'client' ||
+        auth.role === 'agency' ||
+        (auth.role === 'photographer' && talentRole === 'model')
+  );
 
   useEffect(() => {
     if (!open || !eventBooking) return undefined;
@@ -104,7 +114,15 @@ export default function BookingForm({ talentId, talentRole, talentName, eventCon
     inFlight.current = true; setSaving(true); setError(''); setSuccess('');
     try {
       if (eventBooking) {
-        const data = await readJson(await apiFetch(`/events/${verifiedEvent.id}/bookings`, { method: 'POST', body: JSON.stringify({ modelId: talentId }) }));
+        const data = await readJson(
+  await apiFetch(`/events/${verifiedEvent.id}/bookings`, {
+    method: 'POST',
+    body: JSON.stringify({
+      talentId,
+      talentRole,
+    }),
+  })
+);
         setSuccess(data.message || 'Booking request sent successfully.');
       } else {
         await readJson(await apiFetch('/direct-bookings', { method: 'POST', body: JSON.stringify({ ...form, talentId, talentRole }) }));
