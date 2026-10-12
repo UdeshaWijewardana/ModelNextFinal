@@ -10,8 +10,10 @@ function createLivenessVerificationSessionService({
   useDatabase = () => mongoose.connection.readyState === 1,
   now = () => new Date(),
 } = {}) {
+  // Raw token database eke nopenna SHA-256 hash karala witharak store karanawa.
   const hash = (value) => crypto.createHash('sha256').update(value).digest('hex');
 
+  // Session-related errors walata API response ekata yanna one code saha status eka set karanawa.
   const sessionError = (code, message, status = 400) => {
     const error = new Error(message);
     error.code = code;
@@ -19,6 +21,7 @@ function createLivenessVerificationSessionService({
     return error;
   };
 
+  // Verification token hash eken database record eka hoyanawa.
   const readSession = async (tokenHash) => {
     if (useDatabase()) {
       const session = await model.findOne({ tokenHash }).exec();
@@ -27,6 +30,7 @@ function createLivenessVerificationSessionService({
     return null;
   };
 
+  // Token dekama, expire wela nadda, saha balaporoththu wena status ekada kiyala validate karanawa.
   const validateSession = async ({ verificationId, attemptId }, requiredStatus) => {
     if (typeof verificationId !== 'string' || typeof attemptId !== 'string'
       || verificationId.length < 32 || attemptId.length < 24) {
@@ -61,6 +65,7 @@ function createLivenessVerificationSessionService({
     return { tokenHash, attemptIdHash, session, storage };
   };
 
+  // Status saha expiry condition ekka atomic update karala sessioni replay/double-use eka walakwanawa.
   const transition = async ({ verificationId, attemptId }, fromStatus, toStatus, timestampField) => {
     const validated = await validateSession({ verificationId, attemptId }, fromStatus);
     const timestamp = now();
@@ -88,6 +93,7 @@ function createLivenessVerificationSessionService({
 
   const evidenceTypes = new Set(['front', 'left', 'right']);
 
+  // Registration ta ona views thunema session ekata attach wela thiyenawada kiyala balanne.
   const assertEvidence = (session) => {
     const missing = [...evidenceTypes].filter((type) => !session.evidence?.[type]?.path);
     if (missing.length) {
@@ -97,6 +103,7 @@ function createLivenessVerificationSessionService({
 
   const service = {
     async start() {
+      // Aluth verification ekakata expire wena session ekak saha wenama attempt token ekak hadanawa.
       const createdAt = now();
       const expiresAt = new Date(createdAt.getTime() + SESSION_TTL_MS);
       const verificationId = crypto.randomBytes(32).toString('base64url');
@@ -121,6 +128,7 @@ function createLivenessVerificationSessionService({
     },
 
     async complete(credentials) {
+      // Evidence views thunama attach unama pending session eka completed karanawa.
       const validated = await validateSession(credentials, 'pending');
       assertEvidence(validated.session);
       try {
@@ -132,10 +140,12 @@ function createLivenessVerificationSessionService({
     },
 
     async assertCompleted(credentials) {
+      // Registration submit karaddi session eka complete saha valid da kiyala meken balanne.
       await validateSession(credentials, 'completed');
     },
 
     async recordEvidence(credentials, type, evidence) {
+      // Evidence path saha digest eka token walin hoyapu me session ekata link karala save karanawa.
       if (!evidenceTypes.has(type) || !evidence?.path || !evidence?.digest) {
         throw sessionError('LIVENESS_EVIDENCE_INVALID', 'A valid liveness evidence image is required.', 400);
       }
@@ -171,20 +181,24 @@ function createLivenessVerificationSessionService({
     },
 
     async getCompletedEvidence(credentials) {
+      // Complete session ekata adala evidence references registration ekata return karanawa.
       const validated = await validateSession(credentials, 'completed');
       assertEvidence(validated.session);
       return validated.session.evidence;
     },
 
     async claim(credentials) {
+      // Registration evidence use karanna patan gaththama session eka temporary in-use karanawa.
       await transition(credentials, 'completed', 'consuming', null);
     },
 
     async consume(credentials) {
+      // Registration save unata passe session eka consumed karala aye use kirima nawathwanawa.
       await transition(credentials, 'consuming', 'consumed', 'consumedAt');
     },
 
     async release(credentials) {
+      // Registration save nokara fail unoth retry karanna completed status ekata nawatha harawanawa.
       await transition(credentials, 'consuming', 'completed', null);
     },
   };

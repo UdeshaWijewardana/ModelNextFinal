@@ -36,6 +36,7 @@ const CHALLENGE_INSTRUCTIONS = {
   [CHALLENGE_STATES.RETURN_CENTER]: "RIGHT detected ✓ Please look straight at the camera",
   [CHALLENGE_STATES.COMPLETED]: "Liveness verification complete ✓",
 };
+// User karanna ona blink, left, right saha center steps tika me order ekata thiyenawa.
 const CHALLENGE_STEPS = [
   { phase: CHALLENGE_STATES.BLINK, label: "Blink", instruction: "Please blink your eyes", helper: "Close and open your eyes naturally once." },
   { phase: CHALLENGE_STATES.HEAD_LEFT, label: "Turn LEFT", instruction: "Please turn your head LEFT", helper: "Slowly turn your head to the left." },
@@ -48,6 +49,7 @@ const SUCCESS_MESSAGES = {
   [CHALLENGE_STATES.RETURN_CENTER]: "✓ Right movement detected",
 };
 
+// Challenge eka start karaddi face eka hoyana mul state eka methanin hadanawa.
 function initialChallengeState() {
   return {
     phase: CHALLENGE_STATES.WAITING_FOR_FACE,
@@ -57,6 +59,7 @@ function initialChallengeState() {
   };
 }
 
+// Face, blink, head-turn saha timeout events anuwa challenge eke next step eka thoranawa.
 function transitionChallenge(state, event) {
   if (event.type === "RESET") return initialChallengeState();
 
@@ -137,6 +140,7 @@ function transitionChallenge(state, event) {
   return state;
 }
 
+// Dan thiyena phase eka userta progress widihata pennana text ekata harawanawa.
 function challengeProgress(phase) {
   return {
     [CHALLENGE_STATES.WAITING_FOR_FACE]: "Waiting for face",
@@ -149,12 +153,14 @@ function challengeProgress(phase) {
   }[phase];
 }
 
+// Landmark dekak athara distance eka ganan karala eye measurements walata use karanawa.
 function landmarkDistance(landmarks, firstIndex, secondIndex) {
   const first = landmarks[firstIndex];
   const second = landmarks[secondIndex];
   return Math.hypot(first.x - second.x, first.y - second.y);
 }
 
+// Eye landmarks walin EAR eka hadala eye eka close da kiyala balanna use karanawa.
 function calculateEyeAspectRatio(landmarks, [outer, upperOuter, upperInner, inner, lowerInner, lowerOuter]) {
   const eyeWidth = landmarkDistance(landmarks, outer, inner);
   if (eyeWidth === 0) return 0;
@@ -165,6 +171,7 @@ function calculateEyeAspectRatio(landmarks, [outer, upperOuter, upperInner, inne
   return verticalOpening / (2 * eyeWidth);
 }
 
+// EAR thresholds saha frames use karala user blink kalada kiyala confirm karanawa.
 function updateBlinkState(landmarks, state, timestamp) {
   const leftEyeRatio = calculateEyeAspectRatio(landmarks, LEFT_EYE_LANDMARKS);
   const rightEyeRatio = calculateEyeAspectRatio(landmarks, RIGHT_EYE_LANDMARKS);
@@ -217,6 +224,7 @@ function updateBlinkState(landmarks, state, timestamp) {
   return closedDuration >= BLINK_MIN_CLOSED_MS && closedDuration <= BLINK_MAX_CLOSED_MS;
 }
 
+// Aluth challenge ekak hari face eka nathi unama blink tracking state eka reset karanawa.
 function resetBlinkState(state) {
   state.phase = "OPEN";
   state.closedFrames = 0;
@@ -224,6 +232,7 @@ function resetBlinkState(state) {
   state.closedAt = null;
 }
 
+// Nose eka eye center ekata sapekshawa thiyena thanin left, right, center kiyala balanne.
 function getHeadPosition(landmarks) {
   const leftEyeCorner = landmarks[33];
   const rightEyeCorner = landmarks[263];
@@ -279,6 +288,7 @@ const WebcamTest = ({ autoStart = false, onVerificationComplete }) => {
   const startCameraRef = useRef(null);
   const evidenceCapturesRef = useRef({});
 
+  // Component eka ain weddi timers, MediaPipe instances saha webcam stream eka nawaththanawa.
   useEffect(() => {
     isMountedRef.current = true;
     const videoElement = videoRef.current;
@@ -306,6 +316,7 @@ const WebcamTest = ({ autoStart = false, onVerificationComplete }) => {
     };
   }, []);
 
+  // Challenge step maru unama tikak welawak success feedback eka pennanawa.
   useEffect(() => {
     const previousPhase = previousPhaseRef.current;
     previousPhaseRef.current = challenge.phase;
@@ -321,6 +332,7 @@ const WebcamTest = ({ autoStart = false, onVerificationComplete }) => {
     }
   }, [challenge.phase]);
 
+  // Webcam frame walin face eka hoyala landmarks, blink saha head direction check karanawa.
   useEffect(() => {
     if (!isCameraConnected || !isDetectorReady || !isLandmarkerReady) {
       return undefined;
@@ -338,6 +350,7 @@ const WebcamTest = ({ autoStart = false, onVerificationComplete }) => {
       if (video && detector && video.readyState >= HTMLMediaElement.HAVE_CURRENT_DATA) {
         try {
           const timestamp = performance.now();
+          // Muladi face count eka balala ekama face ekak nam landmarks aran challenge eka check karanawa.
           const result = detector.detectForVideo(video, timestamp);
           if (result.detections.length > 1) {
             setFaceStatus("Multiple faces detected");
@@ -367,6 +380,7 @@ const WebcamTest = ({ autoStart = false, onVerificationComplete }) => {
               if (landmarksAvailable) {
                 dispatchChallenge({ type: "FACE_READY" });
 
+                // Blink step eke EAR walin close-open movement eka detect karala next step ekata yanawa.
                 if (challengeRef.current.phase === CHALLENGE_STATES.BLINK
                   && updateBlinkState(landmarks, blinkStateRef.current, timestamp)) {
                   blinkCountRef.current += 1;
@@ -376,6 +390,7 @@ const WebcamTest = ({ autoStart = false, onVerificationComplete }) => {
                   resetBlinkState(blinkStateRef.current);
                 }
 
+                // Consecutive frames walin direction eka confirm karala LEFT/RIGHT/CENTER actions gannawa.
                 const candidatePosition = getHeadPosition(landmarks);
                 if (headPositionCandidateRef.current.position === candidatePosition) {
                   headPositionCandidateRef.current.frames += 1;
@@ -389,10 +404,13 @@ const WebcamTest = ({ autoStart = false, onVerificationComplete }) => {
                   ));
                   const activePhase = challengeRef.current.phase;
                   if (activePhase === CHALLENGE_STATES.HEAD_LEFT && candidatePosition === "LEFT") {
+                    // Left turn eka frames kihipayakin confirm unama LEFT evidence image eka gannawa.
                     void captureEvidenceFrame("left");
                   } else if (activePhase === CHALLENGE_STATES.HEAD_RIGHT && candidatePosition === "RIGHT") {
+                    // Right turn eka confirm unama RIGHT evidence image eka gannawa.
                     void captureEvidenceFrame("right");
                   } else if (activePhase === CHALLENGE_STATES.RETURN_CENTER && candidatePosition === "CENTER") {
+                    // Face eka nawatha center unama FRONT evidence image eka gannawa.
                     void captureEvidenceFrame("front");
                   }
                   dispatchChallenge({ type: "HEAD_POSITION", position: candidatePosition });
@@ -455,6 +473,7 @@ const WebcamTest = ({ autoStart = false, onVerificationComplete }) => {
     };
   }, [isCameraConnected, isDetectorReady, isLandmarkerReady, challenge.phase]);
 
+  // Blink, turn, center steps patan gaththama timeout eka start karala iwara unama stop karanawa.
   useEffect(() => {
     const activeStates = [
       CHALLENGE_STATES.BLINK,
@@ -474,15 +493,18 @@ const WebcamTest = ({ autoStart = false, onVerificationComplete }) => {
     }
   }, [challenge.phase]);
 
+  // Component eka close weddi ithiri challenge saha feedback timers clear karanawa.
   useEffect(() => () => {
     window.clearTimeout(challengeTimeoutRef.current);
     window.clearTimeout(transitionTimeoutRef.current);
   }, []);
 
+  // Event eka challenge state transition function ekata yawala UI state update karanawa.
   function dispatchChallenge(event) {
     setChallenge((current) => transitionChallenge(current, event));
   }
 
+  // Live webcam frame eka FRONT/LEFT/RIGHT evidence image ekak widihata canvas eken gannawa.
   function captureEvidenceFrame(view) {
     if (evidenceCapturesRef.current[view]) return evidenceCapturesRef.current[view];
 
@@ -513,6 +535,7 @@ const WebcamTest = ({ autoStart = false, onVerificationComplete }) => {
     return capture;
   }
 
+  // MediaPipe wasm fileset eka ekaparak load karala detector saha landmarker dekata share karanawa.
   const getVisionFileset = () => {
     if (!visionPromiseRef.current) {
       visionPromiseRef.current = FilesetResolver.forVisionTasks(VISION_WASM_URL);
@@ -520,6 +543,7 @@ const WebcamTest = ({ autoStart = false, onVerificationComplete }) => {
     return visionPromiseRef.current;
   };
 
+  // User camera eka stop kalama video tracks saha challenge-related face state nawathwanawa.
   const stopCamera = () => {
     streamRef.current?.getTracks().forEach((track) => track.stop());
     streamRef.current = null;
@@ -543,6 +567,7 @@ const WebcamTest = ({ autoStart = false, onVerificationComplete }) => {
     ));
   };
 
+  // Try Again click kalama challenge, timer, blink saha kalin gaththa evidence reset karanawa.
   const tryAgain = () => {
     resetBlinkState(blinkStateRef.current);
     blinkCountRef.current = 0;
@@ -564,6 +589,7 @@ const WebcamTest = ({ autoStart = false, onVerificationComplete }) => {
     }
   };
 
+  // MediaPipe FaceDetector model eka load karala video mode eken face count eka hoyanawa.
   const initializeDetector = async () => {
     if (detectorRef.current || detectorPromiseRef.current) return;
 
@@ -602,6 +628,7 @@ const WebcamTest = ({ autoStart = false, onVerificationComplete }) => {
     }
   };
 
+  // FaceLandmarker model eka load karala face landmarks ganna ready karanawa.
   const initializeLandmarker = async () => {
     if (landmarkerRef.current || landmarkerPromiseRef.current) return;
 
@@ -640,6 +667,7 @@ const WebcamTest = ({ autoStart = false, onVerificationComplete }) => {
     }
   };
 
+  // Browser eken camera permission illala stream eka video ekata connect karanawa.
   const startCamera = async () => {
     if (streamRef.current || cameraStartInFlightRef.current) return;
     if (!navigator.mediaDevices?.getUserMedia) {
@@ -695,10 +723,12 @@ const WebcamTest = ({ autoStart = false, onVerificationComplete }) => {
 
   startCameraRef.current = startCamera;
 
+  // autoStart true nam component eka mount unama camera eka arambha karanawa.
   useEffect(() => {
     if (autoStart) void startCameraRef.current?.();
   }, [autoStart]);
 
+  // Challenge eka complete unama evidence confirmation callback eka ekawarak call karanawa.
   useEffect(() => {
     if (challenge.phase === CHALLENGE_STATES.COMPLETED && !completionNotifiedRef.current) {
       completionNotifiedRef.current = true;
@@ -710,6 +740,7 @@ const WebcamTest = ({ autoStart = false, onVerificationComplete }) => {
     }
   }, [challenge.phase]);
 
+  // Images parent callback ekata pass karanawa; me component eka backend API request eka direct karanne naha.
   const confirmCompletion = async () => {
     if (!onVerificationComplete) return;
     setIsConfirmingCompletion(true);
@@ -723,6 +754,7 @@ const WebcamTest = ({ autoStart = false, onVerificationComplete }) => {
       await onVerificationComplete({ front, left, right });
       setCompletionConfirmationError(null);
     } catch (error) {
+      // Callback/API handoff eka fail unoth error eka pennala retry karanna awasthawa denawa.
       setCompletionConfirmationError(error);
     } finally {
       setIsConfirmingCompletion(false);
