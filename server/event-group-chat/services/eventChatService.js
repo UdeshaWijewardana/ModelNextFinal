@@ -69,11 +69,11 @@ const addMember = async (chatId, user, session, joinedAt = new Date()) => {
 const transaction = (work) => mongoose.connection.transaction(work, {
   readConcern: { level: 'snapshot' }, writeConcern: { w: 'majority' }, maxCommitTimeMS: 10000,
 });
-const notify = async (user, type, message, session) => {
-  await Notification.create([{ recipientId: user.id, recipientRole: user.role, type, message }], session ? { session } : {});
+const notify = async (user, type, message, session, reference = {}) => {
+  await Notification.create([{ recipientId: user.id, recipientRole: user.role, type, message, ...reference }], session ? { session } : {});
 };
-const notifyBestEffort = async (user, type, message) => {
-  try { await notify(user, type, message); }
+const notifyBestEffort = async (user, type, message, reference) => {
+  try { await notify(user, type, message, undefined, reference); }
   catch (_error) { console.error('Event chat notification could not be saved.'); }
 };
 

@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { apiFetch } from "../api";
 import { accountRouteForRole, useAuth } from "../context/AuthContext";
+import PasswordInput from "../components/PasswordInput";
 
 export default function Login() {
   const navigate = useNavigate();
@@ -88,10 +89,11 @@ export default function Login() {
               onChange={(e) => setEmail(e.target.value)}
             />
             
-            <input 
-              style={styles.input}
-              placeholder="Password" 
-              type="password"
+            <PasswordInput
+              className="login-password-input"
+              style={{ ...styles.input, paddingRight: "52px", boxSizing: "border-box", width: "100%" }}
+              placeholder="Password"
+              autoComplete="current-password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
             />

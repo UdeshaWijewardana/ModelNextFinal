@@ -1,6 +1,7 @@
 import { useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { apiFetch, readJson } from "../api";
+import PasswordInput from "../components/PasswordInput";
 import RegistrationHeader from "../components/RegistrationHeader";
 import "../styles/clientForm.css";
 
@@ -40,8 +41,8 @@ export default function ClientForm() {
         <label>Phone number<input name="phone" type="tel" autoComplete="tel" value={form.phone} onChange={update} required /></label>
         <label>Email address<input name="email" type="email" autoComplete="email" value={form.email} onChange={update} required /></label>
         <label>Address or location<input name="address" autoComplete="street-address" value={form.address} onChange={update} required /></label>
-        <label>Password<input name="password" type="password" autoComplete="new-password" value={form.password} onChange={update} required /></label>
-        <label>Confirm password<input name="confirmPassword" type="password" autoComplete="new-password" value={form.confirmPassword} onChange={update} required /></label>
+        <label>Password<PasswordInput name="password" autoComplete="new-password" value={form.password} onChange={update} required /></label>
+        <label>Confirm password<PasswordInput name="confirmPassword" autoComplete="new-password" value={form.confirmPassword} onChange={update} required /></label>
       </div><button className="client-registration-submit" disabled={submitting}>{submitting ? "Creating account…" : "Create client account"}</button></form>
       <p className="client-registration-signin">Already registered? <Link to="/login">Sign in</Link></p>
     </section>

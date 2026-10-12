@@ -7,6 +7,7 @@ const Photographer = require('../models/Photographer');
 const Client = require('../models/Client');
 const Agency = require('../models/Agency');
 const EventRequest = require('../models/EventRequest');
+const Notification = require('../models/Notification');
 const { requireUser } = require('../middleware/requireUser');
 const { requireDatabase } = require('../middleware/requireDatabase');
 const { findAccessibleBooking, completionEligibility } = require('./bookingAccess');
@@ -37,6 +38,18 @@ router.post('/', async (req, res) => {
   if (duplicate) return res.status(409).json({ error: 'You already have a pending request for this talent on that date.' });
   const requester = await requesterModels[req.user.role].findById(req.user.id).select(req.user.role === 'agency' ? 'agencyName' : 'name');
   const booking = await DirectBooking.create({ requesterId: req.user.id, requesterRole: req.user.role, requesterName: requesterName(req.user.role, requester), talentId, talentRole, talentName: talentName(talentRole, talent), jobType, bookingDate, location: location.trim(), description: description.trim() });
+  try {
+    await Notification.create({
+      recipientId: booking.talentId,
+      recipientRole: booking.talentRole,
+      type: 'direct_booking_requested',
+      message: `${booking.requesterName} sent you a booking request.`,
+      resourceType: 'direct_booking',
+      resourceId: booking._id,
+    });
+  } catch (error) {
+    console.error('Booking request notification could not be saved:', error.name);
+  }
   return res.status(201).json({ booking: safe(booking) });
 });
 
@@ -65,9 +78,32 @@ router.patch('/:id/status', async (req, res) => {
     if (conflict) return res.status(409).json({ error: 'This talent already has a confirmed direct booking on that date.' });
     if (await hasConfirmedEventConflict(booking)) return res.status(409).json({ error: 'This talent already has a confirmed event booking on that date.' });
   }
-  booking.status = req.body.status; booking.respondedAt = new Date();
-  try { await booking.save(); } catch (error) { if (error.code === 11000) return res.status(409).json({ error: 'This talent already has a confirmed booking on that date.' }); throw error; }
-  return res.json({ booking: safe(booking) });
+  const respondedAt = new Date();
+  let updated;
+  try {
+    updated = await DirectBooking.findOneAndUpdate(
+      { _id: booking._id, talentId: req.user.id, talentRole: req.user.role, status: 'pending' },
+      { $set: { status: req.body.status, respondedAt } },
+      { new: true, runValidators: true }
+    );
+  } catch (error) {
+    if (error.code === 11000) return res.status(409).json({ error: 'This talent already has a confirmed booking on that date.' });
+    throw error;
+  }
+  if (!updated) return res.status(409).json({ error: 'This booking has already been answered.' });
+  try {
+    await Notification.create({
+      recipientId: updated.requesterId,
+      recipientRole: updated.requesterRole,
+      type: updated.status === 'confirmed' ? 'direct_booking_confirmed' : 'direct_booking_declined',
+      message: `Your ${updated.jobType} booking request was ${updated.status}.`,
+      resourceType: 'direct_booking',
+      resourceId: updated._id,
+    });
+  } catch (error) {
+    console.error('Booking response notification could not be saved:', error.name);
+  }
+  return res.json({ booking: safe(updated) });
 });
 
 router.patch('/:id/complete', async (req, res) => {

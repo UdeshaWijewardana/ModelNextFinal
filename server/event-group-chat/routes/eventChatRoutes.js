@@ -210,7 +210,8 @@ router.post(
       await notifyBestEffort(
         { id: invitation.invitedUserId, role: invitation.invitedUserRole },
         'chat_invitation_received',
-        'You received an invitation to an event group chat.'
+        'You received an invitation to an event group chat.',
+        { resourceType: 'event_chat_invitation', resourceId: invitation._id }
       );
 
       return res.status(201).json({
@@ -300,7 +301,8 @@ router.patch(
           { id: chat.ownerId, role: chat.ownerRole },
           action === 'accept' ? 'chat_invitation_accepted' : 'chat_invitation_declined',
           `An event group chat invitation was ${updatedInvitation.status}.`,
-          session
+          session,
+          { resourceType: 'event_chat_invitation', resourceId: updatedInvitation._id }
         );
 
         return {
