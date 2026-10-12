@@ -23,11 +23,8 @@ export default function AIModelRecommendations() {
         setError("");
 
         const [modelData, photographerData] = await Promise.all([
-          apiFetch(`/matching/events/${eventId}/models`)
-            .then(readJson),
-
-          apiFetch(`/matching/events/${eventId}/photographers`)
-            .then(readJson),
+          apiFetch(`/matching/events/${eventId}/models`).then(readJson),
+          apiFetch(`/matching/events/${eventId}/photographers`).then(readJson),
         ]);
 
         if (cancelled) return;
@@ -37,14 +34,10 @@ export default function AIModelRecommendations() {
         setPhotographers(photographerData.matches || []);
       } catch (err) {
         if (!cancelled) {
-          setError(
-            err.message || "Failed to load talent recommendations."
-          );
+          setError(err.message || "Failed to load talent recommendations.");
         }
       } finally {
-        if (!cancelled) {
-          setLoading(false);
-        }
+        if (!cancelled) setLoading(false);
       }
     };
 
@@ -81,14 +74,10 @@ export default function AIModelRecommendations() {
   if (loading) {
     return (
       <main style={styles.page}>
-        <div style={styles.loadingContainer}>
-          <div style={styles.loadingOrb}>AI</div>
-          <h2 style={styles.loadingTitle}>
-            Finding the best talent
-          </h2>
-          <p style={styles.loadingText}>
-            Analysing profiles for your selected event.
-          </p>
+        <div style={styles.messageContainer}>
+          <div style={styles.aiBadge}>AI</div>
+          <h2>Finding the best talent</h2>
+          <p>Analysing profiles for your selected event.</p>
         </div>
       </main>
     );
@@ -97,8 +86,7 @@ export default function AIModelRecommendations() {
   if (error) {
     return (
       <main style={styles.page}>
-        <div style={styles.errorContainer}>
-          <div style={styles.errorIcon}>!</div>
+        <div style={styles.messageContainer}>
           <h2>Unable to load recommendations</h2>
           <p>{error}</p>
           <button
@@ -139,8 +127,8 @@ export default function AIModelRecommendations() {
 
         {event && (
           <section style={styles.eventCard}>
-            <div style={styles.eventInfo}>
-              <p style={styles.eventLabel}>SELECTED EVENT</p>
+            <div>
+              <p style={styles.eyebrow}>SELECTED EVENT</p>
               <h2 style={styles.eventTitle}>{event.title}</h2>
               <p style={styles.eventMeta}>
                 {event.eventType || "Event"}
@@ -187,11 +175,9 @@ export default function AIModelRecommendations() {
 
         {activeMatches.length === 0 ? (
           <div style={styles.emptyState}>
-            <div style={styles.emptyIcon}>AI</div>
-            <h2 style={styles.emptyTitle}>
-              No {activeTab} found
-            </h2>
-            <p style={styles.emptyText}>
+            <div style={styles.aiBadge}>AI</div>
+            <h2>No {activeTab} found</h2>
+            <p>
               There are currently no approved {activeTab} to recommend
               for this event.
             </p>
@@ -236,6 +222,16 @@ export default function AIModelRecommendations() {
                   ? `/photographers/${match.id}`
                   : `/models/${match.id}`;
 
+                const photographyStyles = Array.isArray(
+                  match.photographyStyles
+                )
+                  ? match.photographyStyles
+                  : [];
+
+                const photographerSkills = Array.isArray(match.skills)
+                  ? match.skills
+                  : [];
+
                 return (
                   <article
                     key={match.id || index}
@@ -276,7 +272,9 @@ export default function AIModelRecommendations() {
 
                       <div style={styles.scoreBadge}>
                         <span style={styles.scoreValue}>
-                          {Number(match.matchScore ?? 0).toFixed(1)}%
+                          {match.matchScore == null
+                            ? "N/A"
+                            : `${Number(match.matchScore).toFixed(0)}%`}
                         </span>
                         <span style={styles.scoreLabel}>MATCH</span>
                       </div>
@@ -302,36 +300,28 @@ export default function AIModelRecommendations() {
                       <div style={styles.details}>
                         {match.location && (
                           <div style={styles.detailRow}>
-                            <span style={styles.detailLabel}>
-                              Location
-                            </span>
+                            <span style={styles.detailLabel}>Location</span>
                             <span>{match.location}</span>
                           </div>
                         )}
 
                         {!isPhotographer && match.gender && (
                           <div style={styles.detailRow}>
-                            <span style={styles.detailLabel}>
-                              Gender
-                            </span>
+                            <span style={styles.detailLabel}>Gender</span>
                             <span>{match.gender}</span>
                           </div>
                         )}
 
                         {!isPhotographer && match.height && (
                           <div style={styles.detailRow}>
-                            <span style={styles.detailLabel}>
-                              Height
-                            </span>
+                            <span style={styles.detailLabel}>Height</span>
                             <span>{match.height} cm</span>
                           </div>
                         )}
 
                         {isPhotographer && (
                           <div style={styles.detailRow}>
-                            <span style={styles.detailLabel}>
-                              Experience
-                            </span>
+                            <span style={styles.detailLabel}>Experience</span>
                             <span>
                               {match.experienceYears ?? 0} years
                             </span>
@@ -340,9 +330,7 @@ export default function AIModelRecommendations() {
 
                         {isPhotographer && (
                           <div style={styles.detailRow}>
-                            <span style={styles.detailLabel}>
-                              Portfolio
-                            </span>
+                            <span style={styles.detailLabel}>Portfolio</span>
                             {match.portfolio ? (
                               <a
                                 href={match.portfolio}
@@ -358,6 +346,56 @@ export default function AIModelRecommendations() {
                           </div>
                         )}
                       </div>
+
+                      {/* Photographer photography styles */}
+                      {isPhotographer && (
+                        <div style={styles.tagSection}>
+                          <h4 style={styles.tagHeading}>
+                            Photography Styles
+                          </h4>
+                          {photographyStyles.length > 0 ? (
+                            <div style={styles.categories}>
+                              {photographyStyles.map((style, i) => (
+                                <span
+                                  key={`style-${i}`}
+                                  style={styles.category}
+                                >
+                                  {style}
+                                </span>
+                              ))}
+                            </div>
+                          ) : (
+                            <p style={styles.noTags}>
+                              No photography styles added
+                            </p>
+                          )}
+                        </div>
+                      )}
+
+                      {/* Photographer professional skills */}
+                      {isPhotographer && (
+                        <div style={styles.tagSection}>
+                          <h4 style={styles.tagHeading}>
+                            Professional Skills
+                          </h4>
+                          {photographerSkills.length > 0 ? (
+                            <div style={styles.categories}>
+                              {photographerSkills.map((skill, i) => (
+                                <span
+                                  key={`photographer-skill-${i}`}
+                                  style={styles.category}
+                                >
+                                  {skill}
+                                </span>
+                              ))}
+                            </div>
+                          ) : (
+                            <p style={styles.noTags}>
+                              No professional skills added
+                            </p>
+                          )}
+                        </div>
+                      )}
 
                       {!isPhotographer &&
                         match.categories?.length > 0 && (
@@ -378,7 +416,7 @@ export default function AIModelRecommendations() {
                           <div style={styles.categories}>
                             {match.skills.map((skill, i) => (
                               <span
-                                key={`skill-${i}`}
+                                key={`model-skill-${i}`}
                                 style={styles.category}
                               >
                                 {skill}
@@ -391,9 +429,7 @@ export default function AIModelRecommendations() {
                         type="button"
                         style={styles.profileButton}
                         onClick={() =>
-                          navigate(
-                            `${profilePath}?${params.toString()}`
-                          )
+                          navigate(`${profilePath}?${params.toString()}`)
                         }
                       >
                         <span>
@@ -488,16 +524,6 @@ const styles = {
     borderRadius: "16px",
     padding: "23px",
     marginBottom: "28px",
-  },
-  eventInfo: {
-    minWidth: 0,
-  },
-  eventLabel: {
-    margin: "0 0 6px",
-    color: "var(--mn-burgundy)",
-    fontSize: "9px",
-    letterSpacing: "2px",
-    fontWeight: "700",
   },
   eventTitle: {
     margin: 0,
@@ -712,11 +738,20 @@ const styles = {
     color: "var(--mn-burgundy)",
     textDecoration: "none",
   },
+  tagSection: {
+    marginTop: "15px",
+  },
+  tagHeading: {
+    margin: "0 0 8px",
+    color: "var(--mn-silver)",
+    fontSize: "11px",
+    fontWeight: "700",
+  },
   categories: {
     display: "flex",
     flexWrap: "wrap",
     gap: "7px",
-    margin: "15px 0 18px",
+    margin: "10px 0 18px",
   },
   category: {
     padding: "5px 10px",
@@ -725,6 +760,11 @@ const styles = {
     border: "1px solid var(--mn-border)",
     color: "var(--mn-silver)",
     fontSize: "10px",
+  },
+  noTags: {
+    margin: "5px 0 12px",
+    color: "var(--mn-muted)",
+    fontSize: "11px",
   },
   profileButton: {
     width: "100%",
@@ -743,9 +783,9 @@ const styles = {
   arrow: {
     fontSize: "18px",
   },
-  loadingContainer: {
+  messageContainer: {
     maxWidth: "600px",
-    margin: "170px auto",
+    margin: "120px auto",
     textAlign: "center",
   },
   loadingOrb: {
@@ -760,58 +800,11 @@ const styles = {
     justifyContent: "center",
     fontWeight: "800",
   },
-  loadingTitle: {
-    margin: 0,
-    fontSize: "25px",
-  },
-  loadingText: {
-    marginTop: "10px",
-    color: "var(--mn-muted)",
-    fontSize: "14px",
-  },
-  errorContainer: {
-    maxWidth: "600px",
-    margin: "120px auto",
-    textAlign: "center",
-  },
-  errorIcon: {
-    width: "50px",
-    height: "50px",
-    margin: "0 auto 18px",
-    borderRadius: "50%",
-    background: "var(--mn-burgundy)",
-    color: "var(--mn-ivory)",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    fontWeight: "800",
-  },
   emptyState: {
     textAlign: "center",
     padding: "80px 20px",
     background: "var(--mn-surface)",
     border: "1px solid var(--mn-border)",
     borderRadius: "16px",
-  },
-  emptyIcon: {
-    width: "52px",
-    height: "52px",
-    margin: "0 auto 18px",
-    borderRadius: "15px",
-    background: "var(--mn-burgundy)",
-    color: "var(--mn-ivory)",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    fontWeight: "800",
-  },
-  emptyTitle: {
-    margin: 0,
-    fontSize: "22px",
-  },
-  emptyText: {
-    marginTop: "10px",
-    color: "var(--mn-muted)",
-    fontSize: "14px",
   },
 };

@@ -239,6 +239,57 @@ router.get(
 // requestType so the frontend can display them correctly.
 // =====================================================
 
+/**
+ * GET /api/events/talent/bookings/mine
+ * Get event booking requests received by the logged-in photographer/model.
+ */
+router.get(
+  '/talent/bookings/mine',
+  requireUser,
+  requireDatabase,
+  async (req, res) => {
+    try {
+      if (!['photographer', 'model'].includes(req.user.role)) {
+        return res.status(403).json({
+          error: 'Only photographers and models can view received bookings.',
+        });
+      }
+
+      const requests = await EventRequest.find({
+        requesterId: req.user.id,
+        requesterRole: req.user.role,
+        requestType: 'booking',
+      })
+        .populate(
+          'eventId',
+          'title eventType startDate endDate location ownerId ownerRole'
+        )
+        .sort({ createdAt: -1 });
+
+      const bookings = requests.map((request) => ({
+        id: request._id,
+        eventId: request.eventId?._id || request.eventId,
+        eventTitle: request.eventId?.title || 'Event',
+        eventType: request.eventId?.eventType || 'Event',
+        startDate: request.eventId?.startDate || null,
+        endDate: request.eventId?.endDate || null,
+        location: request.eventId?.location || '',
+        status: request.status,
+        requestType: request.requestType || 'booking',
+        createdAt: request.createdAt,
+      }));
+
+      return res.json({ bookings });
+    } catch (error) {
+      console.error('Get received event bookings error:', error);
+
+      return res.status(500).json({
+        error: 'Unable to load event booking requests.',
+      });
+    }
+  }
+);
+
 router.get(
   '/bookings/mine',
   requireUser,

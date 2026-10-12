@@ -1,292 +1,270 @@
-const { predictMatch } = require('./randomForestService');
-
 const normalizeString = (value) =>
-  String(value || '').trim().toLowerCase();
+  String(value || "").trim().toLowerCase();
 
 const normalizeArray = (value) => {
-  if (!Array.isArray(value)) return [];
+  if (Array.isArray(value)) {
+    return value.map((item) => String(item).trim()).filter(Boolean);
+  }
 
-  return value
-    .map((item) => normalizeString(item))
-    .filter(Boolean);
+  if (typeof value === "string") {
+    return value
+      .split(",")
+      .map((item) => item.trim())
+      .filter(Boolean);
+  }
+
+  return [];
+};
+
+const toNumber = (value) => {
+  if (value === null || value === undefined || value === "") {
+    return null;
+  }
+
+  const number = Number(value);
+  return Number.isFinite(number) ? number : null;
+};
+
+const getValidHeight = (value) => {
+  const height = toNumber(value);
+
+  // This matching system expects adult model heights in centimetres.
+  if (height === null || height < 140 || height > 220) {
+    return null;
+  }
+
+  return height;
 };
 
 const calculateAge = (birthdate) => {
   if (!birthdate) return null;
 
-  const birth = new Date(birthdate);
-
-  if (Number.isNaN(birth.getTime())) return null;
+  const date = new Date(birthdate);
+  if (Number.isNaN(date.getTime())) return null;
 
   const today = new Date();
+  let age = today.getFullYear() - date.getFullYear();
 
-  let age = today.getFullYear() - birth.getFullYear();
+  const beforeBirthday =
+    today.getMonth() < date.getMonth() ||
+    (today.getMonth() === date.getMonth() &&
+      today.getDate() < date.getDate());
 
-  const monthDifference = today.getMonth() - birth.getMonth();
+  if (beforeBirthday) age--;
 
-  if (
-    monthDifference < 0 ||
-    (monthDifference === 0 &&
-      today.getDate() < birth.getDate())
-  ) {
-    age--;
-  }
-
-  return age;
-};
-
-const toNumber = (value) => {
-  const number = Number(value);
-
-  return Number.isFinite(number) ? number : null;
-};
-
-const calculateRangeDifference = (value, min, max) => {
-  if (value === null) return 999;
-
-  const minimum = toNumber(min);
-  const maximum = toNumber(max);
-
-  if (minimum !== null && value < minimum) {
-    return minimum - value;
-  }
-
-  if (maximum !== null && value > maximum) {
-    return value - maximum;
-  }
-
-  return 0;
+  return age >= 0 ? age : null;
 };
 
 const calculateRangeMatch = (value, min, max) => {
-  if (value === null) return 0;
+  if (value === null || value === undefined) return 0.5;
 
-  const minimum = toNumber(min);
-  const maximum = toNumber(max);
+  const number = toNumber(value);
+  if (number === null) return 0.5;
 
-  if (minimum === null && maximum === null) {
-    return 1;
+  const lower = toNumber(min);
+  const upper = toNumber(max);
+
+  if (lower === null && upper === null) return 1;
+  if (lower !== null && number < lower) {
+    return Math.max(0, 1 - (lower - number) / Math.max(lower, 1));
   }
-
-  if (minimum !== null && value < minimum) {
-    return 0;
-  }
-
-  if (maximum !== null && value > maximum) {
-    return 0;
+  if (upper !== null && number > upper) {
+    return Math.max(0, 1 - (number - upper) / Math.max(upper, 1));
   }
 
   return 1;
 };
 
-const calculateOverlapScore = (modelValues, requiredValues) => {
-  if (!requiredValues.length) {
-    return 0.5;
-  }
+const calculateOverlapScore = (actual, required) => {
+  const actualItems = normalizeArray(actual).map(normalizeString);
+  const requiredItems = normalizeArray(required).map(normalizeString);
 
-  if (!modelValues.length) {
-    return 0;
-  }
+  if (requiredItems.length === 0) return 1;
+  if (actualItems.length === 0) return 0;
 
-  const matches = requiredValues.filter((required) =>
-    modelValues.some(
-      (modelValue) =>
-        modelValue === required ||
-        modelValue.includes(required) ||
-        required.includes(modelValue)
-    )
-  );
+  const matched = requiredItems.filter((item) =>
+    actualItems.includes(item)
+  ).length;
 
-  return matches.length / requiredValues.length;
+  return matched / requiredItems.length;
 };
 
-const calculateGenderMatch = (modelGender, requiredGender) => {
-  const required = normalizeString(requiredGender);
+const calculateGenderMatch = (modelGender, eventGender) => {
+  const required = normalizeString(eventGender);
 
-  if (!required || required === 'any') {
-    return 0.5;
-  }
+  if (!required || required === "any" || required === "all") return 1;
 
-  const model = normalizeString(modelGender);
-
-  if (!model) {
-    return 0;
-  }
-
-  return model === required ? 1 : 0;
+  return normalizeString(modelGender) === required ? 1 : 0;
 };
 
-const calculateLocationMatch = (
-  modelLocation,
-  eventLocation
-) => {
-  const model = normalizeString(modelLocation);
-  const event = normalizeString(eventLocation);
+const calculateLocationMatch = (modelLocation, eventLocation) => {
+  const required = normalizeString(eventLocation);
+  const actual = normalizeString(modelLocation);
 
-  if (
-    !model ||
-    !event ||
-    event === 'to be confirmed'
-  ) {
-    return 0.5;
-  }
-
-  if (model === event) {
-    return 1;
-  }
-
-  if (
-    model.includes(event) ||
-    event.includes(model)
-  ) {
-    return 1;
-  }
+  if (!required || !actual) return 0.5;
+  if (actual === required) return 1;
+  if (actual.includes(required) || required.includes(actual)) return 0.75;
 
   return 0;
 };
 
 const calculateModelEventFeatures = (model, event) => {
-  const modelAge = calculateAge(model.birthdate);
-  const modelHeight = toNumber(model.height);
+  const height = getValidHeight(model.height);
+  const age = calculateAge(model.birthdate);
 
-  const requiredCategories =
-    normalizeArray(event.requiredCategories);
+  const requiredHeightMin = toNumber(event.minHeight);
+  const requiredHeightMax = toNumber(event.maxHeight);
+  const requiredAgeMin = toNumber(event.minAge);
+  const requiredAgeMax = toNumber(event.maxAge);
 
-  const requiredSkills =
-    normalizeArray(event.requiredSkills);
+  return {
+    heightMatch: height === null
+      ? 0
+      : calculateRangeMatch(height, requiredHeightMin, requiredHeightMax),
 
-  const modelCategories =
-    normalizeArray(model.categories);
+    ageMatch: age === null
+      ? 0.5
+      : calculateRangeMatch(age, requiredAgeMin, requiredAgeMax),
 
-  const modelSkills =
-    normalizeArray(model.skills);
+    skillsMatch: calculateOverlapScore(
+      model.skills,
+      event.requiredSkills
+    ),
 
-  const genderMatch = calculateGenderMatch(
-    model.gender,
-    event.requiredGender
-  );
+    categoriesMatch: calculateOverlapScore(
+      model.categories,
+      event.requiredCategories
+    ),
 
-  const ageMatch = calculateRangeMatch(
-    modelAge,
-    event.minAge,
-    event.maxAge
-  );
+    genderMatch: calculateGenderMatch(model.gender, event.gender),
 
-  const heightMatch = calculateRangeMatch(
-    modelHeight,
-    event.minHeight,
-    event.maxHeight
-  );
-
-  const ageDifference =
-    calculateRangeDifference(
-      modelAge,
-      event.minAge,
-      event.maxAge
-    );
-
-  const heightDifference =
-    calculateRangeDifference(
-      modelHeight,
-      event.minHeight,
-      event.maxHeight
-    );
-
-  const locationMatch =
-    calculateLocationMatch(
+    locationMatch: calculateLocationMatch(
       model.location,
       event.location
-    );
-
-  const categoryOverlap =
-    calculateOverlapScore(
-      modelCategories,
-      requiredCategories
-    );
-
-  const skillOverlap =
-    calculateOverlapScore(
-      modelSkills,
-      requiredSkills
-    );
-
-  return {
-    gender_match: genderMatch,
-    age_difference: ageDifference,
-    height_difference: heightDifference,
-    location_match: locationMatch,
-    category_overlap: categoryOverlap,
-    skill_overlap: skillOverlap,
-    age_match: ageMatch,
-    height_match: heightMatch
+    ),
   };
 };
+
+// Fallback scoring so the service can work without an external ML module.
+
+const predictMatch = async (features, event) => {
+  const weights = {
+    heightMatch: 0.20,
+    ageMatch: 0.15,
+    skillsMatch: 0.25,
+    categoriesMatch: 0.20,
+    genderMatch: 0.10,
+    locationMatch: 0.10,
+  };
+
+  const score = Object.entries(weights).reduce(
+    (total, [key, weight]) =>
+      total + (features[key] ?? 0) * weight,
+    0
+  );
+
+  const hasRequiredSkills =
+    normalizeArray(event.requiredSkills).length > 0;
+  const hasRequiredCategories =
+    normalizeArray(event.requiredCategories).length > 0;
+
+  const hasHeightRequirement =
+    toNumber(event.minHeight) !== null ||
+    toNumber(event.maxHeight) !== null;
+
+  const hasGenderRequirement =
+    !["", "any", "all"].includes(normalizeString(event.gender));
+
+  const compatible =
+    (!hasRequiredSkills || features.skillsMatch > 0) &&
+    (!hasRequiredCategories || features.categoriesMatch > 0) &&
+    (!hasHeightRequirement || features.heightMatch > 0) &&
+    (!hasGenderRequirement || features.genderMatch > 0);
+
+  return {
+    score: Math.round(score * 100),
+    compatible,
+  };
+};
+
 
 const getRecommendation = (score) => {
-  if (score >= 85) {
-    return 'Excellent compatibility';
-  }
-
-  if (score >= 70) {
-    return 'Good compatibility';
-  }
-
-  if (score >= 50) {
-    return 'Moderate compatibility';
-  }
-
-  return 'Low compatibility';
+  if (score >= 80) return "Highly Recommended";
+  if (score >= 60) return "Recommended";
+  if (score >= 40) return "Potential Match";
+  return "Low Match";
 };
 
-const calculateModelEventMatch = async (
-  model,
-  event
-) => {
-  const features = calculateModelEventFeatures(
-    model,
-    event
+const calculateModelEventMatch = async (model, event) => {
+  const features = calculateModelEventFeatures(model, event);
+  const prediction = await predictMatch(features, event);
+
+  const rawScore = Number(prediction.score);
+  const safeRawScore = Number.isFinite(rawScore)
+    ? Math.max(0, Math.min(100, rawScore))
+    : 0;
+
+  const modelSkills = normalizeArray(model.skills);
+  const modelCategories = normalizeArray(model.categories);
+  const requiredSkills = normalizeArray(event.requiredSkills);
+  const requiredCategories = normalizeArray(event.requiredCategories);
+
+  const rawHeight = toNumber(model.height);
+  const validHeight = getValidHeight(model.height);
+
+  const hasSkills = modelSkills.length > 0;
+  const hasCategories = modelCategories.length > 0;
+  const invalidHeight = rawHeight !== null && validHeight === null;
+
+  let profilePenalty = 1;
+
+  if (requiredSkills.length > 0 && !hasSkills) {
+    profilePenalty -= 0.15;
+  }
+
+  if (requiredCategories.length > 0 && !hasCategories) {
+    profilePenalty -= 0.15;
+  }
+
+  if (invalidHeight) {
+    profilePenalty *= 0.60;
+  }
+
+  const adjustedScore = Number(
+    (safeRawScore * profilePenalty).toFixed(2)
   );
 
-  const prediction = await predictMatch(features);
-
   return {
-  id: model._id,
-  fullName: model.fullName || 'Unnamed Model',
-  location: model.location || '',
-  gender: model.gender || '',
-  categories: model.categories || [],
-  skills: model.skills || [],
-  height: model.height || '',
-  birthdate: model.birthdate || '',
-  profileImage: model.profileImage || '',
-  matchScore: prediction.score,
-  recommendation: getRecommendation(
-    prediction.score
-  ),
-  compatible: prediction.compatible
+    id: model._id,
+    fullName: model.fullName || "Unnamed Model",
+    location: model.location || "",
+    gender: model.gender || "",
+    categories: model.categories || [],
+    skills: model.skills || [],
+    height: model.height || "",
+    birthdate: model.birthdate || "",
+    profileImage: model.profileImage || "",
+    matchScore: adjustedScore,
+    rawMatchScore: safeRawScore,
+    profileCompleteness: {
+      hasSkills,
+      hasCategories,
+      invalidHeight,
+    },
+    recommendation: getRecommendation(adjustedScore),
+    compatible: prediction.compatible,
   };
 };
 
-const rankModelsForEvent = async (
-  models,
-  event
-) => {
+const rankModelsForEvent = async (models, event) => {
   const matches = await Promise.all(
-    models.map((model) =>
-      calculateModelEventMatch(
-        model,
-        event
-      )
-    )
+    models.map((model) => calculateModelEventMatch(model, event))
   );
 
-  return matches.sort(
-    (a, b) =>
-      b.matchScore - a.matchScore
-  );
+  return matches.sort((a, b) => b.matchScore - a.matchScore);
 };
 
 module.exports = {
   calculateModelEventMatch,
-  rankModelsForEvent
+  rankModelsForEvent,
 };

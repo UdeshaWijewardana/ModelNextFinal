@@ -464,3 +464,35 @@
   font-size: 12px;
   font-weight: 600;
 }
+
+.client-multiselect-options {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  max-height: 180px;
+  overflow-y: auto;
+  padding: 8px 12px;
+  background: #201c20;
+  border: 1px solid #393338;
+  border-radius: 6px;
+}
+
+.client-multiselect-option {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 10px;
+  width: 100%;
+  padding: 9px 4px;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.client-multiselect-option input[type="checkbox"] {
+  flex: 0 0 auto;
+  width: 15px;
+  height: 15px;
+  margin: 0;
+  accent-color: #a0002d;
+}

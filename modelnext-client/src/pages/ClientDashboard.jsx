@@ -21,8 +21,8 @@ const initialProject = {
   maxAge: "",
   minHeight: "",
   maxHeight: "",
-  requiredCategories: "",
-  requiredSkills: "",
+  requiredCategories: [],
+  requiredSkills: [],
 };
 
 const bookingFilters = [
@@ -99,6 +99,105 @@ const dashboardSectionIds = {
   'my-events': 'my-events',
   recommendations: 'recommendations',
 };
+
+const CATEGORY_OPTIONS = [
+  'Commercial',
+  'Fashion',
+  'Lifestyle',
+  'Menswear',
+  'Womenswear',
+  'Fitness',
+  'Campaign',
+  'Runway',
+  'Beauty',
+  'Editorial',
+  'Sportswear',
+  'Bridal',
+  'Product Modeling',
+  'Promotional',
+];
+
+const SKILL_OPTIONS = [
+  'Posing',
+  'Runway Walking',
+  'Fashion Modeling',
+  'Commercial Modeling',
+  'Photo Shoots',
+  'Acting',
+  'Dancing',
+  'Fitness Modeling',
+  'Product Modeling',
+  'Camera Confidence',
+  'Facial Expressions',
+  'Promotional Modeling',
+];
+
+function MultiSelect({ label, options, value = [], onChange, disabled }) {
+  const [open, setOpen] = useState(false);
+
+  return (
+    <div className="client-multiselect">
+      <label>{label}</label>
+
+      <button
+        type="button"
+        className="client-multiselect-trigger"
+        disabled={disabled}
+        onClick={() => setOpen((previous) => !previous)}
+        aria-expanded={open}
+      >
+        <span>
+          {value.length
+            ? `${value.length} selected`
+            : `Select ${label.toLowerCase()}`}
+        </span>
+        <span>{open ? '▲' : '▼'}</span>
+      </button>
+
+      {open && (
+        <div className="client-multiselect-options">
+          {options.map((option) => (
+            <label key={option} className="client-multiselect-option">
+              <input
+                type="checkbox"
+                checked={value.includes(option)}
+                disabled={disabled}
+                onChange={() => {
+                  onChange(
+                    value.includes(option)
+                      ? value.filter((item) => item !== option)
+                      : [...value, option]
+                  );
+                }}
+              />
+              {option}
+            </label>
+          ))}
+        </div>
+      )}
+
+      {value.length > 0 && (
+        <div className="client-multiselect-selected">
+          {value.map((item) => (
+            <span key={item} className="client-multiselect-chip">
+              {item}
+              <button
+                type="button"
+                disabled={disabled}
+                aria-label={`Remove ${item}`}
+                onClick={() =>
+                  onChange(value.filter((selected) => selected !== item))
+                }
+              >
+                ×
+              </button>
+            </span>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
 
 export default function ClientDashboard() {
   const navigate = useNavigate();
@@ -332,13 +431,9 @@ export default function ClientDashboard() {
             ? undefined
             : Number(projectForm.maxHeight),
 
-        requiredCategories: listValue(
-          projectForm.requiredCategories
-        ),
+        equiredCategories: projectForm.requiredCategories,
 
-        requiredSkills: listValue(
-          projectForm.requiredSkills
-        ),
+   requiredSkills: projectForm.requiredSkills,
       };
 
       const endpoint = editingEvent
@@ -1643,47 +1738,33 @@ const bookingCounts = {
                   />
                 </label>
 
-                <label>
-                  Categories
 
-                  <small className="client-field-note">
-                    Comma separated
-                  </small>
+<MultiSelect
+  label="Categories"
+  options={CATEGORY_OPTIONS}
+  value={projectForm.requiredCategories}
+  disabled={savingProject}
+  onChange={(value) =>
+    setProjectForm((previous) => ({
+      ...previous,
+      requiredCategories: value,
+    }))
+  }
+/>
 
-                  <input
-                    value={
-                      projectForm.requiredCategories
-                    }
-                    onChange={(event) =>
-                      setProjectForm({
-                        ...projectForm,
-                        requiredCategories:
-                          event.target.value,
-                      })
-                    }
-                  />
-                </label>
+<MultiSelect
+  label="Skills"
+  options={SKILL_OPTIONS}
+  value={projectForm.requiredSkills}
+  disabled={savingProject}
+  onChange={(value) =>
+    setProjectForm((previous) => ({
+      ...previous,
+      requiredSkills: value,
+    }))
+  }
+/>
 
-                <label>
-                  Skills
-
-                  <small className="client-field-note">
-                    Comma separated
-                  </small>
-
-                  <input
-                    value={
-                      projectForm.requiredSkills
-                    }
-                    onChange={(event) =>
-                      setProjectForm({
-                        ...projectForm,
-                        requiredSkills:
-                          event.target.value,
-                      })
-                    }
-                  />
-                </label>
               </div>
 
               <label>

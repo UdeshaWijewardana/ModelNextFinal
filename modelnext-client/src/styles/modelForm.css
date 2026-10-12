@@ -433,3 +433,37 @@
     padding: 16px;
   }
 }
+
+.model-skills-dropdown {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  margin-top: 8px;
+  padding: 14px;
+  border: 1px solid #3a3033;
+  border-radius: 8px;
+  background: #242222;
+}
+
+.model-skills-dropdown .model-skill-option {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  cursor: pointer;
+  font-size: 14px;
+  color: #f3eeee;
+}
+
+.model-skills-dropdown .model-skill-option input {
+  width: 16px;
+  height: 16px;
+  margin: 0;
+  accent-color: #b00035;
+  flex-shrink: 0;
+}
+
+@media (max-width: 600px) {
+  .model-skills-dropdown {
+    grid-template-columns: 1fr;
+  }
+}

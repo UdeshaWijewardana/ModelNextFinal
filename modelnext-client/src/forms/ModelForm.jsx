@@ -11,6 +11,18 @@ const verificationLabel = (label, status) => {
   if (status === "partial_match") return `— ${label}: Partial Match (Manual Review)`;
   return `— ${label}: Unable to Read`;
 };
+const MODEL_SKILL_OPTIONS = [
+  "Runway",
+  "Editorial",
+  "Commercial",
+  "Fashion",
+  "Portrait",
+  "Fitness",
+  "Beauty",
+  "Print Modeling",
+  "Catwalk",
+  "Promotional Modeling",
+];
 
 const ModelForm = () => {
   const navigate = useNavigate();
@@ -30,7 +42,7 @@ const ModelForm = () => {
     hip: "",
     idType: "nic",
     identityDocumentNumber: "",
-    skills: ""
+    skills: []
   });
 
   const [profile, setProfile] = useState(null);
@@ -296,7 +308,7 @@ const ModelForm = () => {
     formData.append("hip", form.hip);
     formData.append("idType", form.idType);
     formData.append("identityDocumentNumber", form.identityDocumentNumber.trim());
-    formData.append("skills", form.skills);
+    formData.append("skills", JSON.stringify(form.skills));
     formData.append("livenessVerificationId", livenessSession.verificationId);
     formData.append("livenessAttemptId", livenessSession.attemptId);
     formData.append("profileImage", profile);
@@ -460,9 +472,34 @@ const ModelForm = () => {
                 </div>
               </div>
 
-              <label>Skills <span>(optional)</span></label>
-              <input name="skills" value={form.skills} placeholder="e.g., Runway, Editorial, Commercial" onChange={handleChange} />
-              <p className="field-help">Separate skills with commas so clients can find the most suitable models.</p>
+           
+<label>Skills <span>(optional)</span></label>
+
+<div className="model-skills-dropdown">
+  {MODEL_SKILL_OPTIONS.map((skill) => (
+    <label key={skill} className="model-skill-option">
+      <input
+        type="checkbox"
+        checked={form.skills.includes(skill)}
+        onChange={(e) => {
+          setForm((previous) => ({
+            ...previous,
+            skills: e.target.checked
+              ? [...previous.skills, skill]
+              : previous.skills.filter(
+                  (item) => item !== skill
+                ),
+          }));
+        }}
+      />
+      <span>{skill}</span>
+    </label>
+  ))}
+</div>
+
+<p className="field-help">
+  Select all skills that apply to your modeling profile.
+</p>
 
               <div className="grid">
                 <div>
@@ -632,7 +669,11 @@ const ModelForm = () => {
                 <p><strong>Registration details</strong></p>
                 <p>{form.fullName.trim()} · {form.email.trim()} · {form.location.trim()}</p>
                 <p>Measurements: {form.weight} kg · {form.height} cm · waist {form.waist} cm · hip {form.hip} cm</p>
-                <p>Skills: {form.skills.trim() || "No skills added"}</p>
+                <p>
+  Skills: {form.skills.length
+    ? form.skills.join(", ")
+    : "No skills added"}
+</p>
                 <p>Portfolio: profile image and six portfolio images selected.</p>
                 <p>{!identityCheck ? "Document Verification: Incomplete" : prototypeVerificationPassed ? "Document Verification: Passed (Prototype)" : "Document Verification: Failed"}</p>
                 <p>{livenessCompleted ? "✓ Liveness verification complete" : "Liveness verification incomplete"}</p>
