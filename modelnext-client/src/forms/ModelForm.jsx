@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { SERVER_BASE_URL } from "../api";
-import WebcamTest from "../components/WebcamTest";
+import WebcamTest from "../liveness-check/WebcamTest";
 import { useAuth } from "../context/AuthContext";
 import "../styles/modelForm.css";
 

@@ -13,7 +13,7 @@ Set `OPENAI_API_KEY` and optionally `OPENAI_VISION_MODEL` in the backend process
 From `server`:
 
 ```powershell
-node openai/testOpenAIIdentity.js
+node ocr/testOpenAIIdentity.js
 ```
 
 ## Manual live test
@@ -21,11 +21,11 @@ node openai/testOpenAIIdentity.js
 Create synthetic test images clearly marked `SAMPLE / NOT VALID`, set your own API key in the backend environment, then from `server` run:
 
 ```powershell
-node -r dotenv/config openai/testOpenAIIdentityLive.js nic .\sample-front.png .\sample-back.png
+node -r dotenv/config ocr/testOpenAIIdentityLive.js nic .\sample-front.png .\sample-back.png
 ```
 
 For a driving licence, use `license` and two paths. For a passport information page, use `passport` and one path. The script prints only field statuses, not extracted identity values or credentials. This command makes real requests and may incur API charges; it does not enable billing. Live behavior has not been confirmed by the project tests.
 
-## Roll back registration to EasyOCR
+## Registration integration
 
-In `server/services/identityVerificationService.js`, change the `extractIdentityDocuments` binding from `createOpenAIIdentityExtractor()` back to `createEasyOCRExtractor()`. Keep the Tesseract rollback files and both OCR systems' dependencies untouched. There is no automatic fallback when OpenAI is unavailable.
+The active registration integration is in `server/ocr/identityVerificationService.js` and uses OpenAI Vision. There is no automatic fallback when OpenAI is unavailable.

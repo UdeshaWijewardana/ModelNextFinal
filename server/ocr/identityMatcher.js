@@ -1,6 +1,6 @@
 const { normalizeOCRText } = require("./ocrTextNormalizer");
 const { extractDateOfBirth } = require("./dateExtractor");
-const { normalizeDocumentNumber, isValidDocumentNumber } = require('./documentNumberExtractor');
+const { normalizeDocumentNumber, isValidDocumentNumber } = require("./documentNumberExtractor");
 
 function normalizeNameForComparison(name) {
   if (typeof name !== "string") {

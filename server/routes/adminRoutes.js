@@ -11,6 +11,7 @@ const Agency = require('../models/Agency');
 const Client = require('../models/Client');
 const Event = require('../models/Event');
 const Notification = require('../models/Notification');
+const Dispute = require('../models/Dispute');
 const { requireAdmin } = require('../middleware/requireAdmin');
 const { requireDatabase, databaseUnavailable } = require('../middleware/requireDatabase');
 const { ADMIN_SESSION_COOKIE, cookieOptions, clearCookie } = require('../utils/sessionCookies');
@@ -50,9 +51,37 @@ const safeRegistration = (role, registration) => ({
   rejectionReason: registration.rejectionReason,
   createdAt: registration.createdAt,
   identityVerificationStatus: role === 'model' ? registration.verificationStatus : undefined,
+  ...(role === 'model' ? {
+    birthdate: registration.birthdate,
+    gender: registration.gender,
+    address: registration.address,
+    idType: registration.idType,
+    username: registration.username,
+    categories: registration.categories || [],
+    skills: registration.skills || [],
+    weight: registration.weight,
+    height: registration.height,
+    waist: registration.waist,
+    hip: registration.hip,
+  } : {}),
 });
 
 const getRegistrationModel = (role) => registrationModels[role] || null;
+const safeDispute = dispute => ({
+  id: dispute._id,
+  bookingId: dispute.bookingId?._id || dispute.bookingId,
+  bookingReference: String(dispute.bookingId?._id || dispute.bookingId),
+  booking: dispute.bookingId && dispute.bookingId.requesterName ? { jobType: dispute.bookingId.jobType, bookingDate: dispute.bookingId.bookingDate } : undefined,
+  complainant: { id: dispute.complainantId, role: dispute.complainantRole, name: dispute.complainantRole === dispute.bookingId?.requesterRole && String(dispute.complainantId) === String(dispute.bookingId?.requesterId) ? dispute.bookingId.requesterName : dispute.bookingId?.talentName },
+  respondent: { id: dispute.respondentId, role: dispute.respondentRole, name: dispute.respondentRole === dispute.bookingId?.requesterRole && String(dispute.respondentId) === String(dispute.bookingId?.requesterId) ? dispute.bookingId.requesterName : dispute.bookingId?.talentName },
+  reason: dispute.reason,
+  description: dispute.description,
+  status: dispute.status,
+  adminResolution: dispute.adminResolution,
+  resolvedAt: dispute.resolvedAt,
+  createdAt: dispute.createdAt,
+  updatedAt: dispute.updatedAt,
+});
 const serverRoot = path.join(__dirname, '..');
 
 const publicUploadUrl = (storedPath) => {
@@ -181,10 +210,23 @@ router.get('/registrations/model/:id/identity-review', requireAdmin, requireData
           status: registration.verificationStatus || 'Not provided',
           summary: registration.verificationSummary || 'Not provided',
           nameVerificationStatus: registration.nameVerificationStatus || 'pending',
+          extracted: registration.aiChecks?.extractedIdentity || null,
+          submitted: registration.aiChecks?.submittedIdentity || {
+            fullName: registration.fullName || null,
+            dateOfBirth: registration.birthdate || null,
+            documentType: registration.idType || null,
+            documentNumber: 'Not stored',
+          },
           checks: registration.aiChecks ? {
             readable: Boolean(registration.aiChecks.ocrReadable),
             nameOcrStatus: registration.aiChecks.nameOcrStatus || 'not_recorded',
-            dateOfBirthMatched: Boolean(registration.aiChecks.dateOfBirthMatched),
+            dateOfBirthMatched: typeof registration.aiChecks.dateOfBirthMatched === 'boolean'
+              ? registration.aiChecks.dateOfBirthMatched
+              : null,
+            documentNumberMatched: typeof registration.aiChecks.documentNumberMatched === 'boolean'
+              ? registration.aiChecks.documentNumberMatched
+              : null,
+            fields: registration.aiChecks.identityChecks || null,
           } : null,
         },
         registeredIdentity: {
@@ -196,6 +238,7 @@ router.get('/registrations/model/:id/identity-review', requireAdmin, requireData
           frontUrl: evidenceUrl(registration, 'liveness-front'),
           leftUrl: evidenceUrl(registration, 'liveness-left'),
           rightUrl: evidenceUrl(registration, 'liveness-right'),
+          capturedAt: registration.aiChecks?.livenessEvidenceCapturedAt || null,
         },
       },
     });
@@ -222,7 +265,16 @@ router.get('/registrations/model/:id/evidence/:kind', requireAdmin, requireDatab
     if (!filePath.startsWith(`${root}${path.sep}`) || !fs.existsSync(filePath)) {
       return res.status(404).json({ error: 'Verification evidence was not found.' });
     }
-    return res.sendFile(filePath);
+    const [realRoot, realFile] = await Promise.all([
+      fs.promises.realpath(root),
+      fs.promises.realpath(filePath),
+    ]);
+    if (!realFile.startsWith(`${realRoot}${path.sep}`) || !(await fs.promises.stat(realFile)).isFile()) {
+      return res.status(404).json({ error: 'Verification evidence was not found.' });
+    }
+    res.set('Cache-Control', 'private, no-store');
+    res.set('X-Content-Type-Options', 'nosniff');
+    return res.sendFile(realFile);
   } catch (error) {
     return res.status(error.name === 'CastError' ? 400 : 500).json({
       error: error.name === 'CastError' ? 'Invalid registration application.' : 'Unable to load verification evidence.',
@@ -299,6 +351,37 @@ router.patch('/events/:id/reject', requireAdmin, requireDatabase, async (req, re
   if (!event) return res.status(404).json({ error: 'Event was not found.' });
   await Notification.create({ recipientId: event.ownerId, recipientRole: event.ownerRole, type: 'event_rejected', message: `${event.title} was rejected.` });
   return res.json({ event });
+});
+
+router.get('/disputes', requireAdmin, requireDatabase, async (_req, res) => {
+  const disputes = await Dispute.find({}).sort({ createdAt: -1 }).populate('bookingId', 'requesterId requesterRole requesterName talentId talentRole talentName jobType bookingDate');
+  return res.json({ disputes: disputes.map(safeDispute) });
+});
+
+router.get('/disputes/:id', requireAdmin, requireDatabase, async (req, res) => {
+  if (!mongoose.isObjectIdOrHexString(req.params.id)) return res.status(400).json({ error: 'Invalid dispute ID.' });
+  const dispute = await Dispute.findById(req.params.id).populate('bookingId', 'requesterId requesterRole requesterName talentId talentRole talentName jobType bookingDate');
+  if (!dispute) return res.status(404).json({ error: 'Dispute was not found.' });
+  return res.json({ dispute: safeDispute(dispute) });
+});
+
+router.patch('/disputes/:id/status', requireAdmin, requireDatabase, async (req, res) => {
+  if (!mongoose.isObjectIdOrHexString(req.params.id)) return res.status(400).json({ error: 'Invalid dispute ID.' });
+  const status = req.body?.status;
+  const resolution = typeof req.body?.adminResolution === 'string' ? req.body.adminResolution.trim() : '';
+  if (!['under_review', 'resolved'].includes(status)) return res.status(400).json({ error: 'A valid dispute status is required.' });
+  if (status === 'resolved' && (!resolution || resolution.length > 1000)) return res.status(400).json({ error: 'A resolution message of 1,000 characters or fewer is required.' });
+  const allowedCurrentStatuses = status === 'under_review' ? ['open'] : ['open', 'under_review'];
+  const update = status === 'resolved'
+    ? { $set: { status, adminResolution: resolution, resolvedAt: new Date() } }
+    : { $set: { status }, $unset: { adminResolution: 1, resolvedAt: 1 } };
+  const dispute = await Dispute.findOneAndUpdate(
+    { _id: req.params.id, status: { $in: allowedCurrentStatuses } },
+    update,
+    { new: true, runValidators: true }
+  ).populate('bookingId', 'requesterId requesterRole requesterName talentId talentRole talentName jobType bookingDate');
+  if (!dispute) return res.status(409).json({ error: 'This dispute is not available for that status transition.' });
+  return res.json({ dispute: safeDispute(dispute) });
 });
 
 module.exports = router;

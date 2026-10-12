@@ -1,7 +1,7 @@
-const { extractDateOfBirth } = require("../utils/dateExtractor");
-const { isValidDocumentNumber, normalizeDocumentNumber } = require("../utils/documentNumberExtractor");
-const { normalizeNameForComparison } = require("../utils/identityMatcher");
-const { normalizeOCRText } = require("../utils/ocrTextNormalizer");
+const { extractDateOfBirth } = require("./dateExtractor");
+const { isValidDocumentNumber, normalizeDocumentNumber } = require("./documentNumberExtractor");
+const { normalizeNameForComparison } = require("./identityMatcher");
+const { normalizeOCRText } = require("./ocrTextNormalizer");
 
 const identityExtractionSchema = {
   type: "object",

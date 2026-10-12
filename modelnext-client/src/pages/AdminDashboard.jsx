@@ -2,6 +2,7 @@ import React, {
   useCallback,
   useEffect,
   useMemo,
+  useRef,
   useState,
 } from "react";
 
@@ -60,18 +61,77 @@ const formatDate = (date) =>
       )
     : "—";
 
+const formatDateTime = (date) =>
+  date && !Number.isNaN(new Date(date).getTime())
+    ? new Date(date).toLocaleString()
+    : "Not recorded";
+
+const displayValue = (value, emptyLabel = "Not provided") => {
+  if (Array.isArray(value)) return value.length ? value.join(", ") : "Not provided";
+  if (value === null || value === undefined || value === "") return emptyLabel;
+  return String(value);
+};
+
+const formatFieldStatus = (status) => {
+  const labels = {
+    match: "MATCH",
+    mismatch: "MISMATCH",
+    partial_match: "PARTIAL MATCH",
+    unable_to_read: "UNABLE TO READ",
+    pending: "PENDING",
+    not_recorded: "PENDING",
+  };
+  return labels[status] || "PENDING";
+};
+
+function ApplicantField({ label, value, emptyLabel }) {
+  return (
+    <div className="identity-detail-field">
+      <span>{label}</span>
+      <strong>{displayValue(value, emptyLabel)}</strong>
+    </div>
+  );
+}
+
+function IdentityComparison({ label, submitted, extracted, extractionRecorded, status }) {
+  const result = formatFieldStatus(status);
+  const extractedEmptyLabel = !extractionRecorded
+    ? "Not stored"
+    : status === "unable_to_read"
+      ? "Unable to read"
+      : "Not provided";
+  return (
+    <div className="identity-comparison-row">
+      <strong>{label}</strong>
+      <ApplicantField label="Submitted" value={submitted} />
+      <ApplicantField label="OCR extracted" value={extracted} emptyLabel={extractedEmptyLabel} />
+      <span className={`identity-field-status status-${result.toLowerCase().replace(/ /g, "-")}`}>
+        {result}
+      </span>
+    </div>
+  );
+}
+
 
 function EvidenceImage({ url, label }) {
+  const [failed, setFailed] = useState(false);
+
+  useEffect(() => {
+    setFailed(false);
+  }, [url]);
+
   return (
     <figure className="identity-evidence-image">
-      {url ? (
+      {url && !failed ? (
         <img
           src={`${SERVER_BASE_URL}${url}`}
           alt={label}
+          crossOrigin="use-credentials"
+          onError={() => setFailed(true)}
         />
       ) : (
         <div className="identity-evidence-missing">
-          Not available
+          Evidence unavailable
         </div>
       )}
 
@@ -120,9 +180,18 @@ export default function AdminDashboard() {
     setEvents,
   ] = useState([]);
 
+  const [disputes, setDisputes] = useState([]);
+  const [selectedDispute, setSelectedDispute] = useState(null);
+  const [resolution, setResolution] = useState("");
+
   const [
     loadError,
     setLoadError,
+  ] = useState("");
+
+  const [
+    actionMessage,
+    setActionMessage,
   ] = useState("");
 
   const [
@@ -136,9 +205,19 @@ export default function AdminDashboard() {
   ] = useState(null);
 
   const [
+    selectedReviewApplicant,
+    setSelectedReviewApplicant,
+  ] = useState(null);
+
+  const [
     reviewLoadingId,
     setReviewLoadingId,
   ] = useState(null);
+
+  const [
+    reviewError,
+    setReviewError,
+  ] = useState("");
 
   const [
     activeView,
@@ -149,6 +228,24 @@ export default function AdminDashboard() {
     query,
     setQuery,
   ] = useState("");
+
+  const reviewRequestIdRef = useRef(0);
+  const reviewAbortRef = useRef(null);
+  const reviewPanelRef = useRef(null);
+
+  useEffect(() => () => {
+    reviewRequestIdRef.current += 1;
+    if (reviewAbortRef.current) {
+      window.clearTimeout(reviewAbortRef.current.timeoutId);
+      reviewAbortRef.current.controller.abort();
+    }
+  }, []);
+
+  useEffect(() => {
+    if (selectedReviewApplicant) {
+      reviewPanelRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+  }, [selectedReviewApplicant, identityReview]);
 
 
   const loadDashboard = useCallback(
@@ -188,6 +285,10 @@ export default function AdminDashboard() {
           eventsData.events || []
         );
       }
+
+      const disputesResponse = await fetch(`${ADMIN_API_BASE_URL}/disputes`, requestOptions());
+      const disputesData = await disputesResponse.json();
+      if (disputesResponse.ok) setDisputes(disputesData.disputes || []);
     },
     []
   );
@@ -333,11 +434,18 @@ export default function AdminDashboard() {
     registration,
     decision
   ) => {
+    const actionLabel = decision === "approve" ? "approve" : "reject";
+    const confirmation = decision === "approve"
+      ? `Approve ${registration.name}'s Model account?`
+      : `Reject ${registration.name}'s Model registration?`;
+    if (registration.role === "model" && !window.confirm(confirmation)) return;
+
     setUpdatingId(
       registration.id
     );
 
     setLoadError("");
+    setActionMessage("");
 
     try {
       const response =
@@ -380,6 +488,9 @@ export default function AdminDashboard() {
                   data.registration,
               }
             : current
+      );
+      setActionMessage(
+        `Registration ${actionLabel === "approve" ? "approved" : "rejected"} successfully.`
       );
     } catch (error) {
       setLoadError(
@@ -448,42 +559,108 @@ export default function AdminDashboard() {
     }
   };
 
+  const openDispute = async (dispute) => {
+    setUpdatingId(dispute.id); setLoadError(""); setActionMessage("");
+    try {
+      const response = await fetch(`${ADMIN_API_BASE_URL}/disputes/${dispute.id}`, requestOptions());
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || "Unable to load dispute.");
+      setSelectedDispute(data.dispute); setResolution(data.dispute.adminResolution || "");
+    } catch (error) { setLoadError(error.message || "Unable to load dispute."); }
+    finally { setUpdatingId(null); }
+  };
 
-  const openIdentityReview = async (
-    registration
-  ) => {
-    setReviewLoadingId(
-      registration.id
-    );
+  const updateDispute = async (status) => {
+    if (!selectedDispute) return;
+    if (status === "resolved" && !resolution.trim()) { setLoadError("Enter a resolution before resolving this dispute."); return; }
+    if (status === "resolved" && !window.confirm("Resolve this dispute? The resolution will be visible to both booking participants.")) return;
+    setUpdatingId(selectedDispute.id); setLoadError(""); setActionMessage("");
+    try {
+      const response = await fetch(`${ADMIN_API_BASE_URL}/disputes/${selectedDispute.id}/status`, requestOptions({ method: "PATCH", body: JSON.stringify({ status, adminResolution: resolution }) }));
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || "Unable to update dispute.");
+      setSelectedDispute(data.dispute);
+      setDisputes(current => current.map(item => item.id === data.dispute.id ? data.dispute : item));
+      setActionMessage(status === "resolved" ? "Dispute resolved successfully." : "Dispute marked under review.");
+    } catch (error) { setLoadError(error.message || "Unable to update dispute."); }
+    finally { setUpdatingId(null); }
+  };
 
+
+  const openIdentityReview = async (registration) => {
+    const requestId = ++reviewRequestIdRef.current;
+    if (reviewAbortRef.current) {
+      window.clearTimeout(reviewAbortRef.current.timeoutId);
+      reviewAbortRef.current.controller.abort();
+    }
+    const controller = new AbortController();
+    const timeoutId = window.setTimeout(() => controller.abort(), 15000);
+    reviewAbortRef.current = { controller, timeoutId };
+    const registrationId = registration?.id;
+
+    setSelectedReviewApplicant(registration || null);
+    setReviewLoadingId(registrationId || null);
     setLoadError("");
+    setReviewError("");
+    setIdentityReview(null);
 
     try {
-      const response =
-        await fetch(
-          `${ADMIN_API_BASE_URL}/registrations/model/${registration.id}/identity-review`,
-          requestOptions()
-        );
+      if (!registrationId) {
+        throw new Error("The selected applicant has no registration ID.");
+      }
 
-      const data =
-        await response.json();
+      const response = await fetch(
+        `${ADMIN_API_BASE_URL}/registrations/model/${encodeURIComponent(registrationId)}/identity-review`,
+        requestOptions({ signal: controller.signal })
+      );
+      const contentType = response.headers.get("content-type") || "";
+      const data = contentType.includes("application/json")
+        ? await response.json()
+        : null;
 
+      if (requestId !== reviewRequestIdRef.current) return;
       if (!response.ok) {
         throw new Error(
-          data.error ||
-            "Unable to load identity verification evidence."
+          data?.error || `Identity review request failed (HTTP ${response.status}).`
         );
       }
 
+      if (
+        !data?.registration?.id
+        || String(data.registration.id) !== String(registrationId)
+        || !data.identityReview?.document
+        || !data.identityReview?.ocr?.submitted
+        || !data.identityReview?.liveness
+        || !data.identityReview?.registeredIdentity
+      ) {
+        throw new Error("The identity review response was incomplete.");
+      }
       setIdentityReview(data);
     } catch (error) {
-      setLoadError(
-        error.message ||
-          "Unable to load identity verification evidence."
-      );
+      if (requestId !== reviewRequestIdRef.current) return;
+      setReviewError(error.name === "AbortError"
+        ? "The identity review request timed out after 15 seconds. Check the server/database connection and retry."
+        : error.message || "Unable to load identity verification evidence.");
     } finally {
-      setReviewLoadingId(null);
+      window.clearTimeout(timeoutId);
+      if (requestId === reviewRequestIdRef.current) {
+        reviewAbortRef.current = null;
+        setReviewLoadingId(null);
+      }
     }
+  };
+
+  const closeIdentityReview = () => {
+    reviewRequestIdRef.current += 1;
+    if (reviewAbortRef.current) {
+      window.clearTimeout(reviewAbortRef.current.timeoutId);
+      reviewAbortRef.current.controller.abort();
+      reviewAbortRef.current = null;
+    }
+    setReviewLoadingId(null);
+    setSelectedReviewApplicant(null);
+    setIdentityReview(null);
+    setReviewError("");
   };
 
 
@@ -925,6 +1102,13 @@ export default function AdminDashboard() {
           </section>
 
 
+          {activeView === "disputes" && <AdminSectionCard eyebrow="USER SUPPORT" title="Booking disputes" className="admin-disputes-card">
+            {loadError && <div className="admin-inline-error" role="alert">{loadError}</div>}
+            {actionMessage && <div className="admin-inline-success" role="status">{actionMessage}</div>}
+            {disputes.length ? <div className="admin-table-wrapper"><table className="admin-table"><thead><tr><th>Booking reference</th><th>Complainant</th><th>Respondent</th><th>Reason</th><th>Submitted</th><th>Status</th><th>Action</th></tr></thead><tbody>{disputes.map(dispute => <tr key={dispute.id}><td><strong>{dispute.bookingReference.slice(-8)}</strong></td><td><strong>{dispute.complainant.name || "Unavailable"}</strong><span>{formatRole(dispute.complainant.role)}</span></td><td><strong>{dispute.respondent.name || "Unavailable"}</strong><span>{formatRole(dispute.respondent.role)}</span></td><td>{dispute.reason}</td><td>{formatDate(dispute.createdAt)}</td><td><StatusBadge status={dispute.status} /></td><td><button type="button" className="review-btn" disabled={updatingId === dispute.id} onClick={() => openDispute(dispute)}>View</button></td></tr>)}</tbody></table></div> : <div className="empty-state">No booking disputes have been submitted.</div>}
+            {selectedDispute && <section className="admin-dispute-detail"><div className="identity-review-heading"><div><p>DIRECT BOOKING DISPUTE</p><h2>Dispute details</h2><span>Booking reference: {selectedDispute.bookingReference}</span></div><button type="button" className="review-close" onClick={() => setSelectedDispute(null)}>Close</button></div><div className="identity-applicant-grid"><ApplicantField label="Complainant" value={`${selectedDispute.complainant.name || "Unavailable"} · ${formatRole(selectedDispute.complainant.role)}`} /><ApplicantField label="Respondent" value={`${selectedDispute.respondent.name || "Unavailable"} · ${formatRole(selectedDispute.respondent.role)}`} /><ApplicantField label="Reason" value={selectedDispute.reason} /><ApplicantField label="Submitted" value={formatDateTime(selectedDispute.createdAt)} /><ApplicantField label="Status" value={selectedDispute.status.replace("_", " ")} /><ApplicantField label="Service" value={selectedDispute.booking ? `${selectedDispute.booking.jobType} · ${selectedDispute.booking.bookingDate}` : "Booking unavailable"} /></div><div className="admin-dispute-description"><span>Description</span><p>{selectedDispute.description}</p></div>{selectedDispute.status !== "resolved" ? <div className="admin-dispute-resolution"><label>Resolution<textarea maxLength="1000" value={resolution} onChange={event => setResolution(event.target.value)} placeholder="Required when resolving the dispute" /></label><div className="table-actions">{selectedDispute.status === "open" && <button type="button" className="review-btn" disabled={updatingId === selectedDispute.id} onClick={() => updateDispute("under_review")}>Mark Under Review</button>}<button type="button" className="approve-btn" disabled={updatingId === selectedDispute.id || !resolution.trim()} onClick={() => updateDispute("resolved")}>{updatingId === selectedDispute.id ? "Updating…" : "Resolve Dispute"}</button></div></div> : <div className="admin-dispute-description"><span>Resolution</span><p>{selectedDispute.adminResolution}</p></div>}</section>}
+          </AdminSectionCard>}
+
           <AdminSectionCard
             eyebrow={
               activeView === "events"
@@ -943,7 +1127,7 @@ export default function AdminDashboard() {
                         )
                   } registrations`
             }
-            className="admin-directory-card"
+            className={`admin-directory-card${activeView === "disputes" ? " admin-hidden" : ""}`}
             action={
               activeView !==
                 "events" && (
@@ -976,6 +1160,12 @@ export default function AdminDashboard() {
                 role="alert"
               >
                 {loadError}
+              </div>
+            )}
+
+            {actionMessage && (
+              <div className="admin-inline-success" role="status">
+                {actionMessage}
               </div>
             )}
 
@@ -1202,7 +1392,8 @@ export default function AdminDashboard() {
                             <div className="table-actions">
 
                               {registration.role ===
-                                "model" && (
+                                "model" &&
+                                registration.approvalStatus === "pending" && (
                                 <button
                                   type="button"
                                   className="review-btn"
@@ -1289,9 +1480,48 @@ export default function AdminDashboard() {
           </AdminSectionCard>
 
 
+          {selectedReviewApplicant && !identityReview && (
+            <section ref={reviewPanelRef} className="identity-review-dossier identity-review-loading-panel" aria-live="polite">
+              <div className="identity-review-heading">
+                <div>
+                  <p>MODEL REGISTRATION · IDENTITY VERIFICATION</p>
+                  <h2>Reviewing {selectedReviewApplicant.name || "selected applicant"}</h2>
+                  <span>Registration ID: {selectedReviewApplicant.id}</span>
+                </div>
+                <button type="button" className="review-close" onClick={closeIdentityReview}>
+                  Close
+                </button>
+              </div>
+              {reviewError ? (
+                <div className="identity-review-error" role="alert">
+                  <strong>Unable to open identity review</strong>
+                  <p>{reviewError}</p>
+                  <div className="table-actions">
+                    <button
+                      type="button"
+                      className="review-btn"
+                      onClick={() => openIdentityReview(selectedReviewApplicant)}
+                    >
+                      Retry
+                    </button>
+                    <button type="button" className="review-close" onClick={closeIdentityReview}>
+                      Close
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <div className="identity-review-loading-message" role="status">
+                  <span className="identity-review-spinner" aria-hidden="true" />
+                  Loading saved registration, OCR and liveness review data…
+                </div>
+              )}
+            </section>
+          )}
+
           {identityReview && (
 
             <section
+              ref={reviewPanelRef}
               className="identity-review-dossier"
               aria-labelledby="identity-review-title"
             >
@@ -1318,15 +1548,38 @@ export default function AdminDashboard() {
                 <button
                   type="button"
                   className="review-close"
-                  onClick={() =>
-                    setIdentityReview(
-                      null
-                    )
-                  }
+                  onClick={closeIdentityReview}
                 >
                   Close
                 </button>
 
+              </div>
+
+              <div className="identity-review-section">
+                <div className="identity-section-title">
+                  <p>APPLICANT DETAILS</p>
+                  <h3>Submitted Model registration</h3>
+                </div>
+                <div className="identity-applicant-grid">
+                  <ApplicantField label="Full name" value={identityReview.registration.name} />
+                  <ApplicantField label="Email" value={identityReview.registration.email} />
+                  <ApplicantField label="Role" value={formatRole(identityReview.registration.role)} />
+                  <ApplicantField label="Date of birth" value={identityReview.registration.birthdate} />
+                  <ApplicantField label="Contact number" value={identityReview.registration.phone} />
+                  <ApplicantField label="Gender" value={identityReview.registration.gender} />
+                  <ApplicantField label="Address" value={identityReview.registration.address || identityReview.registration.location} />
+                  <ApplicantField label="Document type" value={identityReview.registration.idType} />
+                  <ApplicantField label="Registration date" value={formatDateTime(identityReview.registration.createdAt)} />
+                  <ApplicantField label="Account approval status" value={identityReview.registration.approvalStatus} />
+                  <ApplicantField label="Verification status" value={identityReview.registration.identityVerificationStatus} />
+                  <ApplicantField label="Username" value={identityReview.registration.username} />
+                  <ApplicantField label="Categories" value={identityReview.registration.categories} />
+                  <ApplicantField label="Skills" value={identityReview.registration.skills} />
+                  <ApplicantField label="Height" value={identityReview.registration.height} />
+                  <ApplicantField label="Weight" value={identityReview.registration.weight} />
+                  <ApplicantField label="Waist" value={identityReview.registration.waist} />
+                  <ApplicantField label="Hip" value={identityReview.registration.hip} />
+                </div>
               </div>
 
 
@@ -1357,82 +1610,71 @@ export default function AdminDashboard() {
                     label="ID document · Front"
                   />
 
-                  <EvidenceImage
-                    url={
-                      identityReview
-                        .identityReview
-                        .document
-                        .backUrl
-                    }
-                    label="ID document · Back"
-                  />
+                  {identityReview.identityReview.ocr.submitted.documentType !== "passport" && (
+                    <EvidenceImage
+                      url={identityReview.identityReview.document.backUrl}
+                      label="ID document · Back"
+                    />
+                  )}
 
                 </div>
 
 
                 <div className="identity-verification-status">
-
-                  <strong>
-                    OCR Verification
-                  </strong>
-
-                  <span>
-                    {
-                      identityReview
-                        .identityReview
-                        .ocr
-                        .status ===
-                      "prototype_passed"
-                        ? "✓ Passed (Prototype)"
-                        : identityReview
-                            .identityReview
-                            .ocr
-                            .status === "identity_verified"
-                          ? "✓ Passed"
-                          : identityReview
-                            .identityReview
-                            .ocr
-                            .status
-                    }
+                  <strong>Overall OCR result</strong>
+                  <span className="identity-prototype-status">
+                    {identityReview.identityReview.ocr.status === "prototype_passed"
+                      ? "PROTOTYPE PASSED · NAME REVIEW PENDING"
+                      : displayValue(identityReview.identityReview.ocr.status).toUpperCase()}
                   </span>
+                  <p>{identityReview.identityReview.ocr.summary}</p>
+                  <small>
+                    Name verification status:{" "}
+                    {formatFieldStatus(identityReview.identityReview.ocr.nameVerificationStatus)}
+                    {" · "}OCR-readable fields:{" "}
+                    {identityReview.identityReview.ocr.checks?.readable ? "Yes" : "Not confirmed"}
+                  </small>
+                </div>
 
-                  <p>
-                    {
-                      identityReview
-                        .identityReview
-                        .ocr
-                        .summary
+                <div className="identity-comparison-list">
+                  <IdentityComparison
+                    label="Full name"
+                    submitted={identityReview.identityReview.ocr.submitted.fullName}
+                    extracted={identityReview.identityReview.ocr.extracted?.fullName}
+                    extractionRecorded={Boolean(identityReview.identityReview.ocr.extracted)}
+                    status={
+                      identityReview.identityReview.ocr.checks?.fields?.name?.status
+                      || (identityReview.identityReview.ocr.nameVerificationStatus === "verified"
+                        ? "match"
+                        : identityReview.identityReview.ocr.nameVerificationStatus === "rejected"
+                          ? "mismatch"
+                          : "pending")
                     }
-                  </p>
-
-
-                  {identityReview
-                    .identityReview
-                    .ocr
-                    .checks && (
-                    <small>
-                      Name OCR:{" "}
-                      {identityReview
-                        .identityReview
-                        .ocr
-                        .checks
-                        .nameOcrStatus}{" "}
-                      · Name verification:{" "}
-                      {identityReview
-                        .identityReview
-                        .ocr
-                        .nameVerificationStatus}{" "}
-                      · Date of birth:{" "}
-                      {identityReview
-                        .identityReview
-                        .ocr
-                        .checks
-                        .dateOfBirthMatched
-                        ? "matched"
-                        : "not matched"}
-                    </small>
-                  )}
-
+                  />
+                  <IdentityComparison
+                    label="Date of birth"
+                    submitted={identityReview.identityReview.ocr.submitted.dateOfBirth}
+                    extracted={identityReview.identityReview.ocr.extracted?.dateOfBirth}
+                    extractionRecorded={Boolean(identityReview.identityReview.ocr.extracted)}
+                    status={
+                      identityReview.identityReview.ocr.checks?.fields?.dateOfBirth?.status
+                      || (typeof identityReview.identityReview.ocr.checks?.dateOfBirthMatched === "boolean"
+                        ? identityReview.identityReview.ocr.checks.dateOfBirthMatched ? "match" : "mismatch"
+                        : "pending")
+                    }
+                  />
+                  <IdentityComparison
+                    label="Document number"
+                    submitted={identityReview.identityReview.ocr.submitted.documentNumber}
+                    extracted={identityReview.identityReview.ocr.extracted?.documentNumber}
+                    extractionRecorded={Boolean(identityReview.identityReview.ocr.extracted)}
+                    status={
+                      identityReview.identityReview.ocr.checks?.fields?.documentNumber?.status
+                      || (typeof identityReview.identityReview.ocr.checks?.documentNumberMatched === "boolean"
+                        ? identityReview.identityReview.ocr.checks.documentNumberMatched ? "match" : "mismatch"
+                        : "pending")
+                    }
+                  />
                 </div>
 
               </div>
@@ -1495,11 +1737,11 @@ export default function AdminDashboard() {
                 <div className="identity-section-title">
 
                   <p>
-                    LIVE VERIFICATION
+                    FACIAL LIVENESS EVIDENCE
                   </p>
 
                   <h3>
-                    Successful liveness captures
+                    Stored registration evidence
                   </h3>
 
                 </div>
@@ -1514,7 +1756,7 @@ export default function AdminDashboard() {
                         .liveness
                         .frontUrl
                     }
-                    label="FRONT · Front view"
+                    label="FRONT / CENTER"
                   />
 
                   <EvidenceImage
@@ -1524,7 +1766,7 @@ export default function AdminDashboard() {
                         .liveness
                         .leftUrl
                     }
-                    label="LEFT · Left view"
+                    label="LEFT"
                   />
 
                   <EvidenceImage
@@ -1534,7 +1776,7 @@ export default function AdminDashboard() {
                         .liveness
                         .rightUrl
                     }
-                    label="RIGHT · Right view"
+                    label="RIGHT"
                   />
 
                 </div>
@@ -1553,10 +1795,18 @@ export default function AdminDashboard() {
                         .liveness
                         .status ===
                       "completed"
-                        ? "✓ Passed"
-                        : "Not available"
+                        ? "Completed (stored registration status)"
+                          : "Not recorded as completed"
                     }
                   </span>
+                  <p>
+                    Captured:{" "}
+                    {formatDateTime(identityReview.identityReview.liveness.capturedAt?.front)}
+                    {" · "}
+                    {formatDateTime(identityReview.identityReview.liveness.capturedAt?.left)}
+                    {" · "}
+                    {formatDateTime(identityReview.identityReview.liveness.capturedAt?.right)}
+                  </p>
 
                 </div>
 

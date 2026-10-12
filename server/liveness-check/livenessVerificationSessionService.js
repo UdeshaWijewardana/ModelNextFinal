@@ -1,6 +1,6 @@
 const crypto = require('crypto');
 const mongoose = require('mongoose');
-const LivenessVerificationSession = require('../models/LivenessVerificationSession');
+const LivenessVerificationSession = require('./LivenessVerificationSession');
 
 // Browser-reported prototype liveness sessions expire after ten minutes and are single-use.
 const SESSION_TTL_MS = 10 * 60 * 1000;

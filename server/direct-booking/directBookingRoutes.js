@@ -9,7 +9,7 @@ const Agency = require('../models/Agency');
 const EventRequest = require('../models/EventRequest');
 const { requireUser } = require('../middleware/requireUser');
 const { requireDatabase } = require('../middleware/requireDatabase');
-const { findAccessibleBooking } = require('./bookingAccess');
+const { findAccessibleBooking, completionEligibility } = require('./bookingAccess');
 
 const router = express.Router();
 router.use(requireUser, requireDatabase);
@@ -19,7 +19,7 @@ const requesterName = (role, account) => role === 'agency' ? account.agencyName 
 const talentName = (role, account) => role === 'model' ? account.fullName : account.name;
 const dateKey = value => new Date(value).toISOString().slice(0, 10);
 const validDate = value => /^\d{4}-\d{2}-\d{2}$/.test(value || '') && !Number.isNaN(new Date(`${value}T00:00:00Z`).getTime()) && dateKey(new Date(`${value}T00:00:00Z`)) === value;
-const safe = booking => ({ id: booking._id, requesterId: booking.requesterId, requesterRole: booking.requesterRole, requesterName: booking.requesterName, talentId: booking.talentId, talentRole: booking.talentRole, talentName: booking.talentName, jobType: booking.jobType, bookingDate: booking.bookingDate, location: booking.location, description: booking.description, status: booking.status, createdAt: booking.createdAt, respondedAt: booking.respondedAt });
+const safe = booking => ({ id: booking._id, requesterId: booking.requesterId, requesterRole: booking.requesterRole, requesterName: booking.requesterName, talentId: booking.talentId, talentRole: booking.talentRole, talentName: booking.talentName, jobType: booking.jobType, bookingDate: booking.bookingDate, location: booking.location, description: booking.description, status: booking.status, createdAt: booking.createdAt, respondedAt: booking.respondedAt, completedAt: booking.completedAt });
 const hasConfirmedEventConflict = async booking => {
   const requests = await EventRequest.find({ requesterId: booking.talentId, requesterRole: booking.talentRole, requestType: booking.talentRole === 'model' ? 'booking' : 'participation', status: 'confirmed' }).select('eventId').populate({ path: 'eventId', select: 'startDate endDate status', match: { status: 'approved' } }).lean();
   return requests.some(({ eventId }) => eventId?.startDate && booking.bookingDate >= dateKey(eventId.startDate) && booking.bookingDate <= dateKey(eventId.endDate || eventId.startDate));
@@ -67,6 +67,22 @@ router.patch('/:id/status', async (req, res) => {
   }
   booking.status = req.body.status; booking.respondedAt = new Date();
   try { await booking.save(); } catch (error) { if (error.code === 11000) return res.status(409).json({ error: 'This talent already has a confirmed booking on that date.' }); throw error; }
+  return res.json({ booking: safe(booking) });
+});
+
+router.patch('/:id/complete', async (req, res) => {
+  if (!mongoose.isObjectIdOrHexString(req.params.id)) return res.status(400).json({ error: 'Invalid booking ID.' });
+  const existing = await DirectBooking.findById(req.params.id).select('requesterId requesterRole bookingDate status');
+  if (!existing) return res.status(404).json({ error: 'Booking was not found.' });
+  const eligibilityError = completionEligibility(existing, req.user, dateKey(new Date()));
+  if (eligibilityError) return res.status(eligibilityError.status).json({ error: eligibilityError.error });
+
+  const booking = await DirectBooking.findOneAndUpdate(
+    { _id: existing._id, requesterId: req.user.id, requesterRole: req.user.role, status: 'confirmed', bookingDate: existing.bookingDate },
+    { $set: { status: 'completed', completedAt: new Date() } },
+    { new: true, runValidators: true }
+  );
+  if (!booking) return res.status(409).json({ error: 'This booking is no longer eligible for completion.' });
   return res.json({ booking: safe(booking) });
 });
 

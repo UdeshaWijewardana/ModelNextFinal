@@ -9,10 +9,10 @@ const bcrypt = require('bcryptjs');
 const ModelUser = require('../models/ModelUser');
 const EventRequest = require('../models/EventRequest');
 const { directBookedDatesForMonth } = require('../direct-booking/availability');
-const { extractDateOfBirth } = require('../utils/dateExtractor');
-const { isValidDocumentNumber } = require('../utils/documentNumberExtractor');
-const { verifyIdentityDocument } = require('../services/identityVerificationService');
-const { livenessVerificationSessionService } = require('../services/livenessVerificationSessionService');
+const { extractDateOfBirth } = require('../ocr/dateExtractor');
+const { isValidDocumentNumber } = require('../ocr/documentNumberExtractor');
+const { verifyIdentityDocument } = require('../ocr/identityVerificationService');
+const { livenessVerificationSessionService } = require('../liveness-check/livenessVerificationSessionService');
 const { requireDatabase, databaseUnavailable } = require('../middleware/requireDatabase');
 const { requireUser } = require('../middleware/requireUser');
 const { USER_SESSION_COOKIE, cookieOptions, issueUserSession } = require('../utils/sessionCookies');
@@ -625,7 +625,20 @@ router.post('/register', upload.fields([
         ),
         nameOcrStatus: verificationResult.checks.name?.status || 'unable_to_read',
         dateOfBirthMatched: verificationResult.checks.dateOfBirthMatch,
-        documentNumberMatched: verificationResult.checks.documentNumberMatch
+        documentNumberMatched: verificationResult.checks.documentNumberMatch,
+        submittedIdentity: {
+          fullName: data.fullName,
+          dateOfBirth: data.birthdate,
+          documentType: data.idType,
+          documentNumber: data.identityDocumentNumber,
+        },
+        extractedIdentity: verificationResult.extractedIdentity,
+        identityChecks: verificationResult.checks,
+        livenessEvidenceCapturedAt: {
+          front: livenessEvidence.front.capturedAt || null,
+          left: livenessEvidence.left.capturedAt || null,
+          right: livenessEvidence.right.capturedAt || null,
+        },
       },
       livenessVerificationStatus: 'completed',
       livenessEvidence: {

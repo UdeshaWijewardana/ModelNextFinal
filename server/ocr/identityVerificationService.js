@@ -1,8 +1,8 @@
-const { extractDateOfBirth } = require("../utils/dateExtractor");
-const { isValidDocumentNumber, normalizeDocumentNumber } = require("../utils/documentNumberExtractor");
-const { normalizeOCRText } = require("../utils/ocrTextNormalizer");
-const { matchIdentityData, normalizeNameForComparison } = require("../utils/identityMatcher");
-const { createOpenAIIdentityExtractor } = require("../openai/openaiIdentityService");
+const { extractDateOfBirth } = require("./dateExtractor");
+const { isValidDocumentNumber, normalizeDocumentNumber } = require("./documentNumberExtractor");
+const { normalizeOCRText } = require("./ocrTextNormalizer");
+const { matchIdentityData, normalizeNameForComparison } = require("./identityMatcher");
+const { createOpenAIIdentityExtractor } = require("./openaiIdentityService");
 
 function nameScript(value) {
   const normalized = normalizeNameForComparison(value) || "";
@@ -141,6 +141,11 @@ function evaluateIdentityExtraction({ extraction, fullName, birthdate, idType, i
     prototypePassed,
     overallStatus,
     checks,
+    extractedIdentity: {
+      fullName: extraction.fullName || null,
+      dateOfBirth: extraction.dateOfBirth || null,
+      documentNumber: extraction.documentNumber || null,
+    },
   };
 }
 

@@ -3,6 +3,7 @@ import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import Navbar from "../components/Navbar";
 import { apiFetch, readJson, SERVER_BASE_URL } from "../api";
 import BookingForm from "./direct-booking/BookingForm";
+import Reviews from "../components/reviews/Reviews";
 import "../styles/ModelPublicProfile.css";
 
 const hasValue = (value) => value !== undefined && value !== null && String(value).trim() !== "";
@@ -272,6 +273,8 @@ export default function ModelPublicProfile() {
                 </div>
               </div>
             </section>
+
+            <Reviews recipientRole="model" recipientId={modelId} />
 
             <section className="public-model-portfolio" aria-labelledby="portfolio-heading">
               <div className="public-model-section-heading">

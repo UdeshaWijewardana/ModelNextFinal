@@ -5,7 +5,7 @@ async function main() {
   const [documentType, ...relativePaths] = process.argv.slice(2);
   const expectedImages = documentType === "passport" ? 1 : 2;
   if (!["nic", "license", "passport"].includes(documentType) || relativePaths.length !== expectedImages) {
-    throw new Error("Usage: node openai/testOpenAIIdentityLive.js <nic|license|passport> <SAMPLE-image-path> [<SAMPLE-back-image-path>]");
+    throw new Error("Usage: node ocr/testOpenAIIdentityLive.js <nic|license|passport> <SAMPLE-image-path> [<SAMPLE-back-image-path>]");
   }
 
   const filePaths = relativePaths.map(filePath => path.resolve(process.cwd(), filePath));

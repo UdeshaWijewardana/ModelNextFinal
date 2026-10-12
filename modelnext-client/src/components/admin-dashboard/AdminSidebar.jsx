@@ -8,6 +8,7 @@ const navigation = [
   { id: "agency", label: "Agencies", glyph: "◇" },
   { id: "client", label: "Clients", glyph: "○" },
   { id: "events", label: "Events", glyph: "□" },
+  { id: "disputes", label: "Disputes", glyph: "!" },
 ];
 
 export default function AdminSidebar({ activeView, onNavigate, pendingCount }) {
